@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace webthibanglai.Controllers
 {
-    public class AppointmentController : Controller
+    public class KhoaHocController : Controller
     {
         public IActionResult Index()
         {

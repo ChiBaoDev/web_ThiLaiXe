@@ -45,14 +45,58 @@
 
             <div class="col-lg-8">
                 <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                         <div>
                             <h2 class="h3 mb-2">Thông tin chi tiết bản thân</h2>
-                            <p class="text-muted mb-0">Theo dõi tiến độ ôn thi và quản lý tài khoản học viên tại đây.</p>
+                            <p class="text-muted mb-0">Theo dõi tiến độ ôn thi, khóa học đang tham gia và quản lý tài khoản học viên tại đây.</p>
                         </div>
                         <a href="/Exam" class="btn btn-primary">
                             <i class="fas fa-book-open me-2"></i>Tiếp tục ôn thi
                         </a>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="border rounded-4 p-4 h-100 bg-light">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Khóa học đang học</span>
+                                        <h3 id="profileCourseName" class="h4 mb-2">Chưa đăng ký khóa học</h3>
+                                        <p id="profileCourseDescription" class="text-muted mb-3">Bạn chưa có khóa học nào được gán cho tài khoản này.</p>
+                                    </div>
+                                    <i class="fas fa-graduation-cap text-primary fs-2"></i>
+                                </div>
+                                <div class="d-grid gap-2 small text-muted mb-4">
+                                    <div><i class="far fa-calendar-alt text-primary me-2"></i>Khai giảng: <strong id="profileCourseStartDate">Chưa cập nhật</strong></div>
+                                    <div><i class="far fa-clock text-primary me-2"></i>Ca học: <strong id="profileCourseSchedule">Chưa cập nhật</strong></div>
+                                    <div><i class="fas fa-chalkboard-teacher text-primary me-2"></i>Giảng viên: <strong id="profileCourseTeacher">Chưa cập nhật</strong></div>
+                                </div>
+                                <a id="profileScheduleLink" href="/LichHoc" class="btn btn-outline-primary disabled" aria-disabled="true">
+                                    <i class="fas fa-calendar-week me-2"></i>Xem lịch học
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="border rounded-4 p-4 h-100 bg-light">
+                                <span class="badge bg-warning text-dark px-3 py-2 mb-3">Tình trạng học tập</span>
+                                <h3 class="h4 mb-3">Tiến độ hiện tại</h3>
+                                <div class="d-grid gap-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Khóa học đã đăng ký</span>
+                                        <strong id="profileRegisteredCourseCount">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Buổi học gần nhất</span>
+                                        <strong id="profileNextLesson">Chưa có</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Trạng thái khóa học</span>
+                                        <span id="profileCourseStatus" class="badge bg-secondary">Chưa đăng ký</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

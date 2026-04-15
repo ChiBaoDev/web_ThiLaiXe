@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace webthibanglai.Controllers
 {
-    public class CoursesController : Controller
+    public class LichHocController : Controller
     {
         public IActionResult Index()
         {

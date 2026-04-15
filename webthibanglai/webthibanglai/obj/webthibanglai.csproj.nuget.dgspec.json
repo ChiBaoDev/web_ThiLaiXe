@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\webthibanglai\\webthibanglai\\webthibanglai.csproj": {}
+    "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai\\webthibanglai.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\webthibanglai\\webthibanglai\\webthibanglai.csproj": {
+    "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai\\webthibanglai.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\webthibanglai\\webthibanglai\\webthibanglai.csproj",
+        "projectUniqueName": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai\\webthibanglai.csproj",
         "projectName": "webthibanglai",
-        "projectPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\webthibanglai\\webthibanglai\\webthibanglai.csproj",
+        "projectPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai\\webthibanglai.csproj",
         "packagesPath": "C:\\Users\\Bao\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\webthibanglai\\webthibanglai\\obj\\",
+        "outputPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\DevExpress 22.2\\Components\\Offline Packages",

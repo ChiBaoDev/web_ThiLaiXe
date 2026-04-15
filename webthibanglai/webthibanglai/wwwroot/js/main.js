@@ -88,21 +88,35 @@
     function ensureExamNavLink() {
         const navList = document.querySelector('.navbar-nav');
         if (!navList) return;
-        if (!navList.querySelector('a[href="exam.html"]')) {
-            const contactLink = navList.querySelector('a[href="contact.html"]');
-            const examLink = document.createElement('a');
-            examLink.href = 'exam.html';
+
+        const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+        const examPath = '/exam';
+        let examLink = navList.querySelector('a[href="/Exam"], a[href="/exam"], a[href="exam.html"]');
+
+        if (!examLink) {
+            const contactLink = Array.from(navList.querySelectorAll('a')).find((a) => {
+                const href = (a.getAttribute('href') || '').toLowerCase();
+                return href === '/contact' || href.endsWith('/contact') || href === 'contact.html';
+            });
+
+            examLink = document.createElement('a');
+            examLink.href = examPath;
             examLink.className = 'nav-item nav-link';
             examLink.textContent = 'Thi thử';
+
             if (contactLink) {
                 navList.insertBefore(examLink, contactLink);
             } else {
                 navList.appendChild(examLink);
             }
+        } else {
+            examLink.href = examPath;
         }
 
+        examLink.classList.toggle('active', currentPath === examPath);
+
         document.querySelectorAll('a.btn.btn-primary').forEach((btn) => {
-            if (btn.textContent.includes('Bắt đầu thi thử')) btn.href = 'exam.html';
+            if (btn.textContent.includes('Bắt đầu thi thử')) btn.href = examPath;
         });
     }
 

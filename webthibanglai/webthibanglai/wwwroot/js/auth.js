@@ -18,7 +18,16 @@
             role: 'user',
             fullName: 'Học viên Nguyễn Văn A',
             avatar: 'U',
-            studyCount: 0
+            studyCount: 0,
+            registeredCourse: {
+                name: 'Khóa học A1 cơ bản',
+                description: 'Lộ trình dành cho học viên mới bắt đầu, học lý thuyết, biển báo và thực hành sa hình theo từng buổi.',
+                startDate: '15/04/2026',
+                schedule: 'Thứ 2 - Thứ 4 - Thứ 6, 18:30',
+                teacher: 'Thầy Trần Minh Khang',
+                nextLesson: 'Thứ 4, 18:30 - Luyện đề và giải đáp án',
+                status: 'Đang học'
+            }
         }
     };
 
@@ -33,8 +42,8 @@
             admin: '/admin/dashboard.html',
             home: '/',
             about: '/About',
-            courses: '/Courses',
-            appointment: '/Appointment',
+            courses: '/KhoaHoc',
+            lichHoc: '/LichHoc',
             contact: '/Contact',
             exam: '/Exam'
         };
@@ -56,7 +65,6 @@
             'index.html': getUrl('home'),
             'about.html': getUrl('about'),
             'courses.html': getUrl('courses'),
-            'appointment.html': getUrl('appointment'),
             'contact.html': getUrl('contact'),
             'exam.html': getUrl('exam'),
             'login.html': getUrl('login'),
@@ -123,7 +131,8 @@
             ...auth,
             fullName: latest.fullName,
             avatar: latest.avatar,
-            studyCount: latest.studyCount || 0
+            studyCount: latest.studyCount || 0,
+            registeredCourse: latest.registeredCourse || null
         };
 
         setAuth(nextAuth);
@@ -165,6 +174,7 @@
             role: found.role,
             avatar: found.avatar || found.fullName?.charAt(0)?.toUpperCase() || found.username.charAt(0).toUpperCase(),
             studyCount: found.studyCount || 0,
+            registeredCourse: found.registeredCourse || null,
             loginAt: new Date().toISOString()
         };
         setAuth(auth);
@@ -178,8 +188,12 @@
 
     function createNavLink(href, text, key, className) {
         const a = document.createElement('a');
+        const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+        const targetPath = (href || '').toLowerCase().replace(/\/$/, '') || '/';
+        const isActive = currentPath === targetPath;
+
         a.href = href;
-        a.className = className || 'nav-item nav-link';
+        a.className = `${className || 'nav-item nav-link'}${isActive ? ' active' : ''}`;
         a.textContent = text;
         a.setAttribute('data-auth', key);
         return a;
@@ -201,6 +215,10 @@
             nav.appendChild(createNavLink(getUrl('admin'), 'Quản trị', 'admin'));
         }
 
+        if (auth.role !== 'admin' && auth.registeredCourse && !nav.querySelector('[data-auth="lich-hoc"]')) {
+            nav.appendChild(createNavLink(getUrl('lichHoc'), 'Lịch học', 'lich-hoc'));
+        }
+ 
         const wrapper = document.createElement('div');
         wrapper.className = 'nav-item dropdown';
         wrapper.setAttribute('data-auth', 'profile-menu');
@@ -305,12 +323,48 @@
         const lastScore = document.getElementById('profileLastScore');
         const lastStatus = document.getElementById('profileLastStatus');
 
+        const courseName = document.getElementById('profileCourseName');
+        const courseDescription = document.getElementById('profileCourseDescription');
+        const courseStartDate = document.getElementById('profileCourseStartDate');
+        const courseSchedule = document.getElementById('profileCourseSchedule');
+        const courseTeacher = document.getElementById('profileCourseTeacher');
+        const scheduleLink = document.getElementById('profileScheduleLink');
+        const registeredCourseCount = document.getElementById('profileRegisteredCourseCount');
+        const nextLesson = document.getElementById('profileNextLesson');
+        const courseStatus = document.getElementById('profileCourseStatus');
+
         if (avatar) avatar.textContent = auth.avatar || auth.username.charAt(0).toUpperCase();
         if (fullName) fullName.textContent = auth.fullName;
         if (username) username.textContent = auth.username;
         if (role) role.textContent = auth.role === 'admin' ? 'Quản trị viên' : 'Học viên';
         if (loginAt) loginAt.textContent = new Date(auth.loginAt).toLocaleString('vi-VN');
         if (studyCount) studyCount.textContent = String(auth.studyCount || 0);
+
+        if (auth.registeredCourse) {
+            if (courseName) courseName.textContent = auth.registeredCourse.name || 'Đã đăng ký khóa học';
+            if (courseDescription) courseDescription.textContent = auth.registeredCourse.description || 'Khóa học hiện tại của bạn đang được cập nhật.';
+            if (courseStartDate) courseStartDate.textContent = auth.registeredCourse.startDate || 'Chưa cập nhật';
+            if (courseSchedule) courseSchedule.textContent = auth.registeredCourse.schedule || 'Chưa cập nhật';
+            if (courseTeacher) courseTeacher.textContent = auth.registeredCourse.teacher || 'Chưa cập nhật';
+            if (registeredCourseCount) registeredCourseCount.textContent = '1';
+            if (nextLesson) nextLesson.textContent = auth.registeredCourse.nextLesson || 'Đang cập nhật';
+            if (courseStatus) {
+                courseStatus.textContent = auth.registeredCourse.status || 'Đang học';
+                courseStatus.className = 'badge bg-success';
+            }
+            if (scheduleLink) {
+                scheduleLink.classList.remove('disabled');
+                scheduleLink.removeAttribute('aria-disabled');
+                scheduleLink.setAttribute('href', getUrl('lichHoc'));
+            }
+        } else {
+            if (registeredCourseCount) registeredCourseCount.textContent = '0';
+            if (nextLesson) nextLesson.textContent = 'Chưa có';
+            if (courseStatus) {
+                courseStatus.textContent = 'Chưa đăng ký';
+                courseStatus.className = 'badge bg-secondary';
+            }
+        }
 
         if (lastResult) {
             if (lastScore) lastScore.textContent = `${lastResult.correct}/${lastResult.total}`;
@@ -377,6 +431,40 @@
         });
     }
 
+    function fillSchedulePage() {
+        const page = document.getElementById('lichHocPage');
+        if (!page) return;
+
+        const auth = syncAuthWithUsers();
+        if (!auth) {
+            navigateTo(getUrl('login'));
+            return;
+        }
+
+        if (auth.role === 'admin') {
+            navigateTo(getUrl('admin'));
+            return;
+        }
+
+        if (!auth.registeredCourse) {
+            navigateTo(getUrl('courses'));
+            return;
+        }
+
+        const course = auth.registeredCourse;
+        const courseName = document.getElementById('scheduleCourseName');
+        const courseBadge = document.getElementById('scheduleCourseBadge');
+        const time = document.getElementById('scheduleTime');
+        const teacher = document.getElementById('scheduleTeacher');
+        const status = document.getElementById('scheduleStatus');
+
+        if (courseName) courseName.textContent = course.name || 'đang đăng ký';
+        if (courseBadge) courseBadge.textContent = course.name || 'Chưa cập nhật';
+        if (time) time.textContent = course.schedule || 'Chưa cập nhật';
+        if (teacher) teacher.textContent = course.teacher || 'Chưa cập nhật';
+        if (status) status.textContent = course.status || 'Đang học';
+    }
+
     function bindProfileActions() {
         const logoutButtons = document.querySelectorAll('[data-profile-logout]');
         logoutButtons.forEach(button => {
@@ -394,6 +482,7 @@
         bindLoginForm();
         bindAdminInfo();
         fillProfilePage();
+        fillSchedulePage();
         bindPasswordChangeForm();
         bindProfileActions();
     });

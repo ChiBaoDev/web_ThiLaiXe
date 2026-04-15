@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Lịch học";
+}
+
+<div id="lichHocPage" class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-8">
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
+                    <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Lịch học cá nhân</span>
+                    <h1 class="display-6 mb-3">Lịch học khóa <span id="scheduleCourseName">đang đăng ký</span></h1>
+                    <p class="text-muted mb-0">
+                        Theo dõi lịch học, buổi thực hành và các mốc ôn tập quan trọng để chủ động sắp xếp thời gian học.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
+                    <h3 class="h5 mb-3">Thông tin nhanh</h3>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Khóa học</span>
+                        <strong id="scheduleCourseBadge">Chưa cập nhật</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Ca học</span>
+                        <strong id="scheduleTime">Tối 18:30</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Giảng viên</span>
+                        <strong id="scheduleTeacher">Đang cập nhật</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Trạng thái</span>
+                        <span class="badge bg-success" id="scheduleStatus">Đang học</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                        <div>
+                            <h2 class="h4 mb-1">Lịch học trong tuần</h2>
+                            <p class="text-muted mb-0">Các buổi học được sắp xếp theo lộ trình của khóa đã đăng ký.</p>
+                        </div>
+                        <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">
+                            <i class="fas fa-layer-group me-2"></i>Xem khóa học
+                        </a>
+                    </div>
+
+                    <div class="table-responsive" id="scheduleCards">
+                        <table class="table table-bordered align-middle text-center mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width: 140px;">Thứ 2</th>
+                                    <th style="min-width: 140px;">Thứ 3</th>
+                                    <th style="min-width: 140px;">Thứ 4</th>
+                                    <th style="min-width: 140px;">Thứ 5</th>
+                                    <th style="min-width: 140px;">Thứ 6</th>
+                                    <th style="min-width: 140px;">Thứ 7</th>
+                                    <th style="min-width: 140px;">Chủ nhật</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="bg-light">
+                                        <div class="p-2 text-start">
+                                            <div class="fw-bold text-primary mb-2">Lý thuyết biển báo và sa hình</div>
+                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>18:30 - 20:00</div>
+                                            <div class="small text-muted"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Phòng học A1</div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td class="bg-light">
+                                        <div class="p-2 text-start">
+                                            <div class="fw-bold text-warning mb-2">Luyện đề và giải thích đáp án</div>
+                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>18:30 - 20:30</div>
+                                            <div class="small text-muted"><i class="fas fa-laptop-house me-2 text-primary"></i>Phòng máy số 2</div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td class="bg-light">
+                                        <div class="p-2 text-start">
+                                            <div class="fw-bold text-success mb-2">Thực hành sa hình</div>
+                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>17:30 - 19:00</div>
+                                            <div class="small text-muted"><i class="fas fa-warehouse me-2 text-primary"></i>Sân tập thực hành</div>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                    <td class="bg-light">
+                                        <div class="p-2 text-start">
+                                            <div class="fw-bold text-danger mb-2">Thi thử tổng hợp</div>
+                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>08:00 - 10:00</div>
+                                            <div class="small text-muted"><i class="fas fa-school me-2 text-primary"></i>Phòng thi mô phỏng</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
+                    <h3 class="h5 mb-3">Mốc quan trọng</h3>
+                    <div class="timeline d-grid gap-3">
+                        <div class="d-flex gap-3">
+                            <div class="text-primary fs-4"><i class="fas fa-circle"></i></div>
+                            <div>
+                                <strong>Khai giảng</strong>
+                                <p class="text-muted mb-0">15/04/2026 - Nhận tài liệu và phổ biến lộ trình học.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="text-warning fs-4"><i class="fas fa-circle"></i></div>
+                            <div>
+                                <strong>Kiểm tra giữa khóa</strong>
+                                <p class="text-muted mb-0">26/04/2026 - Đánh giá mức độ nắm kiến thức lý thuyết.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="text-success fs-4"><i class="fas fa-circle"></i></div>
+                            <div>
+                                <strong>Ôn tập tổng hợp</strong>
+                                <p class="text-muted mb-0">05/05/2026 - Rà soát lỗi sai và thực hành tăng cường.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="text-danger fs-4"><i class="fas fa-circle"></i></div>
+                            <div>
+                                <strong>Dự kiến sát hạch</strong>
+                                <p class="text-muted mb-0">12/05/2026 - Sẵn sàng bước vào kỳ thi chính thức.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-primary text-white shadow-sm rounded-4 p-4">
+                    <h3 class="h5 mb-3">Lưu ý cho học viên</h3>
+                    <ul class="mb-0 ps-3 d-grid gap-2">
+                        <li>Đến trước giờ học ít nhất 15 phút.</li>
+                        <li>Mang theo CCCD và phiếu đăng ký khi thực hành.</li>
+                        <li>Hoàn thành tối thiểu 3 đề thi thử mỗi tuần.</li>
+                        <li>Liên hệ trung tâm nếu cần đổi ca học.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

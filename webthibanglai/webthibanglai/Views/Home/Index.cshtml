@@ -12,8 +12,8 @@
                         <div class="row justify-content-center">
                             <div class="col-lg-7">
                                 <h1 class="display-2 text-light mb-5 animated slideInDown">Luyện thi bằng lái xe máy tự tin hơn</h1>
-                                <a href="~/about.html" class="btn btn-primary py-sm-3 px-sm-5">Xem chi tiết</a>
-                                <a href="~/courses.html" class="btn btn-light py-sm-3 px-sm-5 ms-3">Bộ đề thi</a>
+                                <a asp-controller="About" asp-action="Index" class="btn btn-primary py-sm-3 px-sm-5">Xem chi tiết</a>
+                                <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-light py-sm-3 px-sm-5 ms-3">Khóa học</a>
                             </div>
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                     </div>
                     <div class="row g-4">
                         <div class="col-sm-6">
-                            <a class="btn btn-primary py-3 px-5" href="~/about.html">Xem thêm</a>
+                            <a class="btn btn-primary py-3 px-5" asp-controller="About" asp-action="Index">Xem thêm</a>
                         </div>
                         <div class="col-sm-6">
                             <a class="d-inline-flex align-items-center btn btn-outline-primary border-2 p-2" href="tel:+84901234567">

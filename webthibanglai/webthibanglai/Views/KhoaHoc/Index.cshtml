@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Khóa học";
+}
+
+<div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
+    <div class="container text-center">
+        <h1 class="display-4 text-white animated slideInDown mb-4">Khóa học</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb justify-content-center mb-0">
+                <li class="breadcrumb-item"><a class="text-white" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item text-primary active" aria-current="page">Khóa học</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container-xxl py-6">
+    <div class="container">
+        <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 650px;">
+            <h6 class="text-primary text-uppercase mb-2">Lộ trình đào tạo</h6>
+            <h1 class="display-6 mb-4">Nhiều khóa học thực tế để học viên dễ chọn và đăng ký</h1>
+            <p>
+                Chọn khóa học phù hợp với mục tiêu của bạn, từ ôn lý thuyết, luyện đề cho đến khóa tăng tốc chuẩn bị sát hạch.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Khóa học A1 cơ bản" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.200.000đ</div>
+                        <h5 class="mb-3">Khóa học A1 cơ bản</h5>
+                        <p>
+                            Dành cho học viên mới bắt đầu, bao gồm lý thuyết, biển báo, sa hình cơ bản và hướng dẫn hồ sơ đăng ký thi.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-signal text-primary me-2"></i>Cơ bản</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>4 tuần</span>
+                            <span><i class="fa fa-user-graduate text-primary me-2"></i>1 kèm 1</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-2.jpg" alt="Khóa học luyện thi tăng tốc" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.500.000đ</div>
+                        <h5 class="mb-3">Khóa luyện thi tăng tốc</h5>
+                        <p>
+                            Tập trung ôn câu hỏi thường sai, luyện mẹo làm bài và thực hành sát cấu trúc thi thật để tăng tỷ lệ đậu.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-signal text-primary me-2"></i>Nâng cao</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>2 tuần</span>
+                            <span><i class="fa fa-file-alt text-primary me-2"></i>Luyện đề chuyên sâu</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-3.jpg" alt="Khóa học cuối tuần" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.350.000đ</div>
+                        <h5 class="mb-3">Khóa học cuối tuần</h5>
+                        <p>
+                            Phù hợp người đi làm hoặc sinh viên bận rộn, lịch học linh hoạt vào thứ 7 và chủ nhật, dễ theo kịp tiến độ.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-clock text-primary me-2"></i>Linh hoạt</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>5 tuần</span>
+                            <span><i class="fa fa-users text-primary me-2"></i>Nhóm nhỏ</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Khóa ôn lý thuyết trực tuyến" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">890.000đ</div>
+                        <h5 class="mb-3">Khóa ôn lý thuyết trực tuyến</h5>
+                        <p>
+                            Học online mọi lúc, có video bài giảng, câu hỏi mô phỏng và bộ đề tự luyện phù hợp cho người tự học tại nhà.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-laptop text-primary me-2"></i>Online</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>3 tuần</span>
+                            <span><i class="fa fa-book text-primary me-2"></i>Tài liệu đầy đủ</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-2.jpg" alt="Khóa luyện sa hình thực hành" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.800.000đ</div>
+                        <h5 class="mb-3">Khóa luyện sa hình thực hành</h5>
+                        <p>
+                            Tăng thời lượng thực hành với giáo viên hướng dẫn sát sao, giúp học viên vững kỹ năng điều khiển và xử lý tình huống.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-motorcycle text-primary me-2"></i>Thực hành</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>4 tuần</span>
+                            <span><i class="fa fa-chalkboard-teacher text-primary me-2"></i>Giảng viên kinh nghiệm</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                    <div class="position-relative">
+                        <img class="img-fluid" src="~/img/courses-3.jpg" alt="Khóa trọn gói từ A đến đậu" />
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">2.200.000đ</div>
+                        <h5 class="mb-3">Khóa trọn gói từ A đến đậu</h5>
+                        <p>
+                            Lộ trình đầy đủ gồm hồ sơ, học lý thuyết, thực hành, luyện đề, thi thử và hỗ trợ sát ngày thi cho học viên mới.
+                        </p>
+                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
+                            <span><i class="fa fa-star text-primary me-2"></i>Trọn gói</span>
+                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>6 tuần</span>
+                            <span><i class="fa fa-headset text-primary me-2"></i>Hỗ trợ liên tục</span>
+                        </div>
+                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
