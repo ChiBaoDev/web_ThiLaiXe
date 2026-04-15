@@ -1,0 +1,42 @@
+@{
+    ViewData["Title"] = "Tư vấn";
+}
+
+<div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
+    <div class="container text-center">
+        <h1 class="display-4 text-white animated slideInDown mb-4">Tư vấn</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb justify-content-center mb-0">
+                <li class="breadcrumb-item"><a class="text-white" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item text-primary active" aria-current="page">Tư vấn</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container-xxl py-6">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="position-relative overflow-hidden ps-5 pt-5 h-100" style="min-height: 400px;">
+                    <img class="position-absolute w-100 h-100" src="~/img/about-1.jpg" alt="Tư vấn khóa học" style="object-fit: cover;" />
+                    <img class="position-absolute top-0 start-0 bg-white pe-3 pb-3" src="~/img/about-2.jpg" alt="Tư vấn học viên" style="width: 200px; height: 200px;" />
+                </div>
+            </div>
+            <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                <h6 class="text-primary text-uppercase mb-2">Tư vấn</h6>
+                <h1 class="display-6 mb-4">Đăng ký tư vấn để chọn lộ trình học và thi phù hợp</h1>
+                <form>
+                    <div class="row g-3">
+                        <div class="col-sm-6"><div class="form-floating"><input type="text" class="form-control border-0 bg-light" id="gname" placeholder="Họ và tên" /><label for="gname">Họ và tên</label></div></div>
+                        <div class="col-sm-6"><div class="form-floating"><input type="email" class="form-control border-0 bg-light" id="gmail" placeholder="Email" /><label for="gmail">Email</label></div></div>
+                        <div class="col-sm-6"><div class="form-floating"><input type="text" class="form-control border-0 bg-light" id="cname" placeholder="Hạng bằng quan tâm" /><label for="cname">Hạng bằng quan tâm</label></div></div>
+                        <div class="col-sm-6"><div class="form-floating"><input type="text" class="form-control border-0 bg-light" id="cage" placeholder="Hình thức học" /><label for="cage">Hình thức học</label></div></div>
+                        <div class="col-12"><div class="form-floating"><textarea class="form-control border-0 bg-light" placeholder="Lời nhắn" id="message" style="height: 150px"></textarea><label for="message">Lời nhắn</label></div></div>
+                        <div class="col-12"><button class="btn btn-primary w-100 py-3" type="submit">Gửi thông tin</button></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

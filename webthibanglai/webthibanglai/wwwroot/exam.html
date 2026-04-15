@@ -1,0 +1,605 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Thi thử bằng lái xe máy A1/A</title>
+    <link href="img/favicon.ico" rel="icon">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        body.exam-fullscreen-active {
+            background: linear-gradient(135deg, #fffdf7 0%, #fff9ea 50%, #ffffff 100%);
+        }
+
+        body.exam-fullscreen-active #siteTopbar,
+        body.exam-fullscreen-active #siteHeader,
+        body.exam-fullscreen-active .exam-hero {
+            display: none !important;
+        }
+
+        body.exam-fullscreen-active .container.py-5 {
+            max-width: 100%;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+
+        body.exam-fullscreen-active .exam-shell {
+            padding: .5rem;
+            border-radius: 24px;
+        }
+
+        body.exam-fullscreen-active .exam-sidebar {
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow: auto;
+        }
+
+        body.exam-fullscreen-active .exam-stage {
+            min-height: calc(100vh - 2rem);
+        }
+
+        .exam-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 28px;
+            padding: 3rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+            color: #1f2937;
+            border: 8px solid #f3bd00;
+            box-shadow: 0 24px 60px rgba(243, 189, 0, 0.14);
+        }
+
+        .exam-hero::after {
+            content: "";
+            position: absolute;
+            inset: auto -80px -120px auto;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(243, 189, 0, 0.10);
+        }
+
+        .exam-panel-glass {
+            border: 1px solid #f3e1a0;
+            background: #ffffff;
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(243, 189, 0, 0.08);
+        }
+
+        .exam-shell {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 1.5rem;
+            border: 10px solid #f3bd00;
+            box-shadow: 0 30px 70px rgba(243, 189, 0, 0.10);
+        }
+
+        .exam-workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .exam-sidebar,
+        .exam-stage,
+        .result-shell {
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            border-radius: 24px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.05);
+        }
+
+        .exam-sidebar {
+            padding: 1.25rem;
+            position: sticky;
+            top: 96px;
+        }
+
+        .exam-stage {
+            padding: 1.5rem;
+            background: #ffffff;
+        }
+
+        .exam-stage-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-progress {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .question-progress-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .75rem 1rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #a16207;
+            font-weight: 700;
+        }
+
+        .question-progress-title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .question-progress-subtitle {
+            margin: .25rem 0 0;
+            color: #64748b;
+        }
+
+        .exam-timer-box {
+            min-width: 180px;
+            text-align: center;
+            border-radius: 20px;
+            padding: .9rem 1rem;
+            background: #fffaf0;
+            border: 1px solid #f2df9d;
+        }
+
+        .exam-timer-box .label {
+            display: block;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #9a7400;
+        }
+
+        .exam-timer-box .value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #8a6500;
+            line-height: 1.1;
+        }
+
+        .exam-question-card {
+            min-height: 520px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 28px;
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            padding: 1.5rem;
+        }
+
+        .question-tag {
+            display: inline-flex;
+            padding: .45rem .9rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #a16207;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.45rem;
+            line-height: 1.6;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        .option-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-item {
+            position: relative;
+        }
+
+        .option-item input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .option-label {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            width: 100%;
+            padding: 1.1rem 1.15rem;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .option-label:hover {
+            transform: translateY(-2px);
+            border-color: #f3bd00;
+            box-shadow: 0 12px 30px rgba(243, 189, 0, 0.16);
+        }
+
+        .option-marker {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            flex: 0 0 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff5cf;
+            color: #9a7400;
+            font-weight: 800;
+        }
+
+        .option-copy {
+            color: #334155;
+            line-height: 1.55;
+        }
+
+        .option-item input:checked + .option-label {
+            border-color: #f3bd00;
+            background: #fff8df;
+            box-shadow: 0 14px 35px rgba(243, 189, 0, 0.14);
+        }
+
+        .option-item input:checked + .option-label .option-marker {
+            background: linear-gradient(135deg, #f3bd00 0%, #e2ac00 100%);
+            color: #fff;
+        }
+
+        .exam-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .question-palette {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .palette-btn {
+            border: 1px solid #eceff3;
+            background: #ffffff;
+            color: #6b7280;
+            border-radius: 14px;
+            min-height: 52px;
+            font-weight: 700;
+            transition: all .2s ease;
+        }
+
+        .palette-btn.active {
+            background: linear-gradient(135deg, #f3bd00 0%, #e2ac00 100%);
+            border-color: #f3bd00;
+            color: #fff;
+            box-shadow: 0 12px 28px rgba(243, 189, 0, 0.22);
+        }
+
+        .palette-btn.answered {
+            border-color: #2dd4bf;
+            color: #0f766e;
+            background: #f0fdfa;
+        }
+
+        .palette-btn.active.answered {
+            color: #fff;
+            background: linear-gradient(135deg, #fb7185 0%, #f472b6 100%);
+            border-color: #f472b6;
+        }
+
+        .sidebar-stat {
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            padding: 1rem;
+        }
+
+        .sidebar-stat strong {
+            display: block;
+            font-size: 1.6rem;
+            color: #9a7400;
+        }
+
+        .exam-fullscreen-note {
+            border-radius: 16px;
+            padding: .9rem 1rem;
+            background: #fff5cf;
+            color: #9a7400;
+            font-size: .95rem;
+        }
+
+        .result-shell {
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .exam-hero {
+                padding: 2rem;
+            }
+
+            .exam-workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .exam-sidebar {
+                position: static;
+            }
+
+            .question-palette {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .exam-shell,
+            .exam-stage,
+            .exam-sidebar,
+            .result-shell,
+            .exam-hero {
+                border-radius: 20px;
+            }
+
+            .exam-hero,
+            .exam-stage,
+            .exam-sidebar,
+            .result-shell,
+            .exam-question-card {
+                padding: 1.25rem;
+            }
+
+            .exam-stage-header,
+            .exam-nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .question-palette {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .question-text {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="siteTopbar" class="container-fluid bg-dark text-light p-0">
+        <div class="row gx-0 d-none d-lg-flex">
+            <div class="col-lg-7 px-5 text-start">
+                <div class="h-100 d-inline-flex align-items-center me-4">
+                    <small class="fa fa-map-marker-alt text-primary me-2"></small>
+                    <small>TP. Hồ Chí Minh, Việt Nam</small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center">
+                    <small class="far fa-clock text-primary me-2"></small>
+                    <small>Thứ 2 - Thứ 6: 08:00 - 20:00</small>
+                </div>
+            </div>
+            <div class="col-lg-5 px-5 text-end">
+                <div class="h-100 d-inline-flex align-items-center me-4">
+                    <small class="fa fa-phone-alt text-primary me-2"></small>
+                    <small>0901 234 567</small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center mx-n2">
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href=""><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href=""><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href=""><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-square btn-link rounded-0" href=""><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav id="siteHeader" class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
+        <a href="index.html" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5">
+            <h2 class="m-0"><i class="fa fa-motorcycle text-primary me-2"></i>ThiXeMay</h2>
+        </a>
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="index.html" class="nav-item nav-link">Trang chủ</a>
+                <a href="about.html" class="nav-item nav-link">Giới thiệu</a>
+                <a href="courses.html" class="nav-item nav-link">Bộ đề</a>
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Trang</a>
+                    <div class="dropdown-menu bg-light m-0">
+                        <a href="feature.html" class="dropdown-item">Tính năng</a>
+                        <a href="appointment.html" class="dropdown-item">Tư vấn</a>
+                        <a href="team.html" class="dropdown-item">Đội ngũ</a>
+                        <a href="testimonial.html" class="dropdown-item">Đánh giá</a>
+                        <a href="404.html" class="dropdown-item">Trang 404</a>
+                    </div>
+                </div>
+                <a href="exam.html" class="nav-item nav-link active">Thi thử</a>
+                <a href="contact.html" class="nav-item nav-link">Liên hệ</a>
+            </div>
+            <a href="exam.html" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block">Bắt đầu thi thử<i class="fa fa-arrow-right ms-3"></i></a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="exam-hero mb-4">
+            <div class="row g-4 align-items-center position-relative">
+                <div class="col-lg-7">
+                    <span class="badge rounded-pill bg-light text-primary px-3 py-2 mb-3">Thi thử sát hạch xe máy thế hệ mới</span>
+                    <h1 class="display-5 fw-bold mb-3">Tập trung tối đa vào từng câu hỏi, làm bài như đang thi thật</h1>
+                    <p class="lead mb-4">Giao diện mới ưu tiên một câu hỏi mỗi màn hình, hiển thị rõ bạn đang ở câu nào, theo dõi tiến độ tức thì và tự mở rộng gần như toàn màn hình khi bắt đầu thi.</p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="exam-panel-glass px-3 py-2">
+                            <i class="fas fa-layer-group me-2"></i>Trình bày 1 câu hỏi / 1 phiên tập trung
+                        </div>
+                        <div class="exam-panel-glass px-3 py-2">
+                            <i class="fas fa-expand-arrows-alt me-2"></i>Tự động kích hoạt chế độ toàn màn hình
+                        </div>
+                        <div class="exam-panel-glass px-3 py-2">
+                            <i class="fas fa-bolt me-2"></i>Điều hướng nhanh và trực quan hơn
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div id="setupPanel" class="exam-panel-glass p-4">
+                        <h4 class="fw-bold mb-3 text-dark">Thiết lập bài thi</h4>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12">
+                                <label for="licenseType" class="form-label text-dark">Chọn hạng bằng</label>
+                                <select id="licenseType" class="form-select form-select-lg">
+                                    <option value="A1">Hạng A1</option>
+                                    <option value="A">Hạng A</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="row g-3">
+                                    <div class="col-sm-4">
+                                        <div class="bg-white text-dark rounded-4 p-3 h-100">
+                                            <div class="small text-uppercase text-muted mb-1">Số câu</div>
+                                            <div class="fs-3 fw-bold"><span id="cfgQuestions">0</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="bg-white text-dark rounded-4 p-3 h-100">
+                                            <div class="small text-uppercase text-muted mb-1">Thời gian</div>
+                                            <div class="fs-3 fw-bold"><span id="cfgTime">0</span><span class="fs-6"> phút</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="bg-white text-dark rounded-4 p-3 h-100">
+                                            <div class="small text-uppercase text-muted mb-1">Điểm đạt</div>
+                                            <div class="fs-3 fw-bold"><span id="cfgPass">0</span><span class="fs-6"> câu</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 d-grid">
+                                <button id="startBtn" class="btn btn-warning btn-lg text-dark fw-bold py-3">Bắt đầu làm bài ngay</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="examPanel" class="d-none exam-shell">
+            <div class="exam-workspace">
+                <aside class="exam-sidebar">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <div class="text-uppercase small text-muted mb-1">Đề thi hiện tại</div>
+                            <h4 class="mb-0">Hạng <span id="examTypeLabel"></span></h4>
+                        </div>
+                        <span id="examStatusBadge" class="badge rounded-pill bg-primary px-3 py-2">Đang làm bài</span>
+                    </div>
+
+                    <div class="sidebar-stat mb-3">
+                        <span class="text-muted small">Tiến độ đã trả lời</span>
+                        <strong><span id="answeredCount">0</span>/<span id="totalCount">0</span></strong>
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-stat mb-3">
+                        <span class="text-muted small">Câu hiện tại</span>
+                        <strong id="sidebarCurrentQuestion">Câu 1</strong>
+                        <div class="text-muted">Tập trung trả lời từng câu để tránh sót.</div>
+                    </div>
+
+                    <div class="exam-fullscreen-note mb-3">
+                        <i class="fas fa-expand me-2"></i>Hệ thống sẽ yêu cầu toàn màn hình để mô phỏng trải nghiệm thi thật.
+                    </div>
+
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Danh sách câu hỏi</h6>
+                            <span class="small text-muted">Nhấn để chuyển nhanh</span>
+                        </div>
+                        <div id="questionPalette" class="question-palette"></div>
+                    </div>
+                </aside>
+
+                <section class="exam-stage">
+                    <div class="exam-stage-header">
+                        <div class="question-progress">
+                            <div class="question-progress-badge">
+                                <i class="fas fa-location-arrow"></i>
+                                <span id="currentQuestionLabel">Câu 1 / 25</span>
+                            </div>
+                            <div>
+                                <h5 class="question-progress-title">Bạn đang làm đến <span id="currentQuestionTitle">câu 1</span></h5>
+                                <p class="question-progress-subtitle">Chỉ hiển thị một câu hỏi để tăng tập trung và dễ theo dõi hơn.</p>
+                            </div>
+                        </div>
+                        <div class="exam-timer-box">
+                            <span class="label">Thời gian còn lại</span>
+                            <strong id="timer" class="value">00:00</strong>
+                        </div>
+                    </div>
+
+                    <form id="examForm">
+                        <div id="questionStage" class="exam-question-card"></div>
+                    </form>
+
+                    <div class="exam-nav">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button id="prevBtn" type="button" class="btn btn-outline-secondary px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Câu trước
+                            </button>
+                            <button id="nextBtn" type="button" class="btn btn-primary px-4">
+                                Câu tiếp theo<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                        <button id="submitBtn" type="button" class="btn btn-danger px-4 py-2">Nộp bài</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div id="resultPanel" class="d-none result-shell">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-4">
+                    <h3 class="fw-bold mb-3">Kết quả thi</h3>
+                    <p class="mb-2">Tổng câu: <strong id="rTotal">0</strong></p>
+                    <p class="mb-2">Đúng: <strong id="rCorrect">0</strong></p>
+                    <p class="mb-2">Sai: <strong id="rWrong">0</strong></p>
+                    <p class="mb-0">Kết luận: <strong id="rStatus"></strong></p>
+                    <a class="btn btn-outline-primary mt-4" href="result.html">Xem trang kết quả chi tiết</a>
+                </div>
+                <div class="col-lg-8">
+                    <div class="border rounded-4 p-3 p-md-4 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Các câu cần xem lại</h5>
+                            <span class="text-muted small">Hiển thị đáp án đúng và giải thích</span>
+                        </div>
+                        <div id="wrongList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/exam.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

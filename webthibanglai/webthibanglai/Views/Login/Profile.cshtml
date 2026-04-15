@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div id="profilePage" class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="bg-white shadow-sm rounded-4 p-4 h-100 border">
+                    <div class="text-center">
+                        <div id="profileAvatar" class="mx-auto d-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold mb-3" style="width: 110px; height: 110px; font-size: 2.5rem;"></div>
+                        <h3 id="profileFullName" class="h4 mb-1"></h3>
+                        <p class="text-muted mb-3">Tài khoản: <span id="profileUsername"></span></p>
+                        <span id="profileRole" class="badge bg-warning text-dark px-3 py-2"></span>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="d-grid gap-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Đăng nhập lúc</span>
+                            <strong id="profileLoginAt"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Số bài đã ôn</span>
+                            <strong id="profileStudyCount"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Điểm bài gần nhất</span>
+                            <strong id="profileLastScore"></strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Trạng thái gần nhất</span>
+                            <span id="profileLastStatus" class="badge"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="button" class="btn btn-outline-danger" data-profile-logout>
+                            <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <h2 class="h3 mb-2">Thông tin chi tiết bản thân</h2>
+                            <p class="text-muted mb-0">Theo dõi tiến độ ôn thi và quản lý tài khoản học viên tại đây.</p>
+                        </div>
+                        <a href="/Exam" class="btn btn-primary">
+                            <i class="fas fa-book-open me-2"></i>Tiếp tục ôn thi
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-sm rounded-4 p-4 border">
+                    <h3 class="h4 mb-3">Đổi mật khẩu</h3>
+                    <p class="text-muted">Cập nhật mật khẩu mới để bảo vệ tài khoản của bạn.</p>
+
+                    <form id="changePasswordForm" class="row g-3">
+                        <div class="col-12">
+                            <label for="currentPassword" class="form-label fw-semibold">Mật khẩu hiện tại</label>
+                            <input id="currentPassword" type="password" class="form-control" placeholder="Nhập mật khẩu hiện tại" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="newPassword" class="form-label fw-semibold">Mật khẩu mới</label>
+                            <input id="newPassword" type="password" class="form-control" placeholder="Tối thiểu 6 ký tự" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label fw-semibold">Xác nhận mật khẩu mới</label>
+                            <input id="confirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu mới" required />
+                        </div>
+                        <div class="col-12">
+                            <div id="changePasswordMsg" class="alert d-none"></div>
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-3">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-key me-2"></i>Lưu mật khẩu mới
+                            </button>
+                            <button type="button" class="btn btn-outline-danger px-4" data-profile-logout>
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

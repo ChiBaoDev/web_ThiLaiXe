@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Hồ sơ cá nhân</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .profile-shell {
+            background: linear-gradient(180deg, #fffef9 0%, #ffffff 100%);
+            min-height: 100vh;
+        }
+
+        .profile-card,
+        .profile-panel {
+            background: #fff;
+            border-radius: 24px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 20px 45px rgba(17, 24, 39, 0.08);
+        }
+
+        .profile-avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f3bd00, #ffda6a);
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+            box-shadow: 0 12px 32px rgba(243, 189, 0, 0.25);
+        }
+
+        .profile-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: .9rem 0;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .profile-stat:last-child {
+            border-bottom: 0;
+        }
+
+        .profile-input {
+            min-height: 52px;
+            border-radius: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid bg-dark text-light p-0">
+        <div class="row gx-0 d-none d-lg-flex">
+            <div class="col-lg-7 px-5 text-start">
+                <div class="h-100 d-inline-flex align-items-center me-4">
+                    <small class="fa fa-map-marker-alt text-primary me-2"></small>
+                    <small>TP. Hồ Chí Minh, Việt Nam</small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center">
+                    <small class="far fa-clock text-primary me-2"></small>
+                    <small>Thứ 2 - Thứ 6: 08:00 - 20:00</small>
+                </div>
+            </div>
+            <div class="col-lg-5 px-5 text-end">
+                <div class="h-100 d-inline-flex align-items-center me-4">
+                    <small class="fa fa-phone-alt text-primary me-2"></small>
+                    <small>0901 234 567</small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center mx-n2">
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href="#"><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-square btn-link rounded-0 border-0 border-end border-secondary" href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-square btn-link rounded-0" href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
+        <a href="index.html" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5">
+            <h2 class="m-0"><i class="fa fa-motorcycle text-primary me-2"></i>ThiXeMay</h2>
+        </a>
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="index.html" class="nav-item nav-link">Trang chủ</a>
+                <a href="about.html" class="nav-item nav-link">Giới thiệu</a>
+                <a href="courses.html" class="nav-item nav-link">Bộ đề</a>
+                <a href="appointment.html" class="nav-item nav-link">Tư vấn</a>
+                <a href="contact.html" class="nav-item nav-link">Liên hệ</a>
+            </div>
+            <a href="exam.html" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block">Bắt đầu thi thử<i class="fa fa-arrow-right ms-3"></i></a>
+        </div>
+    </nav>
+
+    <div id="profilePage" class="profile-shell py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="profile-card p-4 h-100">
+                        <div class="text-center">
+                            <div id="profileAvatar" class="profile-avatar"></div>
+                            <h3 id="profileFullName" class="h4 mb-1"></h3>
+                            <p class="text-muted mb-3">Tài khoản: <span id="profileUsername"></span></p>
+                            <span id="profileRole" class="badge bg-warning text-dark px-3 py-2"></span>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="profile-stat">
+                            <span class="text-muted">Đăng nhập lúc</span>
+                            <strong id="profileLoginAt"></strong>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="text-muted">Số bài đã ôn</span>
+                            <strong id="profileStudyCount"></strong>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="text-muted">Điểm bài gần nhất</span>
+                            <strong id="profileLastScore"></strong>
+                        </div>
+                        <div class="profile-stat">
+                            <span class="text-muted">Trạng thái gần nhất</span>
+                            <span id="profileLastStatus" class="badge"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="button" class="btn btn-outline-danger" data-profile-logout>
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="profile-panel p-4 mb-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div>
+                                <h1 class="h3 mb-2">Thông tin chi tiết bản thân</h1>
+                                <p class="text-muted mb-0">Xem nhanh thông tin cá nhân, tổng số bài đã ôn và trạng thái bài gần nhất.</p>
+                            </div>
+                            <a href="exam.html" class="btn btn-primary">
+                                <i class="fas fa-book-open me-2"></i>Tiếp tục ôn thi
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="profile-panel p-4">
+                        <h2 class="h4 mb-3">Đổi mật khẩu</h2>
+                        <p class="text-muted">Nhập lại mật khẩu hiện tại và đặt mật khẩu mới.</p>
+                        <form id="changePasswordForm" class="row g-3">
+                            <div class="col-12">
+                                <label for="currentPassword" class="form-label fw-semibold">Mật khẩu hiện tại</label>
+                                <input id="currentPassword" type="password" class="form-control profile-input" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="newPassword" class="form-label fw-semibold">Mật khẩu mới</label>
+                                <input id="newPassword" type="password" class="form-control profile-input" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label fw-semibold">Xác nhận mật khẩu mới</label>
+                                <input id="confirmPassword" type="password" class="form-control profile-input" required>
+                            </div>
+                            <div class="col-12">
+                                <div id="changePasswordMsg" class="alert d-none mb-0"></div>
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-3">
+                                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-key me-2"></i>Lưu mật khẩu mới</button>
+                                <button type="button" class="btn btn-outline-danger px-4" data-profile-logout><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
