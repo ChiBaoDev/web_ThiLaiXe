@@ -231,7 +231,6 @@ C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\ga1yrcygyw-jvzbizrrse.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\3hznn7x5jb-d95vvoy9wi.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\7zegwiz01h-r2lc1363p0.gz
-C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\qgof93l79g-izlxcony78.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\md2v015nyo-ofqyywhp2r.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\kctzmgvj3k-4x2eor2cjr.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\ga79jtvvsc-kryym8p5f5.gz
@@ -268,3 +267,4 @@ C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\webthibanglai.pdb
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\webthibanglai.genruntimeconfig.cache
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\ref\webthibanglai.dll
+C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\qgof93l79g-24xtw3kn52.gz

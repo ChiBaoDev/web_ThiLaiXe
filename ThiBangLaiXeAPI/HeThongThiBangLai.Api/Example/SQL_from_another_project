@@ -1,0 +1,321 @@
+vietprodev_cms=# \d+
+                                                                                 List of relations
+ Schema |          Name          | Type  |  Owner   | Persistence | Access method |    Size    |                                    Description
+--------+------------------------+-------+----------+-------------+---------------+------------+-----------------------------------------------------------------------------------
+ public | businesses             | table | postgres | permanent   | heap          | 200 kB     |
+ public | categories             | table | postgres | permanent   | heap          | 152 kB     |
+ public | contacts               | table | postgres | permanent   | heap          | 16 kB      |
+ public | files                  | table | postgres | permanent   | heap          | 56 kB      |
+ public | logos                  | table | postgres | permanent   | heap          | 16 kB      |
+ public | members                | table | postgres | permanent   | heap          | 136 kB     |
+ public | page_config            | table | postgres | permanent   | heap          | 16 kB      |
+ public | page_config_categories | table | postgres | permanent   | heap          | 8192 bytes |
+ public | permissions            | table | postgres | permanent   | heap          | 48 kB      | System permissions for RBAC
+ public | positions              | table | postgres | permanent   | heap          | 8192 bytes |
+ public | post_categories        | table | postgres | permanent   | heap          | 40 kB      |
+ public | posts                  | table | postgres | permanent   | heap          | 304 kB     |
+ public | role_permissions       | table | postgres | permanent   | heap          | 40 kB      | Role-permission mappings
+ public | roles                  | table | postgres | permanent   | heap          | 16 kB      |
+ public | site_informations      | table | postgres | permanent   | heap          | 16 kB      |
+ public | term_position_members  | table | postgres | permanent   | heap          | 40 kB      |
+ public | term_positions         | table | postgres | permanent   | heap          | 8192 bytes |
+ public | terms                  | table | postgres | permanent   | heap          | 8192 bytes |
+ public | user_auth              | table | postgres | permanent   | heap          | 16 kB      | User authentication data including passwords, login attempts, and 2FA information
+ public | user_roles             | table | postgres | permanent   | heap          | 8192 bytes | Many-to-many user-role assignments with primary role marking
+ public | user_sessions          | table | postgres | permanent   | heap          | 1064 kB    | Active user sessions for token management
+ public | users                  | table | postgres | permanent   | heap          | 120 kB     | Basic user information table - authentication data stored in user_auth table
+(22 rows)
+
+
+vietprodev_cms=#
+vietprodev_cms=# \d+
+                                                                                 List of relations
+ Schema |          Name          | Type  |  Owner   | Persistence | Access method |    Size    |                                    Description
+--------+------------------------+-------+----------+-------------+---------------+------------+-----------------------------------------------------------------------------------
+ public | businesses             | table | postgres | permanent   | heap          | 200 kB     |
+ public | categories             | table | postgres | permanent   | heap          | 152 kB     |
+ public | contacts               | table | postgres | permanent   | heap          | 16 kB      |
+ public | files                  | table | postgres | permanent   | heap          | 56 kB      |
+ public | logos                  | table | postgres | permanent   | heap          | 16 kB      |
+ public | members                | table | postgres | permanent   | heap          | 136 kB     |
+ public | page_config            | table | postgres | permanent   | heap          | 16 kB      |
+ public | page_config_categories | table | postgres | permanent   | heap          | 8192 bytes |
+ public | permissions            | table | postgres | permanent   | heap          | 48 kB      | System permissions for RBAC
+ public | positions              | table | postgres | permanent   | heap          | 8192 bytes |
+ public | post_categories        | table | postgres | permanent   | heap          | 40 kB      |
+ public | posts                  | table | postgres | permanent   | heap          | 304 kB     |
+ public | role_permissions       | table | postgres | permanent   | heap          | 40 kB      | Role-permission mappings
+ public | roles                  | table | postgres | permanent   | heap          | 16 kB      |
+ public | site_informations      | table | postgres | permanent   | heap          | 16 kB      |
+ public | term_position_members  | table | postgres | permanent   | heap          | 40 kB      |
+ public | term_positions         | table | postgres | permanent   | heap          | 8192 bytes |
+ public | terms                  | table | postgres | permanent   | heap          | 8192 bytes |
+ public | user_auth              | table | postgres | permanent   | heap          | 16 kB      | User authentication data including passwords, login attempts, and 2FA information
+ public | user_roles             | table | postgres | permanent   | heap          | 8192 bytes | Many-to-many user-role assignments with primary role marking
+ public | user_sessions          | table | postgres | permanent   | heap          | 1064 kB    | Active user sessions for token management
+ public | users                  | table | postgres | permanent   | heap          | 120 kB     | Basic user information table - authentication data stored in user_auth table
+(22 rows)
+
+
+vietprodev_cms=# \d+ users
+                                                                   Table "public.users"
+   Column   |           Type           | Collation | Nullable |               Default               | Storage  | Compression | Stats target | Description
+------------+--------------------------+-----------+----------+-------------------------------------+----------+-------------+--------------+-------------
+ id         | uuid                     |           | not null | uuid_generate_v4()                  | plain    |             |              |
+ email      | character varying(255)   |           | not null |                                     | extended |             |              |
+ username   | character varying(100)   |           |          |                                     | extended |             |              |
+ first_name | character varying(100)   |           |          |                                     | extended |             |              |
+ last_name  | character varying(100)   |           |          |                                     | extended |             |              |
+ phone      | character varying(20)    |           |          |                                     | extended |             |              |
+ avatar_url | text                     |           |          |                                     | extended |             |              |
+ status     | user_status              |           |          | 'pending_verification'::user_status | plain    |             |              |
+ created_at | timestamp with time zone |           |          | CURRENT_TIMESTAMP                   | plain    |             |              |
+ updated_at | timestamp with time zone |           |          | CURRENT_TIMESTAMP                   | plain    |             |              |
+ deleted_at | timestamp with time zone |           |          |                                     | plain    |             |              |
+ created_by | uuid                     |           |          |                                     | plain    |             |              |
+ updated_by | uuid                     |           |          |                                     | plain    |             |              |
+ birth_date | date                     |           |          |                                     | plain    |             |              |
+ hometown   | character varying(255)   |           |          |                                     | extended |             |              |
+ gender     | gender_type              |           |          |                                     | plain    |             |              |
+ bio        | text                     |           |          |                                     | extended |             |              |
+ type       | user_type                |           | not null | 'member'::user_type                 | plain    |             |              |
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "idx_users_type" btree (type)
+    "users_email_key" UNIQUE CONSTRAINT, btree (email)
+    "users_username_key" UNIQUE CONSTRAINT, btree (username)
+Check constraints:
+    "users_birth_date_check" CHECK (birth_date IS NULL OR birth_date <= CURRENT_DATE)
+    "users_email_format" CHECK (email::text ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'::text)
+    "users_phone_format" CHECK (phone IS NULL OR phone::text ~* '^\+?[0-9\s\-\(\)]+$'::text)
+    "users_valid_status" CHECK (status = ANY (ARRAY['active'::user_status, 'inactive'::user_status, 'suspended'::user_status, 'pending_verification'::user_status]))
+Foreign-key constraints:
+    "users_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+    "users_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id)
+Referenced by:
+    TABLE "businesses" CONSTRAINT "businesses_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "businesses" CONSTRAINT "businesses_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "categories" CONSTRAINT "categories_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "categories" CONSTRAINT "categories_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "contacts" CONSTRAINT "contacts_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "contacts" CONSTRAINT "contacts_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "files" CONSTRAINT "files_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "members" CONSTRAINT "fk_members_created_by" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "members" CONSTRAINT "fk_members_updated_by" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "logos" CONSTRAINT "logos_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "logos" CONSTRAINT "logos_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "page_config_categories" CONSTRAINT "page_config_categories_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "page_config" CONSTRAINT "page_config_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "page_config" CONSTRAINT "page_config_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "permissions" CONSTRAINT "permissions_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+    TABLE "permissions" CONSTRAINT "permissions_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id)
+    TABLE "positions" CONSTRAINT "positions_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "positions" CONSTRAINT "positions_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "post_categories" CONSTRAINT "post_categories_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "posts" CONSTRAINT "posts_created_by_foreign" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL    TABLE "posts" CONSTRAINT "posts_updated_by_foreign" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL    TABLE "roles" CONSTRAINT "roles_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+    TABLE "roles" CONSTRAINT "roles_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id)
+    TABLE "site_informations" CONSTRAINT "site_informations_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "site_informations" CONSTRAINT "site_informations_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "term_position_members" CONSTRAINT "term_position_members_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "term_position_members" CONSTRAINT "term_position_members_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "term_positions" CONSTRAINT "term_positions_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "term_positions" CONSTRAINT "term_positions_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "terms" CONSTRAINT "terms_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "terms" CONSTRAINT "terms_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+    TABLE "user_auth" CONSTRAINT "user_auth_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "user_roles" CONSTRAINT "user_roles_assigned_by_fkey" FOREIGN KEY (assigned_by) REFERENCES users(id)
+    TABLE "user_roles" CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE    TABLE "user_sessions" CONSTRAINT "user_sessions_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    TABLE "users" CONSTRAINT "users_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+    TABLE "users" CONSTRAINT "users_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id)
+Access method: heap
+
+
+vietprodev_cms=# \d+ user_sessions
+                                                                      Table "public.user_sessions"
+       Column       |           Type           | Collation | Nullable |      Default       | Storage  | Compression | Stats target |             Description
+--------------------+--------------------------+-----------+----------+--------------------+----------+-------------+--------------+-------------------------------------
+ id                 | uuid                     |           | not null | uuid_generate_v4() | plain    |             |              |
+ user_id            | uuid                     |           | not null |                    | plain    |             |              |
+ session_token      | bytea                    |           | not null |                    | extended |             |              | Encrypted JWT access token (BYTEA)
+ refresh_token      | bytea                    |           | not null |                    | extended |             |              | Encrypted JWT refresh token (BYTEA)
+ token_version      | integer                  |           |          | 1                  | plain    |             |              | Token version for rotation
+ device_info        | jsonb                    |           |          |                    | extended |             |              |
+ ip_address         | inet                     |           |          |                    | main     |             |              |
+ user_agent         | text                     |           |          |                    | extended |             |              |
+ expires_at         | timestamp with time zone |           | not null |                    | plain    |             |              |
+ refresh_expires_at | timestamp with time zone |           | not null |                    | plain    |             |              |
+ is_active          | boolean                  |           |          | true               | plain    |             |              |
+ created_at         | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain    |             |              |
+ last_activity_at   | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain    |             |              |
+Indexes:
+    "user_sessions_pkey" PRIMARY KEY, btree (id)
+    "idx_user_sessions_expires_at" btree (expires_at)
+    "idx_user_sessions_is_active" btree (is_active)
+    "idx_user_sessions_refresh_token" hash (refresh_token)
+    "idx_user_sessions_session_token" hash (session_token)
+    "idx_user_sessions_token_version" btree (token_version)
+    "idx_user_sessions_user_id" btree (user_id)
+    "user_sessions_refresh_token_key" UNIQUE CONSTRAINT, btree (refresh_token)
+    "user_sessions_session_token_key" UNIQUE CONSTRAINT, btree (session_token)
+Foreign-key constraints:
+    "user_sessions_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Triggers:
+    update_user_sessions_activity BEFORE UPDATE ON user_sessions FOR EACH ROW EXECUTE FUNCTION update_last_activity_column()
+Access method: heap
+
+
+vietprodev_cms=# \d+ user_roles
+                                                                    Table "public.user_roles"
+   Column    |           Type           | Collation | Nullable |      Default       | Storage | Compression | Stats target |             Description
+-------------+--------------------------+-----------+----------+--------------------+---------+-------------+--------------+-------------------------------------
+ id          | uuid                     |           | not null | uuid_generate_v4() | plain   |             |              |
+ user_id     | uuid                     |           | not null |                    | plain   |             |              |
+ role_id     | uuid                     |           | not null |                    | plain   |             |              |
+ assigned_at | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain   |             |              |
+ assigned_by | uuid                     |           |          |                    | plain   |             |              |
+ is_primary  | boolean                  |           |          | false              | plain   |             |              | Marks the primary role for the user
+ updated_at  | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain   |             |              |
+Indexes:
+    "user_roles_pkey" PRIMARY KEY, btree (id)
+    "user_primary_role_unique" EXCLUDE USING btree (user_id WITH =) WHERE (is_primary = true)
+    "user_roles_user_id_role_id_key" UNIQUE CONSTRAINT, btree (user_id, role_id)
+Foreign-key constraints:
+    "user_roles_assigned_by_fkey" FOREIGN KEY (assigned_by) REFERENCES users(id)
+    "user_roles_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    "user_roles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Triggers:
+    update_user_roles_updated_at BEFORE UPDATE ON user_roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+Access method: heap
+
+
+vietprodev_cms=# \d+ user_auth
+                                                                                  Table "public.user_auth"
+            Column             |           Type           | Collation | Nullable |          Default          | Storage  | Compression | Stats target |             Description
+-------------------------------+--------------------------+-----------+----------+---------------------------+----------+-------------+--------------+--------------------------------------
+ id                            | uuid                     |           | not null | uuid_generate_v4()        | plain    |             |              |
+ user_id                       | uuid                     |           | not null |                           | plain    |             |              |
+ password_hash                 | character varying(255)   |           | not null |                           | extended |             |              | Bcrypt hashed password
+ last_login_at                 | timestamp with time zone |           |          |                           | plain    |             |              |
+ password_changed_at           | timestamp with time zone |           |          | CURRENT_TIMESTAMP         | plain    |             |              |
+ login_attempts                | integer                  |           |          | 0                         | plain    |             |              | Failed login attempts counter
+ locked_until                  | timestamp with time zone |           |          |                           | plain    |             |              | Account lockout timestamp
+ twofa_secret                  | character varying(255)   |           |          |                           | extended |             |              | TOTP secret key
+ twofa_backup_codes            | text[]                   |           |          |                           | extended |             |              | Hashed backup codes for 2FA recovery
+ twofa_enabled                 | boolean                  |           |          | false                     | plain    |             |              |
+ twofa_method                  | character varying(20)    |           |          | 'totp'::character varying | extended |             |              |
+ password_history              | jsonb                    |           |          | '[]'::jsonb               | extended |             |              | JSON array of recent password hashes
+ created_at                    | timestamp with time zone |           |          | CURRENT_TIMESTAMP         | plain    |             |              |
+ updated_at                    | timestamp with time zone |           |          | CURRENT_TIMESTAMP         | plain    |             |              |
+ reset_password_otp_hash       | character varying(255)   |           |          |                           | extended |             |              |
+ reset_password_otp_expires_at | timestamp with time zone |           |          |                           | plain    |             |              |
+ reset_password_otp_attempts   | integer                  |           | not null | 0                         | plain    |             |              |
+ reset_password_otp_sent_at    | timestamp with time zone |           |          |                           | plain    |             |              |
+Indexes:
+    "user_auth_pkey" PRIMARY KEY, btree (id)
+    "idx_user_auth_locked_until" btree (locked_until)
+    "idx_user_auth_reset_otp_expires_at" btree (reset_password_otp_expires_at)
+    "idx_user_auth_user_id" btree (user_id)
+    "user_auth_user_id_key" UNIQUE CONSTRAINT, btree (user_id)
+Check constraints:
+    "user_auth_twofa_method" CHECK (twofa_method::text = ANY (ARRAY['totp'::character varying::text, 'sms'::character varying::text, 'email'::character varying::text]))
+Foreign-key constraints:
+    "user_auth_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+Triggers:
+    update_user_auth_updated_at BEFORE UPDATE ON user_auth FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+Access method: heap
+
+
+vietprodev_cms=# \d+ roles
+                                                                            Table "public.roles"
+   Column    |           Type           | Collation | Nullable |      Default       | Storage  | Compression | Stats target |                  Description
+-------------+--------------------------+-----------+----------+--------------------+----------+-------------+--------------+------------------------------------------------
+ id          | uuid                     |           | not null | uuid_generate_v4() | plain    |             |              |
+ name        | character varying(50)    |           | not null |                    | extended |             |              |
+ description | text                     |           |          |                    | extended |             |              |
+ permissions | jsonb                    |           |          | '[]'::jsonb        | extended |             |              | JSONB array of permission strings for the role
+ created_at  | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain    |             |              |
+ updated_at  | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain    |             |              |
+ created_by  | uuid                     |           |          |                    | plain    |             |              |
+ updated_by  | uuid                     |           |          |                    | plain    |             |              |
+Indexes:
+    "roles_pkey" PRIMARY KEY, btree (id)
+    "roles_name_key" UNIQUE CONSTRAINT, btree (name)
+Foreign-key constraints:
+    "roles_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id)
+    "roles_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id)
+Referenced by:
+    TABLE "role_permissions" CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+    TABLE "user_roles" CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADETriggers:
+    update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+Access method: heap
+
+
+vietprodev_cms=# \d+ role_permissions
+                                                      Table "public.role_permissions"
+    Column     |           Type           | Collation | Nullable |      Default       | Storage | Compression | Stats target | Description
+---------------+--------------------------+-----------+----------+--------------------+---------+-------------+--------------+-------------
+ id            | uuid                     |           | not null | uuid_generate_v4() | plain   |             |              |
+ permission_id | uuid                     |           | not null |                    | plain   |             |              |
+ created_at    | timestamp with time zone |           |          | CURRENT_TIMESTAMP  | plain   |             |              |
+ role_id       | uuid                     |           |          |                    | plain   |             |              |
+Indexes:
+    "role_permissions_pkey" PRIMARY KEY, btree (id)
+    "idx_role_permissions_role_id" btree (role_id)
+Foreign-key constraints:
+    "role_permissions_permission_id_fkey" FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+    "role_permissions_role_id_fkey" FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+Access method: heap
+
+
+vietprodev_cms=# \d+ files
+                                                             Table "public.files"
+     Column      |           Type           | Collation | Nullable |      Default       | Storage  | Compression | Stats target | Description
+-----------------+--------------------------+-----------+----------+--------------------+----------+-------------+--------------+-------------
+ id              | uuid                     |           | not null | uuid_generate_v4() | plain    |             |              |
+ path            | character varying(500)   |           | not null |                    | extended |             |              |
+ original        | character varying(255)   |           | not null |                    | extended |             |              |
+ mime            | character varying(100)   |           | not null |                    | extended |             |              |
+ compress_info   | jsonb                    |           |          |                    | extended |             |              |
+ compress_status | character varying(50)    |           |          |                    | extended |             |              |
+ created_by      | uuid                     |           |          |                    | plain    |             |              |
+ created_at      | timestamp with time zone |           |          | now()              | plain    |             |              |
+Indexes:
+    "files_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "files_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+Referenced by:
+    TABLE "businesses" CONSTRAINT "businesses_logo_id_fkey" FOREIGN KEY (logo_id) REFERENCES files(id) ON DELETE SET NULL
+    TABLE "categories" CONSTRAINT "categories_thumbnail_id_fkey" FOREIGN KEY (thumbnail_id) REFERENCES files(id) ON DELETE SET NULL
+    TABLE "logos" CONSTRAINT "logos_file_id_fkey" FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE RESTRICT
+    TABLE "posts" CONSTRAINT "posts_thumbnail_id_fkey" FOREIGN KEY (thumbnail_id) REFERENCES files(id) ON DELETE SET NULL
+Access method: heap
+
+
+vietprodev_cms=# \d+ categories
+                                                         Table "public.categories"
+    Column    |           Type           | Collation | Nullable |      Default       | Storage  | Compression | Stats target | Description
+--------------+--------------------------+-----------+----------+--------------------+----------+-------------+--------------+-------------
+ id           | uuid                     |           | not null | uuid_generate_v4() | plain    |             |              |
+ name         | character varying(255)   |           | not null |                    | extended |             |              |
+ slug         | character varying(255)   |           | not null |                    | extended |             |              |
+ type         | category_type            |           | not null |                    | plain    |             |              |
+ url          | text                     |           |          |                    | extended |             |              |
+ thumbnail_id | uuid                     |           |          |                    | plain    |             |              |
+ created_at   | timestamp with time zone |           | not null | now()              | plain    |             |              |
+ created_by   | uuid                     |           |          |                    | plain    |             |              |
+ updated_at   | timestamp with time zone |           | not null | now()              | plain    |             |              |
+ updated_by   | uuid                     |           |          |                    | plain    |             |              |
+Indexes:
+    "categories_pkey" PRIMARY KEY, btree (id)
+    "categories_slug_key" UNIQUE CONSTRAINT, btree (slug)
+Foreign-key constraints:
+    "categories_created_by_fkey" FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+    "categories_thumbnail_id_fkey" FOREIGN KEY (thumbnail_id) REFERENCES files(id) ON DELETE SET NULL
+    "categories_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+Referenced by:
+    TABLE "page_config_categories" CONSTRAINT "page_config_categories_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
+    TABLE "post_categories" CONSTRAINT "post_categories_category_id_fkey" FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
+Access method: heap
+
+
+vietprodev_cms=#

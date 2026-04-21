@@ -1,21 +1,174 @@
+@model webthibanglai.Models.LoginViewModel
 @{
     ViewData["Title"] = "Đăng nhập";
 }
 
-<iframe src="~/login.html" style="width:100%;min-height:100vh;border:0;display:block;" title="Đăng nhập"></iframe>
+
+<div class="login-page py-5">
+    <div class="container py-4 py-lg-5">
+        <div class="row justify-content-center align-items-center">
+            <div class="col-xl-10 col-lg-11">
+                <div class="login-shell">
+                    <div class="row g-0">
+                        <div class="col-lg-5 d-none d-lg-block">
+                            <div class="login-hero d-flex flex-column justify-content-center h-100">
+                                <span class="login-badge"><i class="fas fa-user-shield"></i> Khu vực đăng nhập hệ thống</span>
+                                <h1 class="display-6 mb-3">Đăng nhập nhanh, giao diện sáng và gọn hơn</h1>
+                                <p class="login-note mb-4">Đăng nhập bằng tài khoản thật từ API, giữ lại phong cách nền trắng sạch và điểm nhấn vàng như giao diện cũ.</p>
+
+                                <div class="login-demo-box position-relative">
+                                    <h6 class="fw-bold mb-3">Thông tin đăng nhập</h6>
+                                    <div class="login-demo-item">
+                                        <span><strong>API Endpoint</strong></span>
+                                        <span>/api/v1/auth/login</span>
+                                    </div>
+                                    <div class="login-demo-item">
+                                        <span><strong>Tài khoản</strong></span>
+                                        <span>Dùng user thật trong database</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-7">
+                            <div class="login-panel h-100">
+                                <h2 class="h3 mb-2">Đăng nhập User/Admin</h2>
+                                <p class="login-note mb-4">Nhập tài khoản để truy cập khu vực người dùng hoặc quản trị.</p>
+
+                                @if (!ViewData.ModelState.IsValid)
+                                {
+                                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+                                }
+
+                                 <form method="post" action="/Login/Index">
+                                    <div class="mb-3">
+                                        <label asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-label fw-semibold">Tên đăng nhập hoặc email</label>
+                                        <input asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-control login-input" placeholder="Nhập tên đăng nhập hoặc email" />
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label asp-for="LoginRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
+                                        <input asp-for="LoginRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
+                                    </div>
+
+                                     <button type="submit" class="btn btn-primary w-100 login-submit">Đăng nhập</button>
+                                 </form>
+
+                                <div id="loginApiDebug" class="alert alert-info mt-3 d-none"></div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Styles {
     <style>
-        main {
-            padding: 0;
+        .login-page {
+            background: linear-gradient(180deg, #fffef9 0%, #fffaf0 100%);
+            min-height: calc(100vh - 120px);
         }
 
-        .footer,
-        .copyright,
-        .back-to-top,
-        .navbar,
-        .container-fluid.bg-dark.text-light.p-0 {
-            display: none !important;
+        .login-shell {
+            border-radius: 28px;
+            background: #ffffff;
+            border: 10px solid #f3bd00;
+            box-shadow: 0 24px 60px rgba(243, 189, 0, 0.12);
+            overflow: hidden;
+        }
+
+        .login-hero {
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+            padding: 2rem;
+            position: relative;
+        }
+
+        .login-hero::after {
+            content: "";
+            position: absolute;
+            right: -70px;
+            bottom: -70px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(243, 189, 0, 0.10);
+        }
+
+        .login-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .65rem 1rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #a16207;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .login-panel {
+            background: #ffffff;
+            padding: 2rem;
+        }
+
+        .login-demo-box {
+            border: 1px solid #f0e2b6;
+            background: #fffef9;
+            border-radius: 20px;
+            padding: 1rem 1.1rem;
+        }
+
+        .login-demo-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .75rem 0;
+            border-bottom: 1px dashed #eadcae;
+        }
+
+        .login-demo-item:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .login-demo-item:first-child {
+            padding-top: 0;
+        }
+
+        .login-input {
+            min-height: 54px;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+        .login-input:focus {
+            border-color: #f3bd00;
+            box-shadow: 0 0 0 .2rem rgba(243, 189, 0, 0.15);
+        }
+
+        .login-submit {
+            min-height: 54px;
+            border-radius: 16px;
+            font-weight: 700;
+        }
+
+        .login-note {
+            color: #6b7280;
+        }
+
+        @@media (max-width: 991.98px) {
+            .login-shell {
+                border-width: 8px;
+            }
+
+            .login-panel {
+                padding: 1.5rem;
+            }
         }
     </style>
 }
+

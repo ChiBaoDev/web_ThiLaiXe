@@ -2,53 +2,60 @@ namespace webthibanglai.Models;
 
 public class HomeViewModel
 {
-    public List<CourseSummaryItem> FeaturedCourses { get; set; } = new();
-    public List<ExamSummaryItem> UpcomingExams { get; set; } = new();
-    public List<HomeTeacherItem> Teachers { get; set; } = new();
-    public HomeAboutInfo? AboutInfo { get; set; }
+    public HomeDashboardOverview? Overview { get; set; }
+    public HomeExamStats? ExamStats { get; set; }
+    public List<HomeWeakTopicItem> WeakTopics { get; set; } = new();
+    public HomeCriticalQuestionStats? CriticalQuestionStats { get; set; }
 }
 
-public class CourseSummaryItem
+public class HomeDashboardOverview
 {
-    public int CourseId { get; set; }
-    public string TenKhoaHoc { get; set; } = string.Empty;
-    public string LoaiBangLai { get; set; } = string.Empty;
-    public long HocPhi { get; set; }
-    public int SoBuoiHoc { get; set; }
-    public DateOnly ThoiGianBatDau { get; set; }
-    public DateOnly ThoiGianKetThuc { get; set; }
-    public string TrangThai { get; set; } = string.Empty;
-    public int SoLuongToiDa { get; set; }
-    public int SoLuongHienTai { get; set; }
+    public int TotalCandidates { get; set; }
+    public int TotalSessions { get; set; }
+    public decimal PassRate { get; set; }
+    public decimal AverageScore { get; set; }
+    public decimal CriticalFailRate { get; set; }
 }
 
-public class ExamSummaryItem
+public class HomeExamStats
 {
-    public int ExamId { get; set; }
-    public string TenKyThi { get; set; } = string.Empty;
-    public string LoaiBangLai { get; set; } = string.Empty;
-    public DateOnly NgayThi { get; set; }
-    public string DiaDiem { get; set; } = string.Empty;
-    public string TrangThai { get; set; } = string.Empty;
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
+    public int TotalSessions { get; set; }
+    public int PassedSessions { get; set; }
+    public int FailedSessions { get; set; }
+    public decimal PassRate { get; set; }
+    public decimal AverageScore { get; set; }
+    public List<HomeTrendPointItem> DailyTrend { get; set; } = new();
 }
 
-public class HomeTeacherItem
+public class HomeTrendPointItem
 {
-    public int GiaoVienId { get; set; }
-    public string TenGiaoVien { get; set; } = string.Empty;
-    public int ClassId { get; set; }
-    public string TenLop { get; set; } = string.Empty;
-    public int CourseId { get; set; }
-    public string TenKhoaHoc { get; set; } = string.Empty;
-    public int SiSo { get; set; }
-    public string TrangThai { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public int SessionCount { get; set; }
 }
 
-public class HomeAboutInfo
+public class HomeWeakTopicItem
 {
-    public int TongHocVien { get; set; }
-    public int HocVienMoiThangNay { get; set; }
-    public decimal TyLeDatThi { get; set; }
-    public int TongKyThiSapDienRa { get; set; }
+    public long TopicId { get; set; }
+    public string TopicName { get; set; } = string.Empty;
+    public int TotalAnswered { get; set; }
+    public int WrongCount { get; set; }
+    public decimal AccuracyRate { get; set; }
+}
+
+public class HomeCriticalQuestionStats
+{
+    public int TotalCriticalAttempts { get; set; }
+    public int WrongCriticalAttempts { get; set; }
+    public decimal CriticalErrorRate { get; set; }
+    public List<HomeQuestionErrorItem> TopCriticalWrongQuestions { get; set; } = new();
+}
+
+public class HomeQuestionErrorItem
+{
+    public long QuestionId { get; set; }
+    public string QuestionContent { get; set; } = string.Empty;
+    public int WrongCount { get; set; }
 }
 

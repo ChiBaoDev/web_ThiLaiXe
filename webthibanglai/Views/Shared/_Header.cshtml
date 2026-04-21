@@ -52,6 +52,12 @@
 
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var authUsername = TempData.Peek("AuthUsername")?.ToString();
+    var authEmail = TempData.Peek("AuthEmail")?.ToString();
+    var authRoles = TempData.Peek("AuthRoles")?.ToString() ?? string.Empty;
+    var isLoggedIn = !string.IsNullOrWhiteSpace(authUsername);
+    var roleLabel = authRoles.Contains("ADMIN", StringComparison.OrdinalIgnoreCase) ? "Quản trị viên" : "Học viên";
+    var avatarText = !string.IsNullOrWhiteSpace(authUsername) ? authUsername[..1].ToUpperInvariant() : "U";
 }
 
 <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
@@ -62,11 +68,40 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse">
-        <div class="navbar-nav ms-auto p-4 p-lg-0">
+        <div class="navbar-nav ms-auto p-4 p-lg-0" id="mvcNavbarNav">
             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(currentController == "Home" ? "active" : "")">Trang chủ</a>
             <a asp-controller="About" asp-action="Index" class="nav-item nav-link @(currentController == "About" ? "active" : "")">Giới thiệu</a>
             <a asp-controller="KhoaHoc" asp-action="Index" class="nav-item nav-link @(currentController == "KhoaHoc" ? "active" : "")">Khóa học</a>
+            @if (isLoggedIn)
+            {
+                <a asp-controller="LichHoc" asp-action="Index" class="nav-item nav-link @(currentController == "LichHoc" ? "active" : "")">Lịch học</a>
+            }
             <a asp-controller="Contact" asp-action="Index" class="nav-item nav-link @(currentController == "Contact" ? "active" : "")">Liên hệ</a>
+        </div>
+        <div id="headerAuthArea" class="d-flex align-items-center ms-lg-3">
+            @if (isLoggedIn)
+            {
+                <div class="nav-item dropdown ms-lg-3">
+                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-4 px-lg-3 user-nav-trigger" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="user-avatar-badge">@avatarText</span>
+                        <span class="fw-semibold">@authUsername</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 shadow-sm mt-2 user-nav-dropdown">
+                        <div class="px-3 py-2 border-bottom">
+                            <div class="fw-bold">@authUsername</div>
+                            <small class="text-muted">@authEmail • @roleLabel</small>
+                        </div>
+                        <a class="dropdown-item" href="/Login/Profile?debug=1" target="_self"><i class="fas fa-id-card me-2 text-primary"></i>Xem profile</a>
+                        <form method="post" action="/Login/Logout" class="m-0">
+                            <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2 text-primary"></i>Đăng xuất</button>
+                        </form>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <a href="/Login" class="btn btn-primary py-4 px-lg-5 d-none d-lg-block">Đăng nhập<i class="fa fa-arrow-right ms-3"></i></a>
+            }
         </div>
     </div>
 </nav>

@@ -2,26 +2,40 @@ namespace webthibanglai.Models;
 
 public class AboutViewModel
 {
-    public AboutSummaryInfo? SummaryInfo { get; set; }
-    public List<AboutTeacherItem> Teachers { get; set; } = new();
+    public List<AboutPostSummaryItem> IntroPosts { get; set; } = new();
+    public AboutPostDetail? FeaturedPost { get; set; }
 }
 
-public class AboutSummaryInfo
+public class AboutPostSummaryItem
 {
-    public int TongHocVien { get; set; }
-    public int HocVienMoiThangNay { get; set; }
-    public decimal TyLeDatThi { get; set; }
-    public int TongKyThiSapDienRa { get; set; }
+    public long Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string? Summary { get; set; }
+    public string PostType { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime? PublishedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
-public class AboutTeacherItem
+public class AboutPostDetail
 {
-    public int GiaoVienId { get; set; }
-    public string TenGiaoVien { get; set; } = string.Empty;
-    public int ClassId { get; set; }
-    public string TenLop { get; set; } = string.Empty;
-    public int CourseId { get; set; }
-    public string TenKhoaHoc { get; set; } = string.Empty;
-    public int SiSo { get; set; }
-    public string TrangThai { get; set; } = string.Empty;
+    public long Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public string? Summary { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public string PostType { get; set; } = string.Empty;
+    public long? ThumbnailFileId { get; set; }
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
+    public string? CanonicalUrl { get; set; }
+    public DateTime? PublishedAt { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public long? AuthorId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public List<long> CategoryIds { get; set; } = new();
 }

@@ -200,6 +200,8 @@
     }
 
     function ensureNavAuth() {
+        if (document.getElementById('headerAuthArea')) return;
+
         const nav = document.querySelector('.navbar-nav');
         if (!nav) return;
 
@@ -301,6 +303,10 @@
     function fillProfilePage() {
         const page = document.getElementById('profilePage');
         if (!page) return;
+
+        if (window.location.pathname.toLowerCase().startsWith('/login/profile')) {
+            return;
+        }
 
         const auth = syncAuthWithUsers();
         if (!auth) {
