@@ -4,6 +4,10 @@ public class LoginViewModel
 {
     public LoginRequestModel LoginRequest { get; set; } = new();
     public RegisterRequestModel RegisterRequest { get; set; } = new();
+    public UpdateProfileRequestModel UpdateProfileRequest { get; set; } = new();
+    public ChangePasswordRequestModel ChangePasswordRequest { get; set; } = new();
+    public ForgotPasswordRequestModel ForgotPasswordRequest { get; set; } = new();
+    public ResetPasswordRequestModel ResetPasswordRequest { get; set; } = new();
     public AuthTokenResponse? AuthToken { get; set; }
     public CurrentUserInfo? CurrentUser { get; set; }
 }
@@ -26,6 +30,38 @@ public class RegisterRequestModel
     public string Cccd { get; set; } = string.Empty;
     public string DiaChi { get; set; } = string.Empty;
     public string AnhChanDung { get; set; } = string.Empty;
+}
+
+public class UpdateProfileRequestModel
+{
+    public string Email { get; set; } = string.Empty;
+    public string SoDienThoai { get; set; } = string.Empty;
+    public string HoTen { get; set; } = string.Empty;
+    public DateOnly? NgaySinh { get; set; }
+    public string GioiTinh { get; set; } = string.Empty;
+    public string Cccd { get; set; } = string.Empty;
+    public string DiaChi { get; set; } = string.Empty;
+    public string AnhChanDung { get; set; } = string.Empty;
+}
+
+public class ChangePasswordRequestModel
+{
+    public string OldPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+public class ForgotPasswordRequestModel
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+public class ResetPasswordRequestModel
+{
+    public string Email { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
 }
 
 public class AuthTokenResponse

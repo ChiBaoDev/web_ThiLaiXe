@@ -1,0 +1,203 @@
+@model ExamViewModel
+@{
+    Layout = null;
+    var sessionUrl = Url.Action("Session", "Exam", new { sessionId = Model.LaunchSessionId, number = Model.LaunchQuestionNumber, embedded = true }) ?? "/Exam/Session";
+    var examName = string.IsNullOrWhiteSpace(Model.LaunchExamName) ? "Bài thi mô phỏng" : Model.LaunchExamName;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vào bài thi</title>
+    <link rel="stylesheet" href="@Url.Content("~/css/bootstrap.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/style.css")" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fffdf7 0%, #fff6da 100%);
+            color: #1f2937;
+            font-family: "Heebo", sans-serif;
+        }
+
+        .launch-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .launch-card {
+            width: min(760px, 100%);
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            border-radius: 32px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .launch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #a16207;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .launch-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: .75rem;
+        }
+
+        .launch-copy {
+            color: #6b7280;
+            max-width: 580px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .launch-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .launch-meta-item {
+            border: 1px solid #eceff3;
+            border-radius: 20px;
+            padding: 1rem;
+            background: #fffdf7;
+        }
+
+        .launch-meta-item .label {
+            display: block;
+            color: #6b7280;
+            font-size: .9rem;
+            margin-bottom: .35rem;
+        }
+
+        .launch-meta-item strong {
+            font-size: 1.05rem;
+        }
+
+        .launch-btn {
+            min-width: 240px;
+            border-radius: 18px;
+            font-weight: 700;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 18px 40px rgba(243, 189, 0, 0.22);
+        }
+
+        .launch-note {
+            margin-top: 1rem;
+            color: #6b7280;
+            font-size: .95rem;
+        }
+
+        .exam-host {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            background: #fff;
+        }
+
+        body.exam-host-active {
+            background: #fff;
+            overflow: hidden;
+        }
+
+        body.exam-host-active .launch-shell {
+            display: none;
+        }
+
+        body.exam-host-active .exam-host {
+            display: block;
+        }
+
+        @@media (max-width: 767.98px) {
+            .launch-card {
+                padding: 1.5rem;
+                border-radius: 24px;
+            }
+
+            .launch-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .launch-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="launch-shell">
+        <div class="launch-card">
+            <div class="launch-badge"><i class="fas fa-expand-arrows-alt"></i> Sẵn sàng vào bài thi</div>
+            <h1 class="launch-title">@examName</h1>
+            <p class="launch-copy">Nhấn <strong>Tiếp tục vào bài thi</strong> để kích hoạt chế độ toàn màn hình và mở bài thi ngay trên trang này.</p>
+            <div class="launch-meta">
+                <div class="launch-meta-item">
+                    <span class="label">Phiên thi</span>
+                    <strong>#@Model.LaunchSessionId</strong>
+                </div>
+                <div class="launch-meta-item">
+                    <span class="label">Bắt đầu từ câu</span>
+                    <strong>@Model.LaunchQuestionNumber</strong>
+                </div>
+            </div>
+            <button type="button" id="launchExamBtn" class="btn btn-warning text-dark launch-btn">Tiếp tục vào bài thi</button>
+            <div class="launch-note">Nếu trình duyệt chặn toàn màn hình, bài thi vẫn sẽ được mở trên cùng trang để tiếp tục làm bài.</div>
+        </div>
+    </div>
+
+    <iframe id="examHostFrame" class="exam-host" title="Bài thi" referrerpolicy="same-origin"></iframe>
+
+    <script>
+        (function () {
+            var button = document.getElementById('launchExamBtn');
+            var frame = document.getElementById('examHostFrame');
+            var targetUrl = '@sessionUrl';
+
+            function openFullscreen() {
+                if (document.documentElement.requestFullscreen) {
+                    return document.documentElement.requestFullscreen();
+                }
+
+                return Promise.resolve();
+            }
+
+            function loadExam() {
+                document.body.classList.add('exam-host-active');
+                frame.src = targetUrl;
+            }
+
+            if (!button || !frame) {
+                return;
+            }
+
+            button.addEventListener('click', function () {
+                Promise.resolve(openFullscreen())
+                    .catch(function () {
+                        return null;
+                    })
+                    .finally(function () {
+                        loadExam();
+                    });
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -297,6 +297,18 @@
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
+    function getLaunchContext() {
+        const params = new URLSearchParams(window.location.search);
+        const sampleExamId = params.get('sampleExamId');
+        const licenseType = params.get('type');
+
+        return {
+            sampleExamId,
+            licenseType: licenseType && EXAM_CONFIG[licenseType] ? licenseType : null,
+            autoStart: Boolean(sampleExamId)
+        };
+    }
+
     async function startExam() {
         state.type = el.type.value;
         state.submitted = false;
@@ -309,6 +321,7 @@
         el.examTypeLabel.textContent = state.type;
         el.examPanel.classList.remove('d-none');
         el.resultPanel.classList.add('d-none');
+        el.setupPanel.classList.add('d-none');
 
         updateProgress();
         renderCurrentQuestion();
@@ -316,6 +329,11 @@
         await requestExamFullscreen();
         syncFullscreenState();
         window.scrollTo({ top: el.examPanel.offsetTop - 24, behavior: 'smooth' });
+    }
+
+    const launchContext = getLaunchContext();
+    if (launchContext.licenseType) {
+        el.type.value = launchContext.licenseType;
     }
 
     el.type.addEventListener('change', renderConfig);
@@ -332,4 +350,8 @@
     document.addEventListener('fullscreenchange', syncFullscreenState);
 
     renderConfig();
+
+    if (launchContext.autoStart) {
+        startExam();
+    }
 })();

@@ -3,7 +3,6 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-
 <div class="login-page py-5">
     <div class="container py-4 py-lg-5">
         <div class="row justify-content-center align-items-center">
@@ -12,19 +11,23 @@
                     <div class="row g-0">
                         <div class="col-lg-5 d-none d-lg-block">
                             <div class="login-hero d-flex flex-column justify-content-center h-100">
-                                <span class="login-badge"><i class="fas fa-user-shield"></i> Khu vực đăng nhập hệ thống</span>
-                                <h1 class="display-6 mb-3">Đăng nhập nhanh, giao diện sáng và gọn hơn</h1>
-                                <p class="login-note mb-4">Đăng nhập bằng tài khoản thật từ API, giữ lại phong cách nền trắng sạch và điểm nhấn vàng như giao diện cũ.</p>
+                                <span class="login-badge"><i class="fas fa-user-shield"></i> Khu vực tài khoản hệ thống</span>
+                                <h1 class="display-6 mb-3">Đăng nhập nhanh hoặc tạo tài khoản mới</h1>
+                                <p class="login-note mb-4">Kết nối trực tiếp API thật để đăng nhập và đăng ký học viên với giao diện sáng, gọn và dễ dùng.</p>
 
                                 <div class="login-demo-box position-relative">
-                                    <h6 class="fw-bold mb-3">Thông tin đăng nhập</h6>
+                                    <h6 class="fw-bold mb-3">Thông tin tích hợp</h6>
                                     <div class="login-demo-item">
-                                        <span><strong>API Endpoint</strong></span>
+                                        <span><strong>API Login</strong></span>
                                         <span>/api/v1/auth/login</span>
                                     </div>
                                     <div class="login-demo-item">
-                                        <span><strong>Tài khoản</strong></span>
-                                        <span>Dùng user thật trong database</span>
+                                        <span><strong>API Register</strong></span>
+                                        <span>/api/v1/auth/register</span>
+                                    </div>
+                                    <div class="login-demo-item">
+                                        <span><strong>Dữ liệu</strong></span>
+                                        <span>Tài khoản thật từ database</span>
                                     </div>
                                 </div>
                             </div>
@@ -32,33 +35,191 @@
 
                         <div class="col-lg-7">
                             <div class="login-panel h-100">
-                                <h2 class="h3 mb-2">Đăng nhập User/Admin</h2>
-                                <p class="login-note mb-4">Nhập tài khoản để truy cập khu vực người dùng hoặc quản trị.</p>
+                                <div class="d-flex flex-wrap gap-2 mb-4 login-tab-group" role="tablist" aria-label="Chọn biểu mẫu tài khoản">
+                                    <button type="button" class="btn login-tab-btn active" data-login-tab="login">Đăng nhập</button>
+                                    <button type="button" class="btn login-tab-btn" data-login-tab="register">Đăng ký</button>
+                                </div>
 
-                                @if (!ViewData.ModelState.IsValid)
-                                {
-                                    <div asp-validation-summary="All" class="alert alert-danger"></div>
-                                }
+                                <div id="loginTabPanel" data-login-panel="login">
+                                    <h2 class="h3 mb-2">Đăng nhập User/Admin</h2>
+                                    <p class="login-note mb-4">Nhập tài khoản để truy cập khu vực người dùng hoặc quản trị.</p>
 
-                                 <form method="post" action="/Login/Index">
-                                    <div class="mb-3">
-                                        <label asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-label fw-semibold">Tên đăng nhập hoặc email</label>
-                                        <input asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-control login-input" placeholder="Nhập tên đăng nhập hoặc email" />
+                                    @if (!ViewData.ModelState.IsValid)
+                                    {
+                                        <div asp-validation-summary="All" class="alert alert-danger"></div>
+                                    }
+
+                                    @if (ViewBag.RegisterSuccess != null)
+                                    {
+                                        <div class="alert alert-success">@ViewBag.RegisterSuccess</div>
+                                    }
+
+                                    @if (TempData["ForgotPasswordSuccess"] != null)
+                                    {
+                                        <div class="alert alert-success">@TempData["ForgotPasswordSuccess"]</div>
+                                    }
+
+                                    @if (TempData["ForgotPasswordError"] != null && (TempData.Peek("ActiveLoginTab")?.ToString() == "forgot"))
+                                    {
+                                        <div class="alert alert-danger">@TempData["ForgotPasswordError"]</div>
+                                    }
+
+                                    @if (TempData["ResetPasswordSuccess"] != null)
+                                    {
+                                        <div class="alert alert-success">@TempData["ResetPasswordSuccess"]</div>
+                                    }
+
+                                    @if (TempData["ResetPasswordError"] != null && (TempData.Peek("ActiveLoginTab")?.ToString() == "reset"))
+                                    {
+                                        <div class="alert alert-danger">@TempData["ResetPasswordError"]</div>
+                                    }
+
+                                    <form method="post" action="/Login/Index">
+                                        <div class="mb-3">
+                                            <label asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-label fw-semibold">Tên đăng nhập hoặc email</label>
+                                            <input asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-control login-input" placeholder="Nhập tên đăng nhập hoặc email" />
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label asp-for="LoginRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
+                                            <input asp-for="LoginRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary w-100 login-submit">Đăng nhập</button>
+                                    </form>
+
+                                    <div class="login-secondary-actions mt-3">
+                                        <button type="button" class="btn btn-link login-inline-link p-0" data-login-tab="forgot">Quên mật khẩu?</button>
+                                        <span class="text-muted">hoặc</span>
+                                        <button type="button" class="btn btn-link login-inline-link p-0" data-login-tab="reset">Nhập token để reset mật khẩu</button>
                                     </div>
+                                </div>
 
-                                    <div class="mb-4">
-                                        <label asp-for="LoginRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
-                                        <input asp-for="LoginRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
-                                    </div>
+                                <div id="registerTabPanel" data-login-panel="register" class="d-none">
+                                    <h2 class="h3 mb-2">Đăng ký tài khoản học viên</h2>
+                                    <p class="login-note mb-4">Tạo tài khoản mới theo đúng dữ liệu yêu cầu từ API.</p>
 
-                                     <button type="submit" class="btn btn-primary w-100 login-submit">Đăng nhập</button>
-                                 </form>
+                                    <form method="post" action="/Login/Register" class="row g-3">
+                                        <div class="col-md-6">
+                                            <label asp-for="RegisterRequest.TenDangNhap" class="form-label fw-semibold">Tên đăng nhập</label>
+                                            <input asp-for="RegisterRequest.TenDangNhap" class="form-control login-input" placeholder="vd: nguyenvana" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="RegisterRequest.Email" class="form-label fw-semibold">Email</label>
+                                            <input asp-for="RegisterRequest.Email" type="email" class="form-control login-input" placeholder="name@email.com" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="RegisterRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
+                                            <input asp-for="RegisterRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="RegisterRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                                            <input asp-for="RegisterRequest.SoDienThoai" class="form-control login-input" placeholder="Nhập số điện thoại" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.HoTen" class="form-label fw-semibold">Họ tên</label>
+                                            <input asp-for="RegisterRequest.HoTen" class="form-control login-input" placeholder="Nhập họ tên đầy đủ" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label asp-for="RegisterRequest.NgaySinh" class="form-label fw-semibold">Ngày sinh</label>
+                                            <input asp-for="RegisterRequest.NgaySinh" type="date" class="form-control login-input" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label asp-for="RegisterRequest.GioiTinh" class="form-label fw-semibold">Giới tính</label>
+                                            <select asp-for="RegisterRequest.GioiTinh" class="form-select login-input">
+                                                <option value="">Chọn giới tính</option>
+                                                <option value="Nam">Nam</option>
+                                                <option value="Nữ">Nữ</option>
+                                                <option value="Khác">Khác</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label asp-for="RegisterRequest.Cccd" class="form-label fw-semibold">CCCD</label>
+                                            <input asp-for="RegisterRequest.Cccd" class="form-control login-input" placeholder="Nhập CCCD" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.DiaChi" class="form-label fw-semibold">Địa chỉ</label>
+                                            <input asp-for="RegisterRequest.DiaChi" class="form-control login-input" placeholder="Nhập địa chỉ" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.AnhChanDung" class="form-label fw-semibold">Ảnh chân dung</label>
+                                            <input asp-for="RegisterRequest.AnhChanDung" class="form-control login-input" placeholder="URL ảnh hoặc chuỗi base64 nếu API yêu cầu" />
+                                            <div class="form-text">Trường này có thể để trống nếu hiện tại chưa có ảnh.</div>
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary w-100 login-submit">Đăng ký tài khoản</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div id="forgotTabPanel" data-login-panel="forgot" class="d-none">
+                                    <h2 class="h3 mb-2">Quên mật khẩu</h2>
+                                    <p class="login-note mb-4">Nhập email để gửi yêu cầu khôi phục mật khẩu qua API.</p>
+
+                                    @if (TempData.Peek("ActiveLoginTab")?.ToString() == "forgot" && TempData["ForgotPasswordError"] != null)
+                                    {
+                                        <div class="alert alert-danger">@TempData["ForgotPasswordError"]</div>
+                                    }
+
+                                    @if (TempData.Peek("ActiveLoginTab")?.ToString() == "forgot" && TempData["ForgotPasswordSuccess"] != null)
+                                    {
+                                        <div class="alert alert-success">@TempData["ForgotPasswordSuccess"]</div>
+                                    }
+
+                                    <form method="post" action="/Login/ForgotPassword">
+                                        @Html.AntiForgeryToken()
+                                        <div class="mb-4">
+                                            <label asp-for="ForgotPasswordRequest.Email" class="form-label fw-semibold">Email</label>
+                                            <input asp-for="ForgotPasswordRequest.Email" type="email" class="form-control login-input" placeholder="Nhập email tài khoản" />
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary w-100 login-submit">Gửi yêu cầu quên mật khẩu</button>
+                                    </form>
+                                </div>
+
+                                <div id="resetTabPanel" data-login-panel="reset" class="d-none">
+                                    <h2 class="h3 mb-2">Reset mật khẩu</h2>
+                                    <p class="login-note mb-4">Nhập email, token và mật khẩu mới để hoàn tất đặt lại mật khẩu.</p>
+
+                                    @if (TempData.Peek("ActiveLoginTab")?.ToString() == "reset" && TempData["ResetPasswordError"] != null)
+                                    {
+                                        <div class="alert alert-danger">@TempData["ResetPasswordError"]</div>
+                                    }
+
+                                    @if (TempData.Peek("ActiveLoginTab")?.ToString() == "reset" && TempData["ResetPasswordSuccess"] != null)
+                                    {
+                                        <div class="alert alert-success">@TempData["ResetPasswordSuccess"]</div>
+                                    }
+
+                                    <form method="post" action="/Login/ResetPassword" class="row g-3">
+                                        @Html.AntiForgeryToken()
+                                        <div class="col-12">
+                                            <label asp-for="ResetPasswordRequest.Email" class="form-label fw-semibold">Email</label>
+                                            <input asp-for="ResetPasswordRequest.Email" type="email" class="form-control login-input" placeholder="Nhập email tài khoản" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label asp-for="ResetPasswordRequest.Token" class="form-label fw-semibold">Token</label>
+                                            <input asp-for="ResetPasswordRequest.Token" class="form-control login-input" placeholder="Nhập token reset mật khẩu" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="ResetPasswordRequest.NewPassword" class="form-label fw-semibold">Mật khẩu mới</label>
+                                            <input asp-for="ResetPasswordRequest.NewPassword" type="password" class="form-control login-input" placeholder="Tối thiểu 8 ký tự" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label asp-for="ResetPasswordRequest.ConfirmPassword" class="form-label fw-semibold">Xác nhận mật khẩu mới</label>
+                                            <input asp-for="ResetPasswordRequest.ConfirmPassword" type="password" class="form-control login-input" placeholder="Nhập lại mật khẩu mới" />
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary w-100 login-submit">Reset mật khẩu</button>
+                                        </div>
+                                    </form>
+                                </div>
 
                                 <div id="loginApiDebug" class="alert alert-info mt-3 d-none"></div>
-                             </div>
-                         </div>
-                     </div>
-                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -156,8 +317,50 @@
             font-weight: 700;
         }
 
+        .login-tab-group {
+            display: inline-flex;
+            background: #fff8df;
+            border-radius: 18px;
+            padding: .35rem;
+        }
+
+        .login-tab-btn {
+            border-radius: 14px;
+            font-weight: 700;
+            color: #7c5a00;
+            background: transparent;
+            border: 0;
+            padding: .8rem 1.2rem;
+        }
+
+        .login-tab-btn.active {
+            background: #f3bd00;
+            color: #1f2937;
+            box-shadow: 0 8px 20px rgba(243, 189, 0, 0.28);
+        }
+
         .login-note {
             color: #6b7280;
+        }
+
+        .login-secondary-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            align-items: center;
+            justify-content: center;
+            font-size: .95rem;
+        }
+
+        .login-inline-link {
+            color: #a16207;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-inline-link:hover {
+            color: #7c5a00;
+            text-decoration: underline;
         }
 
         @@media (max-width: 991.98px) {
@@ -172,3 +375,68 @@
     </style>
 }
 
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('[data-login-tab]');
+            const loginPanel = document.querySelector('[data-login-panel="login"]');
+            const registerPanel = document.querySelector('[data-login-panel="register"]');
+            const forgotPanel = document.querySelector('[data-login-panel="forgot"]');
+            const resetPanel = document.querySelector('[data-login-panel="reset"]');
+            const activeTabFromServer = '@(TempData.Peek("ActiveLoginTab")?.ToString() ?? string.Empty)';
+
+            function activateTab(tabName) {
+                buttons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.loginTab === tabName);
+                });
+
+                if (loginPanel) {
+                    loginPanel.classList.toggle('d-none', tabName !== 'login');
+                }
+
+                if (registerPanel) {
+                    registerPanel.classList.toggle('d-none', tabName !== 'register');
+                }
+
+                if (forgotPanel) {
+                    forgotPanel.classList.toggle('d-none', tabName !== 'forgot');
+                }
+
+                if (resetPanel) {
+                    resetPanel.classList.toggle('d-none', tabName !== 'reset');
+                }
+            }
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function () {
+                    activateTab(button.dataset.loginTab);
+                });
+            });
+
+            const hasRegisterValues = [
+                document.getElementById('RegisterRequest_TenDangNhap'),
+                document.getElementById('RegisterRequest_Email'),
+                document.getElementById('RegisterRequest_HoTen')
+            ].some(input => input && input.value.trim() !== '');
+
+            const hasForgotValues = [
+                document.getElementById('ForgotPasswordRequest_Email')
+            ].some(input => input && input.value.trim() !== '');
+
+            const hasResetValues = [
+                document.getElementById('ResetPasswordRequest_Email'),
+                document.getElementById('ResetPasswordRequest_Token')
+            ].some(input => input && input.value.trim() !== '');
+
+            if (activeTabFromServer) {
+                activateTab(activeTabFromServer);
+            } else if (hasResetValues) {
+                activateTab('reset');
+            } else if (hasForgotValues) {
+                activateTab('forgot');
+            } else {
+                activateTab(hasRegisterValues ? 'register' : 'login');
+            }
+        });
+    </script>
+}

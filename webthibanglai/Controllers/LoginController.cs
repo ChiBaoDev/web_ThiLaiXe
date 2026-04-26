@@ -23,7 +23,14 @@ namespace webthibanglai.Controllers
 
         public IActionResult Index()
         {
-            return View(new LoginViewModel());
+            var model = BuildLoginViewModel();
+
+            if (TempData.TryGetValue("RegisterSuccess", out var registerSuccessMessage))
+            {
+                ViewBag.RegisterSuccess = registerSuccessMessage?.ToString();
+            }
+
+            return View(model);
         }
 
         [HttpPost]
@@ -113,15 +120,294 @@ namespace webthibanglai.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Register(LoginViewModel model)
+        {
+            var request = model.RegisterRequest;
+
+            if (string.IsNullOrWhiteSpace(request.TenDangNhap)
+                || string.IsNullOrWhiteSpace(request.MatKhau)
+                || string.IsNullOrWhiteSpace(request.Email)
+                || string.IsNullOrWhiteSpace(request.SoDienThoai)
+                || string.IsNullOrWhiteSpace(request.HoTen)
+                || request.NgaySinh == default
+                || string.IsNullOrWhiteSpace(request.GioiTinh)
+                || string.IsNullOrWhiteSpace(request.Cccd)
+                || string.IsNullOrWhiteSpace(request.DiaChi))
+            {
+                ModelState.AddModelError(string.Empty, "Vui lòng nhập đầy đủ thông tin đăng ký bắt buộc.");
+                return View("Index", model);
+            }
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var payload = new
+            {
+                ten_dang_nhap = request.TenDangNhap.Trim(),
+                mat_khau = request.MatKhau,
+                email = request.Email.Trim(),
+                so_dien_thoai = request.SoDienThoai.Trim(),
+                ho_ten = request.HoTen.Trim(),
+                ngay_sinh = request.NgaySinh.ToString("yyyy-MM-dd"),
+                gioi_tinh = request.GioiTinh.Trim(),
+                cccd = request.Cccd.Trim(),
+                dia_chi = request.DiaChi.Trim(),
+                anh_chan_dung = request.AnhChanDung?.Trim() ?? string.Empty
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/api/v1/auth/register", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Register API raw response: {ResponseBody}", responseBody);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                ModelState.AddModelError(string.Empty, ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Đăng ký thất bại.");
+                return View("Index", model);
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<RegisterResponseData>>(responseBody, JsonOptions());
+            var registeredUser = apiResponse?.Data;
+
+            TempData["RegisterSuccess"] = registeredUser == null
+                ? "Đăng ký thành công. Vui lòng đăng nhập bằng tài khoản vừa tạo."
+                : $"Đăng ký thành công cho tài khoản {registeredUser.TenDangNhap}. Vui lòng đăng nhập.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpGet]
         public IActionResult Profile(bool debug = false)
         {
+            var model = BuildProfileViewModel();
+
             if (debug)
             {
-                return View(new LoginViewModel());
+                return View(model);
             }
 
-            return View(new LoginViewModel());
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Profile(LoginViewModel model)
+        {
+            var token = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                TempData["ProfileUpdateError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var request = model.UpdateProfileRequest;
+            if (string.IsNullOrWhiteSpace(request.HoTen))
+            {
+                TempData["ProfileUpdateError"] = "Họ tên không được để trống.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Email) && !IsValidEmail(request.Email))
+            {
+                TempData["ProfileUpdateError"] = "Email không hợp lệ.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var payload = new
+            {
+                email = request.Email?.Trim(),
+                so_dien_thoai = request.SoDienThoai?.Trim(),
+                ho_ten = request.HoTen.Trim(),
+                ngay_sinh = request.NgaySinh?.ToString("yyyy-MM-dd"),
+                gioi_tinh = string.IsNullOrWhiteSpace(request.GioiTinh) ? null : request.GioiTinh.Trim(),
+                cccd = string.IsNullOrWhiteSpace(request.Cccd) ? null : request.Cccd.Trim(),
+                dia_chi = string.IsNullOrWhiteSpace(request.DiaChi) ? null : request.DiaChi.Trim(),
+                anh_chan_dung = string.IsNullOrWhiteSpace(request.AnhChanDung) ? null : request.AnhChanDung.Trim()
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PutAsync("/api/v1/auth/me", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Update profile API raw response: {ResponseBody}", responseBody);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ProfileUpdateError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Cập nhật hồ sơ thất bại.";
+                PreserveProfileTempDataFromRequest(request, model);
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<CurrentUserInfo>>(responseBody, JsonOptions());
+            if (apiResponse?.Data == null)
+            {
+                TempData["ProfileUpdateError"] = "Không đọc được dữ liệu hồ sơ sau khi cập nhật.";
+                PreserveProfileTempDataFromRequest(request, model);
+                return RedirectToAction(nameof(Profile));
+            }
+
+            PopulateProfileTempData(apiResponse.Data);
+            TempData["ProfileUpdateSuccess"] = "Cập nhật hồ sơ thành công.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(LoginViewModel model)
+        {
+            var token = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                TempData["ChangePasswordError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var request = model.ChangePasswordRequest;
+            PreserveChangePasswordTempData(request);
+
+            if (string.IsNullOrWhiteSpace(request.OldPassword)
+                || string.IsNullOrWhiteSpace(request.NewPassword)
+                || string.IsNullOrWhiteSpace(request.ConfirmPassword))
+            {
+                TempData["ChangePasswordError"] = "Vui lòng nhập đầy đủ thông tin đổi mật khẩu.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (request.NewPassword.Length < 8)
+            {
+                TempData["ChangePasswordError"] = "Mật khẩu mới phải có ít nhất 8 ký tự.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (!string.Equals(request.NewPassword, request.ConfirmPassword, StringComparison.Ordinal))
+            {
+                TempData["ChangePasswordError"] = "Xác nhận mật khẩu không khớp.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var payload = new
+            {
+                mat_khau_cu = request.OldPassword,
+                mat_khau_moi = request.NewPassword
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/api/v1/auth/change-password", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Change password API raw response: {ResponseBody}", responseBody);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ChangePasswordError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Đổi mật khẩu thất bại.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            ClearChangePasswordTempData();
+            TempData["ChangePasswordSuccess"] = ExtractErrorMessage(responseBody) ?? "Đổi mật khẩu thành công.";
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(LoginViewModel model)
+        {
+            var request = model.ForgotPasswordRequest;
+            TempData["ForgotPasswordEmail"] = request.Email;
+
+            if (string.IsNullOrWhiteSpace(request.Email) || !IsValidEmail(request.Email))
+            {
+                TempData["ForgotPasswordError"] = "Vui lòng nhập email hợp lệ.";
+                TempData["ActiveLoginTab"] = "forgot";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var payload = new
+            {
+                email = request.Email.Trim()
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/api/v1/auth/forgot-password", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Forgot password API raw response: {ResponseBody}", responseBody);
+
+            TempData["ActiveLoginTab"] = "forgot";
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ForgotPasswordError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Gửi yêu cầu quên mật khẩu thất bại.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["ForgotPasswordSuccess"] = ExtractErrorMessage(responseBody) ?? "Yêu cầu quên mật khẩu đã được gửi.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(LoginViewModel model)
+        {
+            var request = model.ResetPasswordRequest;
+            PreserveResetPasswordTempData(request);
+            TempData["ActiveLoginTab"] = "reset";
+
+            if (string.IsNullOrWhiteSpace(request.Email) || !IsValidEmail(request.Email))
+            {
+                TempData["ResetPasswordError"] = "Email không hợp lệ.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                TempData["ResetPasswordError"] = "Token không được để trống.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                TempData["ResetPasswordError"] = "Mật khẩu mới không được để trống.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (request.NewPassword.Length < 8)
+            {
+                TempData["ResetPasswordError"] = "Mật khẩu mới phải có ít nhất 8 ký tự.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.Equals(request.NewPassword, request.ConfirmPassword, StringComparison.Ordinal))
+            {
+                TempData["ResetPasswordError"] = "Xác nhận mật khẩu không khớp.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var payload = new
+            {
+                email = request.Email.Trim(),
+                reset_token = request.Token.Trim(),
+                mat_khau_moi = request.NewPassword
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/api/v1/auth/reset-password", content);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Reset password API raw response: {ResponseBody}", responseBody);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["ResetPasswordError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Đặt lại mật khẩu thất bại.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            ClearResetPasswordTempData();
+            TempData["ResetPasswordSuccess"] = ExtractErrorMessage(responseBody) ?? "Đặt lại mật khẩu thành công.";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
@@ -204,13 +490,187 @@ namespace webthibanglai.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Remove(AccessTokenSessionKey);
+
+            TempData.Remove("AuthUsername");
+            TempData.Remove("AuthEmail");
+            TempData.Remove("AuthRoles");
+            TempData.Remove("ProfileUserId");
+            TempData.Remove("ProfileHocVienId");
+            TempData.Remove("ProfileHoTen");
+            TempData.Remove("ProfileTenDangNhap");
+            TempData.Remove("ProfileEmail");
+            TempData.Remove("ProfileSoDienThoai");
+            TempData.Remove("ProfileTrangThai");
+            TempData.Remove("ProfileNgaySinh");
+            TempData.Remove("ProfileGioiTinh");
+            TempData.Remove("ProfileCccd");
+            TempData.Remove("ProfileDiaChi");
+            TempData.Remove("ProfileAnhChanDung");
+            TempData.Remove("LoginSuccess");
+
             return RedirectToAction(nameof(Index));
+        }
+
+        private LoginViewModel BuildProfileViewModel()
+        {
+            return new LoginViewModel
+            {
+                UpdateProfileRequest = new UpdateProfileRequestModel
+                {
+                    HoTen = TempData.Peek("ProfileHoTen")?.ToString() ?? string.Empty,
+                    Email = TempData.Peek("ProfileEmail")?.ToString() ?? string.Empty,
+                    SoDienThoai = TempData.Peek("ProfileSoDienThoai")?.ToString() ?? string.Empty,
+                    NgaySinh = ParseDateOnly(TempData.Peek("ProfileNgaySinh")?.ToString()),
+                    GioiTinh = TempData.Peek("ProfileGioiTinh")?.ToString() ?? string.Empty,
+                    Cccd = TempData.Peek("ProfileCccd")?.ToString() ?? string.Empty,
+                    DiaChi = TempData.Peek("ProfileDiaChi")?.ToString() ?? string.Empty,
+                    AnhChanDung = TempData.Peek("ProfileAnhChanDung")?.ToString() ?? string.Empty
+                },
+                ChangePasswordRequest = new ChangePasswordRequestModel
+                {
+                    OldPassword = TempData.Peek("ChangePasswordOldPassword")?.ToString() ?? string.Empty,
+                    NewPassword = TempData.Peek("ChangePasswordNewPassword")?.ToString() ?? string.Empty,
+                    ConfirmPassword = TempData.Peek("ChangePasswordConfirmPassword")?.ToString() ?? string.Empty
+                }
+            };
+        }
+
+        private LoginViewModel BuildLoginViewModel()
+        {
+            return new LoginViewModel
+            {
+                ForgotPasswordRequest = new ForgotPasswordRequestModel
+                {
+                    Email = TempData.Peek("ForgotPasswordEmail")?.ToString() ?? string.Empty
+                },
+                ResetPasswordRequest = new ResetPasswordRequestModel
+                {
+                    Email = TempData.Peek("ResetPasswordEmail")?.ToString() ?? string.Empty,
+                    Token = TempData.Peek("ResetPasswordToken")?.ToString() ?? string.Empty,
+                    NewPassword = TempData.Peek("ResetPasswordNewPassword")?.ToString() ?? string.Empty,
+                    ConfirmPassword = TempData.Peek("ResetPasswordConfirmPassword")?.ToString() ?? string.Empty
+                }
+            };
+        }
+
+        private void PopulateProfileTempData(CurrentUserInfo currentUser)
+        {
+            TempData["AuthUsername"] = !string.IsNullOrWhiteSpace(currentUser.HoTen)
+                ? currentUser.HoTen
+                : currentUser.TenDangNhap;
+            TempData["AuthEmail"] = currentUser.Email;
+            TempData["AuthRoles"] = string.Join(",", currentUser.Roles ?? new List<string>());
+            TempData["ProfileUserId"] = currentUser.UserId.ToString();
+            TempData["ProfileHocVienId"] = currentUser.HocVienId.ToString();
+            TempData["ProfileHoTen"] = currentUser.HoTen;
+            TempData["ProfileTenDangNhap"] = currentUser.TenDangNhap;
+            TempData["ProfileEmail"] = currentUser.Email;
+            TempData["ProfileSoDienThoai"] = currentUser.SoDienThoai;
+            TempData["ProfileTrangThai"] = currentUser.TrangThai;
+            TempData["ProfileNgaySinh"] = currentUser.NgaySinh?.ToString("dd/MM/yyyy");
+            TempData["ProfileGioiTinh"] = currentUser.GioiTinh;
+            TempData["ProfileCccd"] = currentUser.Cccd;
+            TempData["ProfileDiaChi"] = currentUser.DiaChi;
+            TempData["ProfileAnhChanDung"] = currentUser.AnhChanDung;
+        }
+
+        private void PreserveProfileTempDataFromRequest(UpdateProfileRequestModel request, LoginViewModel model)
+        {
+            TempData["ProfileHoTen"] = request.HoTen;
+            TempData["ProfileEmail"] = request.Email;
+            TempData["ProfileSoDienThoai"] = request.SoDienThoai;
+            TempData["ProfileNgaySinh"] = request.NgaySinh?.ToString("dd/MM/yyyy");
+            TempData["ProfileGioiTinh"] = request.GioiTinh;
+            TempData["ProfileCccd"] = request.Cccd;
+            TempData["ProfileDiaChi"] = request.DiaChi;
+            TempData["ProfileAnhChanDung"] = request.AnhChanDung;
+            model.UpdateProfileRequest = request;
+        }
+
+        private void PreserveChangePasswordTempData(ChangePasswordRequestModel request)
+        {
+            TempData["ChangePasswordOldPassword"] = request.OldPassword;
+            TempData["ChangePasswordNewPassword"] = request.NewPassword;
+            TempData["ChangePasswordConfirmPassword"] = request.ConfirmPassword;
+        }
+
+        private void ClearChangePasswordTempData()
+        {
+            TempData.Remove("ChangePasswordOldPassword");
+            TempData.Remove("ChangePasswordNewPassword");
+            TempData.Remove("ChangePasswordConfirmPassword");
+        }
+
+        private void PreserveResetPasswordTempData(ResetPasswordRequestModel request)
+        {
+            TempData["ResetPasswordEmail"] = request.Email;
+            TempData["ResetPasswordToken"] = request.Token;
+            TempData["ResetPasswordNewPassword"] = request.NewPassword;
+            TempData["ResetPasswordConfirmPassword"] = request.ConfirmPassword;
+        }
+
+        private void ClearResetPasswordTempData()
+        {
+            TempData.Remove("ResetPasswordEmail");
+            TempData.Remove("ResetPasswordToken");
+            TempData.Remove("ResetPasswordNewPassword");
+            TempData.Remove("ResetPasswordConfirmPassword");
+        }
+
+        private static DateOnly? ParseDateOnly(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            if (DateOnly.TryParseExact(value, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedVietnameseDate))
+            {
+                return parsedVietnameseDate;
+            }
+
+            if (DateOnly.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                return parsedDate;
+            }
+
+            return null;
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                _ = new System.Net.Mail.MailAddress(email);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static string? ExtractErrorMessage(string responseBody)
         {
             var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, JsonOptions());
             return apiResponse?.Message;
+        }
+
+        private static string? ExtractDetailedErrorMessage(string responseBody)
+        {
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, JsonOptions());
+            if (apiResponse?.Errors == null || apiResponse.Errors.Count == 0)
+            {
+                return apiResponse?.Message;
+            }
+
+            return string.Join(" ", apiResponse.Errors
+                .Select(x => !string.IsNullOrWhiteSpace(x.Detail)
+                    ? x.Detail
+                    : !string.IsNullOrWhiteSpace(x.Field)
+                        ? $"{x.Field}: dữ liệu không hợp lệ."
+                        : x.Code)
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         private static JsonSerializerOptions JsonOptions()
@@ -299,5 +759,22 @@ namespace webthibanglai.Controllers
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public T? Data { get; set; }
+        public List<ApiErrorDetail> Errors { get; set; } = new();
+    }
+
+    public class ApiErrorDetail
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Field { get; set; } = string.Empty;
+        public string Detail { get; set; } = string.Empty;
+    }
+
+    public class RegisterResponseData
+    {
+        public long UserId { get; set; }
+        public string TenDangNhap { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string RoleMacDinh { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -1,3 +1,5 @@
+using webthibanglai.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -18,6 +20,7 @@ builder.Services.AddHttpClient("ApiClient", client =>
         client.BaseAddress = new Uri(baseUrl);
     }
 });
+builder.Services.AddScoped<IExamApiService, ExamApiService>();
 
 var app = builder.Build();
 

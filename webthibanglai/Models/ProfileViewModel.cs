@@ -5,7 +5,7 @@ public class ProfileViewModel
     public StudentProfileInfo? Profile { get; set; }
     public List<CourseRegistrationItem> CourseRegistrations { get; set; } = new();
     public List<PracticeHistoryItem> PracticeHistory { get; set; } = new();
-    public ChangePasswordRequestModel ChangePassword { get; set; } = new();
+    public ProfileChangePasswordModel ChangePassword { get; set; } = new();
 }
 
 public class StudentProfileInfo
@@ -30,7 +30,7 @@ public class CourseRegistrationItem
     public DateTime NgayDangKy { get; set; }
 }
 
-public class ChangePasswordRequestModel
+public class ProfileChangePasswordModel
 {
     public string MatKhauCu { get; set; } = string.Empty;
     public string MatKhauMoi { get; set; } = string.Empty;

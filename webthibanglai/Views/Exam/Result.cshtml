@@ -1,0 +1,111 @@
+@model ExamViewModel
+@{
+    ViewData["Title"] = "Kết quả bài thi";
+    var result = Model.SessionResult!;
+    var reviewItems = result.ReviewItems ?? new List<ExamSessionReviewItemViewModel>();
+}
+
+<div class="container py-5 result-page">
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4">@Model.ErrorMessage</div>
+    }
+
+    <div class="result-shell">
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-4">
+                <div class="result-summary-card">
+                    <h3 class="fw-bold mb-3">Kết quả thi</h3>
+                    <p class="mb-2">Tổng câu: <strong>@result.TotalQuestions</strong></p>
+                    <p class="mb-2">Đúng: <strong>@result.CorrectAnswers</strong></p>
+                    <p class="mb-2">Sai: <strong>@result.WrongAnswers</strong></p>
+                    <p class="mb-2">Chưa trả lời: <strong>@result.UnansweredAnswers</strong></p>
+                    <p class="mb-2">Điểm: <strong>@result.Score</strong></p>
+                    <p class="mb-2">Trạng thái: <strong class="@(string.Equals(result.Result, "PASS", StringComparison.OrdinalIgnoreCase) ? "text-success" : "text-danger")">@result.Result</strong></p>
+                    @if (result.FailedByCriticalQuestion)
+                    {
+                        <p class="text-danger small mb-0">Bạn không đạt do sai câu điểm liệt.</p>
+                    }
+                    <div class="d-grid gap-2 mt-4">
+                        <a class="btn btn-primary" asp-controller="Exam" asp-action="Index">Về danh sách đề thi</a>
+                        <a class="btn btn-outline-primary" asp-controller="Exam" asp-action="Session" asp-route-sessionId="@result.SessionId" asp-route-number="1" asp-route-review="true">Xem lại phiên thi</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="review-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="mb-0">Các câu cần xem lại</h5>
+                        <span class="text-muted small">Đối chiếu đáp án đã chọn và đáp án đúng</span>
+                    </div>
+
+                    @if (reviewItems.Count == 0)
+                    {
+                        <p class="text-success mb-0">Không có dữ liệu review cho phiên thi này.</p>
+                    }
+                    else
+                    {
+                        <div class="review-list">
+                            @foreach (var item in reviewItems)
+                            {
+                                <div class="review-item @(item.IsCorrect == true ? "correct" : item.IsCorrect == false ? "wrong" : "neutral")">
+                                    <div class="d-flex justify-content-between gap-3 flex-wrap mb-2">
+                                        <strong>Câu @item.Number</strong>
+                                        <span class="badge @(item.IsCorrect == true ? "bg-success" : item.IsCorrect == false ? "bg-danger" : "bg-secondary")">
+                                            @(item.IsCorrect == true ? "Đúng" : item.IsCorrect == false ? "Sai" : "Chưa trả lời")
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">@item.QuestionContent</div>
+                                    <div class="small text-muted">Đáp án đã chọn: @(item.SelectedAnswerId?.ToString() ?? "Chưa chọn")</div>
+                                    <div class="small text-muted">Đáp án đúng: @(item.CorrectAnswerId?.ToString() ?? "--")</div>
+                                    @if (item.IsCritical)
+                                    {
+                                        <div class="small text-danger mt-2">Câu điểm liệt</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .result-page {
+            max-width: 1200px;
+        }
+
+        .result-summary-card,
+        .review-card {
+            background: #fff;
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 16px 40px rgba(15,23,42,.08);
+        }
+
+        .review-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .review-item {
+            border-radius: 18px;
+            padding: 1rem 1.1rem;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .review-item.correct {
+            border-color: #b7ebc6;
+            background: #f2fff6;
+        }
+
+        .review-item.wrong {
+            border-color: #f5c2c7;
+            background: #fff5f6;
+        }
+    </style>
+}
