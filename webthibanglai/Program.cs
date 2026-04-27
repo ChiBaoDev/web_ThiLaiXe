@@ -21,6 +21,7 @@ builder.Services.AddHttpClient("ApiClient", client =>
     }
 });
 builder.Services.AddScoped<IExamApiService, ExamApiService>();
+builder.Services.AddScoped<IStudentDashboardApiService, StudentDashboardApiService>();
 
 var app = builder.Build();
 

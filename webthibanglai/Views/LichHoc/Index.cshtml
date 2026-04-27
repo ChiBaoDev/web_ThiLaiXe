@@ -1,37 +1,133 @@
+@model webthibanglai.Models.LichHocViewModel
 @{
-    ViewData["Title"] = "Lịch học";
+    ViewData["Title"] = "Trang học viên";
+    var profile = Model.Profile;
+    var stats = Model.Stats;
 }
 
-<div id="lichHocPage" class="container-xxl py-5">
+<div id="studentPortalPage" class="container-xxl py-5 student-portal-page">
     <div class="container">
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-4 align-items-stretch">
             <div class="col-lg-8">
-                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
-                    <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Lịch học cá nhân</span>
-                    <h1 class="display-6 mb-3">Lịch học khóa <span id="scheduleCourseName">đang đăng ký</span></h1>
-                    <p class="text-muted mb-0">
-                        Theo dõi lịch học, buổi thực hành và các mốc ôn tập quan trọng để chủ động sắp xếp thời gian học.
-                    </p>
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100 student-hero-card">
+                    <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Cổng thông tin học viên</span>
+                    <div class="d-flex flex-column flex-md-row gap-4 align-items-md-center">
+                        <div class="student-avatar flex-shrink-0">@profile.Initials</div>
+                        <div class="flex-grow-1">
+                            <h1 class="display-6 mb-2">@(string.IsNullOrWhiteSpace(profile.HoTen) ? "Học viên" : profile.HoTen)</h1>
+                            <p class="text-muted mb-3">Theo dõi hồ sơ cá nhân, kết quả ôn luyện, khóa học đã đăng ký và lịch học của bạn trên cùng một màn hình.</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-id-card me-2 text-primary"></i>Mã học viên: @(profile.HocVienId > 0 ? profile.HocVienId : 0)</span>
+                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-user-check me-2 text-success"></i>@(string.IsNullOrWhiteSpace(profile.TrangThai) ? "Đang hoạt động" : profile.TrangThai)</span>
+                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-layer-group me-2 text-warning"></i>@Model.RegisteredCourses.Count khóa học</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="col-lg-4">
                 <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
-                    <h3 class="h5 mb-3">Thông tin nhanh</h3>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">Khóa học</span>
-                        <strong id="scheduleCourseBadge">Chưa cập nhật</strong>
+                    <h3 class="h5 mb-3">Thông tin học viên</h3>
+                    <div class="student-info-list d-grid gap-3">
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Tên đăng nhập</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.TenDangNhap) ? "Chưa cập nhật" : profile.TenDangNhap)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Email</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.Email) ? "Chưa cập nhật" : profile.Email)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Số điện thoại</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.SoDienThoai) ? "Chưa cập nhật" : profile.SoDienThoai)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Ngày sinh</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.NgaySinhText) ? "Chưa cập nhật" : profile.NgaySinhText)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Giới tính</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.GioiTinh) ? "Chưa cập nhật" : profile.GioiTinh)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">CCCD</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.Cccd) ? "Chưa cập nhật" : profile.Cccd)</strong></div>
+                        <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Địa chỉ</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.DiaChi) ? "Chưa cập nhật" : profile.DiaChi)</strong></div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">Ca học</span>
-                        <strong id="scheduleTime">Tối 18:30</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="portal-stat-card stat-primary h-100">
+                    <div class="portal-stat-card__icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="portal-stat-card__value">@stats.PassRate.ToString("0.##")%</div>
+                    <div class="portal-stat-card__label">Tỉ lệ thi đậu</div>
+                    <div class="portal-stat-card__sub">Đậu @stats.PassedExams / @stats.TotalExams bài thi</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="portal-stat-card stat-success h-100">
+                    <div class="portal-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="portal-stat-card__value">@stats.CorrectAnswers</div>
+                    <div class="portal-stat-card__label">Câu đúng</div>
+                    <div class="portal-stat-card__sub">Điểm trung bình @stats.AverageScore.ToString("0.##")</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="portal-stat-card stat-warning h-100">
+                    <div class="portal-stat-card__icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="portal-stat-card__value">@stats.WrongAnswers</div>
+                    <div class="portal-stat-card__label">Câu sai</div>
+                    <div class="portal-stat-card__sub">@stats.WrongQuestionCount câu đang cần ôn lại</div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="portal-stat-card stat-danger h-100">
+                    <div class="portal-stat-card__icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="portal-stat-card__value">@stats.CriticalWrongCount</div>
+                    <div class="portal-stat-card__label">Câu điểm liệt sai</div>
+                    <div class="portal-stat-card__sub">Tỷ lệ lỗi @stats.CriticalErrorRate.ToString("0.##")%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
+                    <h3 class="h5 mb-3">Tóm tắt ôn luyện</h3>
+                    <div class="d-grid gap-3">
+                        <div class="summary-item">
+                            <span class="summary-item__label">Số bài ôn đã làm</span>
+                            <strong class="summary-item__value">@stats.PracticeCount</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item__label">Bài thi chưa đạt</span>
+                            <strong class="summary-item__value">@stats.FailedExams</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item__label">Lượt làm câu điểm liệt</span>
+                            <strong class="summary-item__value">@stats.TotalCriticalAttempts</strong>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-item__label">Trạng thái học tập</span>
+                            <strong class="summary-item__value text-success">Duy trì ôn luyện đều</strong>
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-muted">Giảng viên</span>
-                        <strong id="scheduleTeacher">Đang cập nhật</strong>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h3 class="h5 mb-1">Các khóa học đã đăng ký</h3>
+                            <p class="text-muted mb-0">Hiển thị tĩnh để mô phỏng lộ trình học hiện tại của học viên.</p>
+                        </div>
+                        <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">
+                            <i class="fas fa-layer-group me-2"></i>Xem khóa học
+                        </a>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Trạng thái</span>
-                        <span class="badge bg-success" id="scheduleStatus">Đang học</span>
+                    <div class="row g-3">
+                        @foreach (var course in Model.RegisteredCourses)
+                        {
+                            <div class="col-md-6">
+                                <div class="course-card h-100">
+                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                        <h4 class="h6 mb-0">@course.Name</h4>
+                                        <span class="badge rounded-pill bg-light text-primary border">@course.Status</span>
+                                    </div>
+                                    <p class="text-muted small mb-3">@course.Description</p>
+                                    <div class="small text-muted d-grid gap-2">
+                                        <div><i class="far fa-clock me-2 text-primary"></i>@course.ScheduleText</div>
+                                        <div><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>@course.TeacherName</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -42,112 +138,197 @@
                 <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
                     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <div>
-                            <h2 class="h4 mb-1">Lịch học trong tuần</h2>
-                            <p class="text-muted mb-0">Các buổi học được sắp xếp theo lộ trình của khóa đã đăng ký.</p>
+                            <h3 class="h5 mb-1">Lịch học của khóa học</h3>
+                            <p class="text-muted mb-0">Phần lịch học hiện đang dùng dữ liệu tĩnh theo yêu cầu.</p>
                         </div>
-                        <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">
-                            <i class="fas fa-layer-group me-2"></i>Xem khóa học
-                        </a>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2">Lịch học minh họa</span>
                     </div>
 
-                    <div class="table-responsive" id="scheduleCards">
-                        <table class="table table-bordered align-middle text-center mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="min-width: 140px;">Thứ 2</th>
-                                    <th style="min-width: 140px;">Thứ 3</th>
-                                    <th style="min-width: 140px;">Thứ 4</th>
-                                    <th style="min-width: 140px;">Thứ 5</th>
-                                    <th style="min-width: 140px;">Thứ 6</th>
-                                    <th style="min-width: 140px;">Thứ 7</th>
-                                    <th style="min-width: 140px;">Chủ nhật</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="bg-light">
-                                        <div class="p-2 text-start">
-                                            <div class="fw-bold text-primary mb-2">Lý thuyết biển báo và sa hình</div>
-                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>18:30 - 20:00</div>
-                                            <div class="small text-muted"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Phòng học A1</div>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td class="bg-light">
-                                        <div class="p-2 text-start">
-                                            <div class="fw-bold text-warning mb-2">Luyện đề và giải thích đáp án</div>
-                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>18:30 - 20:30</div>
-                                            <div class="small text-muted"><i class="fas fa-laptop-house me-2 text-primary"></i>Phòng máy số 2</div>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td class="bg-light">
-                                        <div class="p-2 text-start">
-                                            <div class="fw-bold text-success mb-2">Thực hành sa hình</div>
-                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>17:30 - 19:00</div>
-                                            <div class="small text-muted"><i class="fas fa-warehouse me-2 text-primary"></i>Sân tập thực hành</div>
-                                        </div>
-                                    </td>
-                                    <td></td>
-                                    <td class="bg-light">
-                                        <div class="p-2 text-start">
-                                            <div class="fw-bold text-danger mb-2">Thi thử tổng hợp</div>
-                                            <div class="small text-muted mb-1"><i class="far fa-clock me-2 text-primary"></i>08:00 - 10:00</div>
-                                            <div class="small text-muted"><i class="fas fa-school me-2 text-primary"></i>Phòng thi mô phỏng</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="schedule-list d-grid gap-3">
+                        @foreach (var item in Model.Schedule)
+                        {
+                            <div class="schedule-item schedule-@item.AccentClass">
+                                <div class="schedule-item__day">@item.DayLabel</div>
+                                <div class="schedule-item__body">
+                                    <div class="schedule-item__title">@item.Title</div>
+                                    <div class="schedule-item__meta"><i class="far fa-clock me-2"></i>@item.TimeText</div>
+                                    <div class="schedule-item__meta"><i class="fas fa-map-marker-alt me-2"></i>@item.Location</div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
-
             <div class="col-lg-4">
-                <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
-                    <h3 class="h5 mb-3">Mốc quan trọng</h3>
-                    <div class="timeline d-grid gap-3">
-                        <div class="d-flex gap-3">
-                            <div class="text-primary fs-4"><i class="fas fa-circle"></i></div>
-                            <div>
-                                <strong>Khai giảng</strong>
-                                <p class="text-muted mb-0">15/04/2026 - Nhận tài liệu và phổ biến lộ trình học.</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-3">
-                            <div class="text-warning fs-4"><i class="fas fa-circle"></i></div>
-                            <div>
-                                <strong>Kiểm tra giữa khóa</strong>
-                                <p class="text-muted mb-0">26/04/2026 - Đánh giá mức độ nắm kiến thức lý thuyết.</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-3">
-                            <div class="text-success fs-4"><i class="fas fa-circle"></i></div>
-                            <div>
-                                <strong>Ôn tập tổng hợp</strong>
-                                <p class="text-muted mb-0">05/05/2026 - Rà soát lỗi sai và thực hành tăng cường.</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-3">
-                            <div class="text-danger fs-4"><i class="fas fa-circle"></i></div>
-                            <div>
-                                <strong>Dự kiến sát hạch</strong>
-                                <p class="text-muted mb-0">12/05/2026 - Sẵn sàng bước vào kỳ thi chính thức.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-primary text-white shadow-sm rounded-4 p-4">
+                <div class="bg-primary text-white shadow-sm rounded-4 p-4 h-100">
                     <h3 class="h5 mb-3">Lưu ý cho học viên</h3>
-                    <ul class="mb-0 ps-3 d-grid gap-2">
-                        <li>Đến trước giờ học ít nhất 15 phút.</li>
-                        <li>Mang theo CCCD và phiếu đăng ký khi thực hành.</li>
-                        <li>Hoàn thành tối thiểu 3 đề thi thử mỗi tuần.</li>
-                        <li>Liên hệ trung tâm nếu cần đổi ca học.</li>
+                    <ul class="mb-4 ps-3 d-grid gap-2">
+                        <li>Đến trước giờ học ít nhất 15 phút và chuẩn bị CCCD khi cần đối chiếu.</li>
+                        <li>Ôn lại toàn bộ câu sai sau mỗi lần làm bài để cải thiện tỉ lệ đậu.</li>
+                        <li>Ưu tiên luyện lại câu điểm liệt trước kỳ sát hạch chính thức.</li>
+                        <li>Theo dõi các khóa đã đăng ký để không bỏ lỡ lịch học quan trọng.</li>
                     </ul>
+                    <div class="portal-note-box bg-white text-dark rounded-4 p-3">
+                        <div class="fw-semibold mb-1">Mục tiêu tuần này</div>
+                        <div class="small text-muted">Hoàn thành thêm ít nhất 3 bài ôn và giữ tỉ lệ chính xác trên 80%.</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .student-portal-page {
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+        }
+
+        .student-hero-card {
+            overflow: hidden;
+        }
+
+        .student-avatar {
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d6efd, #4f8dfd);
+            color: #fff;
+            font-size: 2rem;
+            font-weight: 700;
+            box-shadow: 0 18px 32px rgba(13, 110, 253, .22);
+        }
+
+        .portal-stat-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            color: #fff;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+        }
+
+        .portal-stat-card__icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.18);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .portal-stat-card__value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: .5rem;
+        }
+
+        .portal-stat-card__label {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .portal-stat-card__sub {
+            font-size: .92rem;
+            opacity: .92;
+        }
+
+        .stat-primary { background: linear-gradient(135deg, #0d6efd, #4f8dfd); }
+        .stat-success { background: linear-gradient(135deg, #198754, #36b37e); }
+        .stat-warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+        .stat-danger { background: linear-gradient(135deg, #dc3545, #f87171); }
+
+        .summary-item {
+            padding: 1rem 1.1rem;
+            border-radius: 1rem;
+            background: #f8fbff;
+            border: 1px solid #e9eef5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .summary-item__label {
+            color: #6b7280;
+        }
+
+        .summary-item__value {
+            color: #111827;
+            font-weight: 700;
+        }
+
+        .course-card {
+            background: #f8fbff;
+            border: 1px solid #e9eef5;
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 30px rgba(15, 23, 42, .08);
+        }
+
+        .schedule-list {
+            grid-template-columns: 1fr;
+        }
+
+        .schedule-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 1.1rem;
+            border: 1px solid #e9eef5;
+            background: #fff;
+            align-items: flex-start;
+        }
+
+        .schedule-item__day {
+            min-width: 92px;
+            text-align: center;
+            font-weight: 700;
+            padding: .65rem .75rem;
+            border-radius: .9rem;
+            background: #eef4ff;
+            color: #0d6efd;
+        }
+
+        .schedule-item__title {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: .35rem;
+        }
+
+        .schedule-item__meta {
+            color: #6b7280;
+            font-size: .95rem;
+            margin-top: .2rem;
+        }
+
+        .schedule-warning .schedule-item__day { background: #fff7e6; color: #b45309; }
+        .schedule-success .schedule-item__day { background: #ecfdf3; color: #198754; }
+        .schedule-danger .schedule-item__day { background: #fff1f2; color: #dc3545; }
+
+        .portal-note-box {
+            border: 1px dashed rgba(13,110,253,.25);
+        }
+
+        @@media (max-width: 991.98px) {
+            .student-avatar {
+                width: 78px;
+                height: 78px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+}
