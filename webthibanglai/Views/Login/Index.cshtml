@@ -99,30 +99,41 @@
                                     <h2 class="h3 mb-2">Đăng ký tài khoản học viên</h2>
                                     <p class="login-note mb-4">Tạo tài khoản mới theo đúng dữ liệu yêu cầu từ API.</p>
 
-                                    <form method="post" action="/Login/Register" class="row g-3">
+                                    @if (!ViewData.ModelState.IsValid && TempData.Peek("ActiveLoginTab")?.ToString() == "register")
+                                    {
+                                        <div asp-validation-summary="All" class="alert alert-danger"></div>
+                                    }
+
+                                    <form method="post" action="/Login/Register" class="row g-3" novalidate>
                                         <div class="col-md-6">
                                             <label asp-for="RegisterRequest.TenDangNhap" class="form-label fw-semibold">Tên đăng nhập</label>
                                             <input asp-for="RegisterRequest.TenDangNhap" class="form-control login-input" placeholder="vd: nguyenvana" />
+                                            <span asp-validation-for="RegisterRequest.TenDangNhap" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <label asp-for="RegisterRequest.Email" class="form-label fw-semibold">Email</label>
                                             <input asp-for="RegisterRequest.Email" type="email" class="form-control login-input" placeholder="name@email.com" />
+                                            <span asp-validation-for="RegisterRequest.Email" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <label asp-for="RegisterRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
                                             <input asp-for="RegisterRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
+                                            <span asp-validation-for="RegisterRequest.MatKhau" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-6">
                                             <label asp-for="RegisterRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
                                             <input asp-for="RegisterRequest.SoDienThoai" class="form-control login-input" placeholder="Nhập số điện thoại" />
+                                            <span asp-validation-for="RegisterRequest.SoDienThoai" class="text-danger small"></span>
                                         </div>
                                         <div class="col-12">
                                             <label asp-for="RegisterRequest.HoTen" class="form-label fw-semibold">Họ tên</label>
                                             <input asp-for="RegisterRequest.HoTen" class="form-control login-input" placeholder="Nhập họ tên đầy đủ" />
+                                            <span asp-validation-for="RegisterRequest.HoTen" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-4">
                                             <label asp-for="RegisterRequest.NgaySinh" class="form-label fw-semibold">Ngày sinh</label>
                                             <input asp-for="RegisterRequest.NgaySinh" type="date" class="form-control login-input" />
+                                            <span asp-validation-for="RegisterRequest.NgaySinh" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-4">
                                             <label asp-for="RegisterRequest.GioiTinh" class="form-label fw-semibold">Giới tính</label>
@@ -132,19 +143,22 @@
                                                 <option value="Nữ">Nữ</option>
                                                 <option value="Khác">Khác</option>
                                             </select>
+                                            <span asp-validation-for="RegisterRequest.GioiTinh" class="text-danger small"></span>
                                         </div>
                                         <div class="col-md-4">
                                             <label asp-for="RegisterRequest.Cccd" class="form-label fw-semibold">CCCD</label>
                                             <input asp-for="RegisterRequest.Cccd" class="form-control login-input" placeholder="Nhập CCCD" />
+                                            <span asp-validation-for="RegisterRequest.Cccd" class="text-danger small"></span>
                                         </div>
                                         <div class="col-12">
                                             <label asp-for="RegisterRequest.DiaChi" class="form-label fw-semibold">Địa chỉ</label>
                                             <input asp-for="RegisterRequest.DiaChi" class="form-control login-input" placeholder="Nhập địa chỉ" />
+                                            <span asp-validation-for="RegisterRequest.DiaChi" class="text-danger small"></span>
                                         </div>
                                         <div class="col-12">
-                                            <label asp-for="RegisterRequest.AnhChanDung" class="form-label fw-semibold">Ảnh chân dung</label>
-                                            <input asp-for="RegisterRequest.AnhChanDung" class="form-control login-input" placeholder="URL ảnh hoặc chuỗi base64 nếu API yêu cầu" />
-                                            <div class="form-text">Trường này có thể để trống nếu hiện tại chưa có ảnh.</div>
+                                            <label for="RegisterRequest_AnhChanDung" class="form-label fw-semibold">Ảnh chân dung <span class="text-muted fw-normal">(không bắt buộc)</span></label>
+                                            <input id="RegisterRequest_AnhChanDung" name="RegisterRequest.AnhChanDung" type="text" class="form-control login-input" placeholder="Để trống nếu chưa có ảnh" value="@Model.RegisterRequest.AnhChanDung" />
+                                            <div class="form-text">Có thể cập nhật sau trong trang hồ sơ cá nhân.</div>
                                         </div>
                                         <div class="col-12">
                                             <button type="submit" class="btn btn-primary w-100 login-submit">Đăng ký tài khoản</button>

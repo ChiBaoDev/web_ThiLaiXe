@@ -44,7 +44,11 @@
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="portal-stat-card stat-primary h-100">
-                    <div class="portal-stat-card__icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="portal-stat-card__glow"></div>
+                    <div class="portal-stat-card__topbar">
+                        <div class="portal-stat-card__icon"><i class="fas fa-trophy"></i></div>
+                        <span class="portal-stat-card__pill">Kết quả</span>
+                    </div>
                     <div class="portal-stat-card__value">@stats.PassRate.ToString("0.##")%</div>
                     <div class="portal-stat-card__label">Tỉ lệ thi đậu</div>
                     <div class="portal-stat-card__sub">Đậu @stats.PassedExams / @stats.TotalExams bài thi</div>
@@ -52,7 +56,11 @@
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="portal-stat-card stat-success h-100">
-                    <div class="portal-stat-card__icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="portal-stat-card__glow"></div>
+                    <div class="portal-stat-card__topbar">
+                        <div class="portal-stat-card__icon"><i class="fas fa-bullseye"></i></div>
+                        <span class="portal-stat-card__pill">Chính xác</span>
+                    </div>
                     <div class="portal-stat-card__value">@stats.CorrectAnswers</div>
                     <div class="portal-stat-card__label">Câu đúng</div>
                     <div class="portal-stat-card__sub">Điểm trung bình @stats.AverageScore.ToString("0.##")</div>
@@ -60,7 +68,11 @@
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="portal-stat-card stat-warning h-100">
-                    <div class="portal-stat-card__icon"><i class="fas fa-times-circle"></i></div>
+                    <div class="portal-stat-card__glow"></div>
+                    <div class="portal-stat-card__topbar">
+                        <div class="portal-stat-card__icon"><i class="fas fa-redo-alt"></i></div>
+                        <span class="portal-stat-card__pill">Ôn lại</span>
+                    </div>
                     <div class="portal-stat-card__value">@stats.WrongAnswers</div>
                     <div class="portal-stat-card__label">Câu sai</div>
                     <div class="portal-stat-card__sub">@stats.WrongQuestionCount câu đang cần ôn lại</div>
@@ -68,10 +80,101 @@
             </div>
             <div class="col-xl-3 col-md-6">
                 <div class="portal-stat-card stat-danger h-100">
-                    <div class="portal-stat-card__icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="portal-stat-card__glow"></div>
+                    <div class="portal-stat-card__topbar">
+                        <div class="portal-stat-card__icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <span class="portal-stat-card__pill">Cảnh báo</span>
+                    </div>
                     <div class="portal-stat-card__value">@stats.CriticalWrongCount</div>
                     <div class="portal-stat-card__label">Câu điểm liệt sai</div>
                     <div class="portal-stat-card__sub">Tỷ lệ lỗi @stats.CriticalErrorRate.ToString("0.##")%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-sm rounded-4 p-4 border mb-4 practice-panel">
+            <button class="practice-panel__toggle" type="button" data-bs-toggle="collapse" data-bs-target="#studentPracticeCollapse" aria-expanded="true" aria-controls="studentPracticeCollapse">
+                <span>
+                    <span class="practice-panel__eyebrow">Ôn tập học viên</span>
+                    <span class="practice-panel__title">Khu vực ôn tập nhanh</span>
+                    <span class="practice-panel__desc">Thu gọn hoặc mở rộng danh sách ôn tập. Các mục chưa có API vẫn hiển thị tĩnh.</span>
+                </span>
+                <span class="practice-panel__toggle-icon"><i class="fas fa-chevron-down"></i></span>
+            </button>
+
+            <div id="studentPracticeCollapse" class="collapse show">
+                <div class="practice-grid">
+                <a asp-controller="Exam" asp-action="Index" class="practice-shortcut practice-amber text-decoration-none">
+                    <span class="practice-shortcut__icon"><i class="fas fa-book"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Ôn tập tất cả</span>
+                        <span class="practice-shortcut__meta">Mở nhanh khu vực luyện đề tổng hợp dành cho học viên.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn</span>
+                </a>
+
+                <a asp-controller="Exam" asp-action="Index" class="practice-shortcut practice-red text-decoration-none">
+                    <span class="practice-shortcut__icon"><i class="fas fa-random"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Đề ngẫu nhiên</span>
+                        <span class="practice-shortcut__meta">Đi tới phần thi thử với bộ câu hỏi chọn nhanh.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-play"></i>Vào luyện đề</span>
+                </a>
+
+                <a asp-controller="Exam" asp-action="Index" class="practice-shortcut practice-pink text-decoration-none">
+                    <span class="practice-shortcut__icon"><i class="fas fa-th-large"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Ôn theo bộ đề</span>
+                        <span class="practice-shortcut__meta">Dùng điều hướng hiện có để vào danh sách đề luyện tập.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-folder-open"></i>Xem bộ đề</span>
+                </a>
+
+                <div class="practice-shortcut practice-lime practice-shortcut--static">
+                    <span class="practice-shortcut__icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Câu điểm liệt</span>
+                        <span class="practice-shortcut__meta">Hiện làm tĩnh vì chưa có API danh sách riêng các câu điểm liệt sai.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-info-circle"></i>Đang mô phỏng</span>
+                </div>
+
+                <div class="practice-shortcut practice-cyan practice-shortcut--static">
+                    <span class="practice-shortcut__icon"><i class="fas fa-lightbulb"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Mẹo ghi nhớ</span>
+                        <span class="practice-shortcut__meta">Khu vực mẹo học nhanh đang hiển thị giao diện mẫu cho học viên.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-star"></i>Nội dung tĩnh</span>
+                </div>
+
+                <div class="practice-shortcut practice-blue practice-shortcut--static">
+                    <span class="practice-shortcut__icon"><i class="fas fa-list-ol"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Top câu sai</span>
+                        <span class="practice-shortcut__meta">Tạm hiển thị kiểu thẻ vì chưa có API top câu sai theo học viên.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-chart-line"></i>Chưa nối dữ liệu</span>
+                </div>
+
+                <div class="practice-shortcut practice-indigo practice-shortcut--static">
+                    <span class="practice-shortcut__icon"><i class="fas fa-map-signs"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Biển báo GT</span>
+                        <span class="practice-shortcut__meta">Chuyên đề biển báo đang là giao diện tĩnh do chưa có API riêng.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-route"></i>Chuyên đề mẫu</span>
+                </div>
+
+                <a asp-controller="KhoaHoc" asp-action="Index" class="practice-shortcut practice-purple text-decoration-none">
+                    <span class="practice-shortcut__icon"><i class="fas fa-car"></i></span>
+                    <span class="practice-shortcut__content">
+                        <span class="practice-shortcut__title">Tập lái</span>
+                        <span class="practice-shortcut__meta">Đi tới khu vực khóa học và nội dung liên quan phần thực hành.</span>
+                    </span>
+                    <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Xem khóa học</span>
+                </a>
                 </div>
             </div>
         </div>
@@ -205,22 +308,55 @@
         .portal-stat-card {
             position: relative;
             overflow: hidden;
-            border-radius: 1.5rem;
+            border-radius: 1.75rem;
             padding: 1.5rem;
             color: #fff;
             box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+            isolation: isolate;
+        }
+
+        .portal-stat-card__glow {
+            position: absolute;
+            inset: auto -40px -55px auto;
+            width: 140px;
+            height: 140px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.12);
+            filter: blur(4px);
+            z-index: -1;
+        }
+
+        .portal-stat-card__topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
         .portal-stat-card__icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,.18);
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.14);
+            backdrop-filter: blur(10px);
+            font-size: 1.35rem;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+        }
+        .portal-stat-card__pill {
+            display: inline-flex;
+            align-items: center;
+            padding: .45rem .8rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .02em;
+            background: rgba(255,255,255,.16);
+            border: 1px solid rgba(255,255,255,.14);
         }
 
         .portal-stat-card__value {
@@ -241,10 +377,166 @@
             opacity: .92;
         }
 
-        .stat-primary { background: linear-gradient(135deg, #0d6efd, #4f8dfd); }
-        .stat-success { background: linear-gradient(135deg, #198754, #36b37e); }
-        .stat-warning { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-        .stat-danger { background: linear-gradient(135deg, #dc3545, #f87171); }
+        .stat-primary { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+        .stat-success { background: linear-gradient(135deg, #059669, #34d399); }
+        .stat-warning { background: linear-gradient(135deg, #f59e0b, #fcd34d); }
+        .stat-danger { background: linear-gradient(135deg, #e11d48, #fb7185); }
+        .practice-panel {
+            overflow: hidden;
+        }
+
+        .practice-panel__toggle {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            margin: 0 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            text-align: left;
+        }
+
+        .practice-panel__eyebrow {
+            display: inline-block;
+            margin-bottom: .35rem;
+            padding: .35rem .7rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 700;
+            color: #b45309;
+            background: #fff7e6;
+        }
+
+        .practice-panel__title {
+            display: block;
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: .2rem;
+        }
+
+        .practice-panel__desc {
+            display: block;
+            color: #64748b;
+            font-size: .96rem;
+        }
+
+        .practice-panel__toggle-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform .2s ease;
+        }
+
+        .practice-panel__toggle[aria-expanded="true"] .practice-panel__toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .85rem;
+        }
+
+        .practice-shortcut {
+            min-height: 168px;
+            border-radius: 1.1rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(15, 23, 42, .10);
+            transition: transform .2s ease, box-shadow .2s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,.18);
+            text-decoration: none;
+        }
+
+        .practice-shortcut::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.03));
+            pointer-events: none;
+        }
+
+        .practice-shortcut:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 34px rgba(15, 23, 42, .14);
+            color: #fff;
+        }
+
+        .practice-shortcut__icon,
+        .practice-shortcut__content,
+        .practice-shortcut__footer {
+            position: relative;
+            z-index: 1;
+        }
+
+        .practice-shortcut__icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            background: rgba(255,255,255,.18);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+        }
+
+        .practice-shortcut__content {
+            margin-top: .8rem;
+        }
+
+        .practice-shortcut__title {
+            display: block;
+            font-size: 1rem;
+            line-height: 1.3;
+            font-weight: 800;
+            margin-bottom: .35rem;
+        }
+
+        .practice-shortcut__meta {
+            display: block;
+            font-size: .84rem;
+            line-height: 1.4;
+            opacity: .96;
+        }
+
+        .practice-shortcut__footer {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            font-weight: 700;
+            opacity: .95;
+            margin-top: .85rem;
+        }
+
+        .practice-shortcut--static {
+            cursor: default;
+        }
+
+        .practice-amber { background: linear-gradient(135deg, #f59e0b, #f8c15c); }
+        .practice-red { background: linear-gradient(135deg, #ef4444, #ff6b6b); }
+        .practice-pink { background: linear-gradient(135deg, #ec4899, #f472b6); }
+        .practice-lime { background: linear-gradient(135deg, #84cc16, #a3d94b); }
+        .practice-cyan { background: linear-gradient(135deg, #06b6d4, #22cce2); }
+        .practice-blue { background: linear-gradient(135deg, #2563eb, #4f8dfd); }
+        .practice-indigo { background: linear-gradient(135deg, #4f46e5, #6477f3); }
+        .practice-purple { background: linear-gradient(135deg, #7c3aed, #9f67ff); }
 
         .summary-item {
             padding: 1rem 1.1rem;
@@ -328,6 +620,23 @@
                 width: 78px;
                 height: 78px;
                 font-size: 1.5rem;
+            }
+
+            .practice-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .practice-panel__title {
+                font-size: 1.25rem;
+            }
+        }
+        @@media (max-width: 575.98px) {
+            .practice-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .practice-shortcut {
+                min-height: 156px;
             }
         }
     </style>

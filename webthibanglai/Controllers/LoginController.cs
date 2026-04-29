@@ -125,17 +125,29 @@ namespace webthibanglai.Controllers
         {
             var request = model.RegisterRequest;
 
-            if (string.IsNullOrWhiteSpace(request.TenDangNhap)
-                || string.IsNullOrWhiteSpace(request.MatKhau)
-                || string.IsNullOrWhiteSpace(request.Email)
-                || string.IsNullOrWhiteSpace(request.SoDienThoai)
-                || string.IsNullOrWhiteSpace(request.HoTen)
-                || request.NgaySinh == default
-                || string.IsNullOrWhiteSpace(request.GioiTinh)
-                || string.IsNullOrWhiteSpace(request.Cccd)
-                || string.IsNullOrWhiteSpace(request.DiaChi))
+            // Validate từng trường và thêm lỗi cụ thể
+            if (string.IsNullOrWhiteSpace(request.TenDangNhap))
+                ModelState.AddModelError("RegisterRequest.TenDangNhap", "Tên đăng nhập không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.MatKhau))
+                ModelState.AddModelError("RegisterRequest.MatKhau", "Mật khẩu không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.Email))
+                ModelState.AddModelError("RegisterRequest.Email", "Email không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.SoDienThoai))
+                ModelState.AddModelError("RegisterRequest.SoDienThoai", "Số điện thoại không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.HoTen))
+                ModelState.AddModelError("RegisterRequest.HoTen", "Họ tên không được để trống.");
+            if (request.NgaySinh == default)
+                ModelState.AddModelError("RegisterRequest.NgaySinh", "Ngày sinh không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.GioiTinh))
+                ModelState.AddModelError("RegisterRequest.GioiTinh", "Giới tính không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.Cccd))
+                ModelState.AddModelError("RegisterRequest.Cccd", "CCCD không được để trống.");
+            if (string.IsNullOrWhiteSpace(request.DiaChi))
+                ModelState.AddModelError("RegisterRequest.DiaChi", "Địa chỉ không được để trống.");
+
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError(string.Empty, "Vui lòng nhập đầy đủ thông tin đăng ký bắt buộc.");
+                TempData["ActiveLoginTab"] = "register";
                 return View("Index", model);
             }
 
@@ -161,17 +173,104 @@ namespace webthibanglai.Controllers
 
             if (!response.IsSuccessStatusCode)
             {
-                ModelState.AddModelError(string.Empty, ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Đăng ký thất bại.");
+                _logger.LogWarning("Register API failed. Status: {StatusCode}, Body: {ResponseBody}", response.StatusCode, responseBody);
+                var errorMessage = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody);
+                
+                // Nếu là lỗi server 500 và message chung chung, đưa ra thông báo thân thiện hơn
+                if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError &&
+                    (string.IsNullOrEmpty(errorMessage) || errorMessage.Contains("unexpected error", StringComparison.OrdinalIgnoreCase)))
+                {
+                    errorMessage = "Đăng ký thất bại. Có thể email hoặc tên đăng nhập đã tồn tại. Vui lòng thử lại với thông tin khác.";
+                }
+                else if (string.IsNullOrEmpty(errorMessage))
+                {
+                    errorMessage = "Đăng ký thất bại.";
+                }
+                
+                _logger.LogInformation("Extracted error message: {ErrorMessage}", errorMessage);
+                ModelState.AddModelError(string.Empty, errorMessage);
+                TempData["ActiveLoginTab"] = "register";
                 return View("Index", model);
             }
 
             var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<RegisterResponseData>>(responseBody, JsonOptions());
             var registeredUser = apiResponse?.Data;
 
-            TempData["RegisterSuccess"] = registeredUser == null
-                ? "Đăng ký thành công. Vui lòng đăng nhập bằng tài khoản vừa tạo."
-                : $"Đăng ký thành công cho tài khoản {registeredUser.TenDangNhap}. Vui lòng đăng nhập.";
+            if (registeredUser == null)
+            {
+                TempData["RegisterSuccess"] = "Đăng ký thành công. Vui lòng đăng nhập bằng tài khoản vừa tạo.";
+                return RedirectToAction(nameof(Index));
+            }
 
+            // Tự động đăng nhập sau khi đăng ký thành công
+            _logger.LogInformation("Auto-login after registration for user: {Username}", registeredUser.TenDangNhap);
+            
+            var loginPayload = new
+            {
+                ten_dang_nhap_hoac_email = request.TenDangNhap,
+                mat_khau = request.MatKhau
+            };
+
+            var loginContent = new StringContent(JsonSerializer.Serialize(loginPayload), Encoding.UTF8, "application/json");
+            var loginResponse = await client.PostAsync("/api/v1/auth/login", loginContent);
+            var loginResponseBody = await loginResponse.Content.ReadAsStringAsync();
+
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var loginApiResponse = JsonSerializer.Deserialize<ApiEnvelope<AuthTokenResponse>>(loginResponseBody, JsonOptions());
+                if (loginApiResponse?.Data != null)
+                {
+                    var auth = NormalizeAuthToken(loginApiResponse.Data, loginResponseBody);
+                    if (!string.IsNullOrWhiteSpace(auth.AccessToken))
+                    {
+                        HttpContext.Session.SetString(AccessTokenSessionKey, auth.AccessToken);
+                        _logger.LogInformation("Saved access token to session for user {Username}. ExpiresAtUtc={ExpiresAtUtc}", auth.TenDangNhap, auth.ExpiresAtUtc);
+
+                        // Gọi API /auth/me để lấy thông tin user đầy đủ
+                        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+                        var meResponse = await client.GetAsync("/api/v1/auth/me");
+                        var meResponseBody = await meResponse.Content.ReadAsStringAsync();
+                        _logger.LogInformation("Auth/me raw response after registration: {ResponseBody}", meResponseBody);
+
+                        if (meResponse.IsSuccessStatusCode)
+                        {
+                            var meApiResponse = JsonSerializer.Deserialize<ApiEnvelope<CurrentUserInfo>>(meResponseBody, JsonOptions());
+                            var currentUser = meApiResponse?.Data;
+
+                            if (currentUser != null)
+                            {
+                                TempData["AuthUsername"] = !string.IsNullOrWhiteSpace(currentUser.HoTen) ? currentUser.HoTen : auth.TenDangNhap;
+                                TempData["AuthEmail"] = currentUser.Email ?? auth.Email;
+                                TempData["AuthRoles"] = string.Join(",", currentUser.Roles ?? auth.Roles);
+                                TempData["ProfileUserId"] = currentUser.UserId.ToString();
+                                TempData["ProfileHocVienId"] = currentUser.HocVienId.ToString();
+                                TempData["ProfileHoTen"] = currentUser.HoTen;
+                                TempData["ProfileTenDangNhap"] = currentUser.TenDangNhap;
+                                TempData["ProfileEmail"] = currentUser.Email;
+                                TempData["ProfileSoDienThoai"] = currentUser.SoDienThoai;
+                                TempData["ProfileTrangThai"] = currentUser.TrangThai;
+                                TempData["ProfileNgaySinh"] = currentUser.NgaySinh?.ToString("dd/MM/yyyy");
+                                TempData["ProfileGioiTinh"] = currentUser.GioiTinh;
+                                TempData["ProfileCccd"] = currentUser.Cccd;
+                                TempData["ProfileDiaChi"] = currentUser.DiaChi;
+                                TempData["ProfileAnhChanDung"] = currentUser.AnhChanDung;
+                            }
+                        }
+                        else
+                        {
+                            TempData["AuthUsername"] = auth.TenDangNhap;
+                            TempData["AuthEmail"] = auth.Email;
+                            TempData["AuthRoles"] = string.Join(",", auth.Roles);
+                        }
+
+                        TempData["LoginSuccess"] = $"Đăng ký và đăng nhập thành công! Chào mừng {registeredUser.TenDangNhap}";
+                        return RedirectToAction("Index", "Home");
+                    }
+                }
+            }
+
+            // Nếu auto-login thất bại, vẫn thông báo đăng ký thành công
+            TempData["RegisterSuccess"] = $"Đăng ký thành công cho tài khoản {registeredUser.TenDangNhap}. Vui lòng đăng nhập.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -652,25 +751,64 @@ namespace webthibanglai.Controllers
 
         private static string? ExtractErrorMessage(string responseBody)
         {
-            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, JsonOptions());
-            return apiResponse?.Message;
+            try
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, JsonOptions());
+                return apiResponse?.Message;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static string? ExtractDetailedErrorMessage(string responseBody)
         {
-            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, JsonOptions());
-            if (apiResponse?.Errors == null || apiResponse.Errors.Count == 0)
+            try
             {
+                // Thử parse với JsonSerializerOptions có IgnoreNullValues
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+                
+                var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<object>>(responseBody, options);
+                
+                // Nếu có errors và là array
+                if (apiResponse?.Errors != null && apiResponse.Errors.Count > 0)
+                {
+                    return string.Join(" ", apiResponse.Errors
+                        .Select(x => !string.IsNullOrWhiteSpace(x.Detail)
+                            ? x.Detail
+                            : !string.IsNullOrWhiteSpace(x.Field)
+                                ? $"{x.Field}: dữ liệu không hợp lệ."
+                                : x.Code)
+                        .Where(x => !string.IsNullOrWhiteSpace(x)));
+                }
+                
+                // Nếu không có errors, trả về message
                 return apiResponse?.Message;
             }
-
-            return string.Join(" ", apiResponse.Errors
-                .Select(x => !string.IsNullOrWhiteSpace(x.Detail)
-                    ? x.Detail
-                    : !string.IsNullOrWhiteSpace(x.Field)
-                        ? $"{x.Field}: dữ liệu không hợp lệ."
-                        : x.Code)
-                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            catch
+            {
+                // Nếu không parse được JSON, thử tìm message trong raw response
+                if (responseBody.Contains("Email đã tồn tại", StringComparison.OrdinalIgnoreCase))
+                    return "Email đã tồn tại.";
+                    
+                if (responseBody.Contains("Tên đăng nhập đã tồn tại", StringComparison.OrdinalIgnoreCase))
+                    return "Tên đăng nhập đã tồn tại.";
+                    
+                if (responseBody.Contains("uq_hoc_vien_cccd", StringComparison.OrdinalIgnoreCase) ||
+                    responseBody.Contains("duplicate key", StringComparison.OrdinalIgnoreCase))
+                    return "CCCD đã tồn tại trong hệ thống. Vui lòng kiểm tra lại.";
+                    
+                if (responseBody.Contains("UNIQUE KEY constraint", StringComparison.OrdinalIgnoreCase))
+                    return "Thông tin đã tồn tại trong hệ thống (email, tên đăng nhập hoặc CCCD). Vui lòng kiểm tra lại.";
+                
+                return null;
+            }
         }
 
         private static JsonSerializerOptions JsonOptions()
@@ -759,7 +897,7 @@ namespace webthibanglai.Controllers
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public T? Data { get; set; }
-        public List<ApiErrorDetail> Errors { get; set; } = new();
+        public List<ApiErrorDetail>? Errors { get; set; }
     }
 
     public class ApiErrorDetail
