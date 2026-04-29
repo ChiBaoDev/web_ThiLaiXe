@@ -23,6 +23,10 @@ builder.Services.AddHttpClient("ApiClient", client =>
 builder.Services.AddScoped<IExamApiService, ExamApiService>();
 builder.Services.AddScoped<IStudentDashboardApiService, StudentDashboardApiService>();
 
+// Đăng ký AI Service
+builder.Services.AddHttpClient<IAIService, OpenAIService>();
+builder.Services.AddScoped<IAIService, OpenAIService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

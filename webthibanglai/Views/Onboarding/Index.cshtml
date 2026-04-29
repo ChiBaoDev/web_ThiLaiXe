@@ -1,0 +1,529 @@
+@{
+    ViewData["Title"] = "Khảo sát ban đầu";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+
+<div class="onboarding-page">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-xl-8 col-lg-10">
+                <div class="onboarding-card">
+                    <div class="onboarding-header text-center mb-4">
+                        <div class="onboarding-icon mb-3">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h1 class="h2 mb-2">Chào mừng bạn đến với hệ thống!</h1>
+                        <p class="text-muted">Hãy cho chúng tôi biết thêm về bạn để gợi ý khóa học phù hợp nhất</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container mb-4">
+                        <div class="progress" style="height: 8px; border-radius: 10px;">
+                            <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width: 33.33%"></div>
+                        </div>
+                        <div class="step-indicator mt-2 text-center">
+                            <small class="text-muted">Câu <span id="currentStep">1</span> / 3</small>
+                        </div>
+                    </div>
+
+                    <form id="onboardingForm">
+                        <!-- Câu hỏi 1: Mục đích sử dụng -->
+                        <div class="onboarding-question step-question active" data-step="1">
+                            <label class="form-label fw-bold mb-3">
+                                <span class="question-number">1</span> Mục đích chính của bạn khi sử dụng hệ thống này?
+                            </label>
+                            <div class="option-group">
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="purpose" id="purpose1" value="hoc_thi_bang_lai" required>
+                                    <label class="form-check-label" for="purpose1">
+                                        <i class="fas fa-graduation-cap me-2"></i>
+                                        <span>Học để thi bằng lái lần đầu</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="purpose" id="purpose2" value="thi_thu">
+                                    <label class="form-check-label" for="purpose2">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        <span>Thi thử để đánh giá năng lực</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="purpose" id="purpose3" value="on_lai_kien_thuc">
+                                    <label class="form-check-label" for="purpose3">
+                                        <i class="fas fa-book-reader me-2"></i>
+                                        <span>Ôn lại kiến thức đã học</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="purpose" id="purpose4" value="xem_meo_thi">
+                                    <label class="form-check-label" for="purpose4">
+                                        <i class="fas fa-lightbulb me-2"></i>
+                                        <span>Xem mẹo thi và kinh nghiệm</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Câu hỏi 2: Mức độ hiện tại -->
+                        <div class="onboarding-question step-question" data-step="2">
+                            <label class="form-label fw-bold mb-3">
+                                <span class="question-number">2</span> Mức độ hiểu biết hiện tại của bạn về luật giao thông?
+                            </label>
+                            <div class="option-group">
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="level" id="level1" value="chua_biet_gi" required>
+                                    <label class="form-check-label" for="level1">
+                                        <i class="fas fa-seedling me-2"></i>
+                                        <span>Chưa biết gì, mới bắt đầu</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="level" id="level2" value="da_hoc_qua">
+                                    <label class="form-check-label" for="level2">
+                                        <i class="fas fa-book me-2"></i>
+                                        <span>Đã học qua một số kiến thức cơ bản</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="level" id="level3" value="sap_thi">
+                                    <label class="form-check-label" for="level3">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <span>Sắp thi, đang ôn tập tích cực</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="level" id="level4" value="da_thi_rot">
+                                    <label class="form-check-label" for="level4">
+                                        <i class="fas fa-redo me-2"></i>
+                                        <span>Đã thi rớt, cần ôn lại</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="level" id="level5" value="da_co_bang">
+                                    <label class="form-check-label" for="level5">
+                                        <i class="fas fa-id-card me-2"></i>
+                                        <span>Đã có bằng, muốn củng cố kiến thức</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Câu hỏi 3: Thói quen học -->
+                        <div class="onboarding-question step-question" data-step="3">
+                            <label class="form-label fw-bold mb-3">
+                                <span class="question-number">3</span> Bạn thích học theo cách nào?
+                            </label>
+                            <div class="option-group">
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="style" id="style1" value="hoc_nhanh" required>
+                                    <label class="form-check-label" for="style1">
+                                        <i class="fas fa-bolt me-2"></i>
+                                        <span>Học nhanh, tập trung cao độ</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="style" id="style2" value="hoc_theo_de">
+                                    <label class="form-check-label" for="style2">
+                                        <i class="fas fa-list-ol me-2"></i>
+                                        <span>Học theo từng đề thi mẫu</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="style" id="style3" value="ly_thuyet_truoc">
+                                    <label class="form-check-label" for="style3">
+                                        <i class="fas fa-book-open me-2"></i>
+                                        <span>Học lý thuyết trước, sau đó làm bài tập</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="style" id="style4" value="thuc_hanh_truoc">
+                                    <label class="form-check-label" for="style4">
+                                        <i class="fas fa-hands-helping me-2"></i>
+                                        <span>Làm bài tập trước, học lý thuyết sau</span>
+                                    </label>
+                                </div>
+                                <div class="form-check option-card">
+                                    <input class="form-check-input" type="radio" name="style" id="style5" value="hoc_tu_tu">
+                                    <label class="form-check-label" for="style5">
+                                        <i class="fas fa-walking me-2"></i>
+                                        <span>Học từ từ, chia nhỏ mỗi ngày</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="onboarding-actions d-flex gap-3 mt-5">
+                            <button type="button" class="btn btn-outline-secondary" id="prevBtn" style="display: none;">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary flex-fill" id="skipBtn">
+                                <i class="fas fa-forward me-2"></i>Bỏ qua
+                            </button>
+                            <button type="button" class="btn btn-primary flex-fill" id="nextBtn">
+                                Tiếp theo<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            <button type="submit" class="btn btn-primary flex-fill" id="submitBtn" style="display: none;">
+                                <i class="fas fa-check me-2"></i>Hoàn thành
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Debug: Xem dữ liệu đã lưu -->
+                    <div class="mt-4 text-center">
+                        <button type="button" class="btn btn-sm btn-outline-info" id="viewDataBtn">
+                            <i class="fas fa-eye me-1"></i>Xem dữ liệu đã lưu
+                        </button>
+                    </div>
+                    <div id="savedDataDisplay" class="mt-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <h6 class="mb-2"><i class="fas fa-database me-2"></i>Dữ liệu trong localStorage:</h6>
+                            <pre id="savedDataContent" class="mb-0" style="font-size: 0.85rem; background: #fff; padding: 1rem; border-radius: 8px;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .onboarding-page {
+        background: linear-gradient(180deg, #fffef9 0%, #fffaf0 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+        .onboarding-card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 2px solid #f3bd00;
+        }
+
+        .onboarding-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #f3bd00 0%, #ffd700 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(243, 189, 0, 0.3);
+        }
+
+        .progress-container {
+            padding: 0 1rem;
+        }
+
+        .step-question {
+            display: none;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.4s ease;
+        }
+
+        .step-question.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            animation: slideIn 0.4s ease;
+        }
+
+        .step-question.prev {
+            animation: slideOut 0.4s ease;
+        }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @@keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+        }
+
+        .onboarding-question {
+            padding: 1.5rem;
+            background: #fffef9;
+            border-radius: 16px;
+            border: 1px solid #f0e2b6;
+            min-height: 400px;
+        }
+
+        .question-number {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background: #f3bd00;
+            color: #1f2937;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option-card {
+            margin: 0;
+            padding: 0;
+        }
+
+        .option-card .form-check-input {
+            display: none;
+        }
+
+        .option-card .form-check-label {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .option-card .form-check-label:hover {
+            border-color: #f3bd00;
+            background: #fffef9;
+            transform: translateX(4px);
+        }
+
+        .option-card .form-check-input:checked + .form-check-label {
+            background: #fff8df;
+            border-color: #f3bd00;
+            box-shadow: 0 4px 12px rgba(243, 189, 0, 0.2);
+        }
+
+        .option-card .form-check-label i {
+            color: #f3bd00;
+            font-size: 1.25rem;
+        }
+
+        .onboarding-actions button {
+            min-height: 54px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        @@media (max-width: 767.98px) {
+            .onboarding-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .onboarding-actions {
+                flex-direction: column;
+            }
+
+            .onboarding-question {
+                min-height: 350px;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('onboardingForm');
+            const skipBtn = document.getElementById('skipBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progressBar');
+            const currentStepSpan = document.getElementById('currentStep');
+            const viewDataBtn = document.getElementById('viewDataBtn');
+            const savedDataDisplay = document.getElementById('savedDataDisplay');
+            const savedDataContent = document.getElementById('savedDataContent');
+
+            let currentStep = 1;
+            const totalSteps = 3;
+
+            // Kiểm tra xem đã làm khảo sát chưa
+            const onboardingData = localStorage.getItem('onboardingData');
+            if (onboardingData) {
+                // Đã làm rồi, redirect về Home
+                window.location.href = '/Home/Index';
+                return;
+            }
+
+            // Hàm cập nhật hiển thị step
+            function updateStep() {
+                // Ẩn tất cả các câu hỏi
+                document.querySelectorAll('.step-question').forEach(q => {
+                    q.classList.remove('active');
+                });
+
+                // Hiển thị câu hỏi hiện tại
+                const currentQuestion = document.querySelector(`.step-question[data-step="${currentStep}"]`);
+                if (currentQuestion) {
+                    currentQuestion.classList.add('active');
+                }
+
+                // Cập nhật progress bar
+                const progress = (currentStep / totalSteps) * 100;
+                progressBar.style.width = progress + '%';
+                currentStepSpan.textContent = currentStep;
+
+                // Cập nhật buttons
+                prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+                
+                if (currentStep === totalSteps) {
+                    nextBtn.style.display = 'none';
+                    submitBtn.style.display = 'block';
+                } else {
+                    nextBtn.style.display = 'block';
+                    submitBtn.style.display = 'none';
+                }
+            }
+
+            // Hàm kiểm tra câu hỏi hiện tại đã trả lời chưa
+            function isCurrentStepAnswered() {
+                const currentQuestion = document.querySelector(`.step-question[data-step="${currentStep}"]`);
+                if (!currentQuestion) return false;
+
+                const inputs = currentQuestion.querySelectorAll('input[type="radio"]');
+                return Array.from(inputs).some(input => input.checked);
+            }
+
+            // Xử lý nút Next
+            nextBtn.addEventListener('click', function () {
+                if (!isCurrentStepAnswered()) {
+                    alert('Vui lòng chọn một câu trả lời trước khi tiếp tục.');
+                    return;
+                }
+
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateStep();
+                }
+            });
+
+            // Xử lý nút Previous
+            prevBtn.addEventListener('click', function () {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateStep();
+                }
+            });
+
+            // Xử lý submit form
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                if (!isCurrentStepAnswered()) {
+                    alert('Vui lòng chọn một câu trả lời trước khi hoàn thành.');
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const data = {
+                    purpose: formData.get('purpose'),
+                    level: formData.get('level'),
+                    style: formData.get('style'),
+                    completedAt: new Date().toISOString()
+                };
+
+                // Lưu vào localStorage
+                localStorage.setItem('onboardingData', JSON.stringify(data));
+                console.log('Onboarding data saved:', data);
+
+                // Gửi form để redirect
+                const completeForm = document.createElement('form');
+                completeForm.method = 'POST';
+                completeForm.action = '/Onboarding/Complete';
+                document.body.appendChild(completeForm);
+                completeForm.submit();
+            });
+
+            // Xử lý bỏ qua
+            skipBtn.addEventListener('click', function () {
+                if (confirm('Bạn có chắc muốn bỏ qua khảo sát? Bạn có thể làm lại sau trong phần cài đặt.')) {
+                    // Đánh dấu đã bỏ qua
+                    localStorage.setItem('onboardingSkipped', 'true');
+                    
+                    const skipForm = document.createElement('form');
+                    skipForm.method = 'POST';
+                    skipForm.action = '/Onboarding/Skip';
+                    document.body.appendChild(skipForm);
+                    skipForm.submit();
+                }
+            });
+
+            // Xử lý xem dữ liệu đã lưu
+            viewDataBtn.addEventListener('click', function () {
+                const onboardingData = localStorage.getItem('onboardingData');
+                const skippedData = localStorage.getItem('onboardingSkipped');
+                
+                if (onboardingData || skippedData) {
+                    let displayText = '';
+                    
+                    if (onboardingData) {
+                        const data = JSON.parse(onboardingData);
+                        displayText += 'Dữ liệu khảo sát:\n' + JSON.stringify(data, null, 2);
+                    }
+                    
+                    if (skippedData) {
+                        displayText += '\n\nĐã bỏ qua: ' + skippedData;
+                    }
+                    
+                    savedDataContent.textContent = displayText;
+                    savedDataDisplay.style.display = 'block';
+                } else {
+                    savedDataContent.textContent = 'Chưa có dữ liệu nào được lưu.';
+                    savedDataDisplay.style.display = 'block';
+                }
+            });
+
+            // Khởi tạo
+            updateStep();
+        });
+    </script>
+</body>
+</html>

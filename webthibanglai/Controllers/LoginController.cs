@@ -264,7 +264,7 @@ namespace webthibanglai.Controllers
                         }
 
                         TempData["LoginSuccess"] = $"Đăng ký và đăng nhập thành công! Chào mừng {registeredUser.TenDangNhap}";
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Onboarding");
                     }
                 }
             }
