@@ -180,18 +180,6 @@
                             </button>
                         </div>
                     </form>
-
-                    <!-- Debug: Xem dữ liệu đã lưu -->
-                    <div class="mt-4 text-center">
-                        <button type="button" class="btn btn-sm btn-outline-info" id="viewDataBtn">
-                            <i class="fas fa-eye me-1"></i>Xem dữ liệu đã lưu
-                        </button>
-                    </div>
-                    <div id="savedDataDisplay" class="mt-3" style="display: none;">
-                        <div class="alert alert-info">
-                            <h6 class="mb-2"><i class="fas fa-database me-2"></i>Dữ liệu trong localStorage:</h6>
-                            <pre id="savedDataContent" class="mb-0" style="font-size: 0.85rem; background: #fff; padding: 1rem; border-radius: 8px;"></pre>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -378,9 +366,6 @@
             const submitBtn = document.getElementById('submitBtn');
             const progressBar = document.getElementById('progressBar');
             const currentStepSpan = document.getElementById('currentStep');
-            const viewDataBtn = document.getElementById('viewDataBtn');
-            const savedDataDisplay = document.getElementById('savedDataDisplay');
-            const savedDataContent = document.getElementById('savedDataContent');
 
             let currentStep = 1;
             const totalSteps = 3;
@@ -472,7 +457,6 @@
 
                 // Lưu vào localStorage
                 localStorage.setItem('onboardingData', JSON.stringify(data));
-                console.log('Onboarding data saved:', data);
 
                 // Gửi form để redirect
                 const completeForm = document.createElement('form');
@@ -493,31 +477,6 @@
                     skipForm.action = '/Onboarding/Skip';
                     document.body.appendChild(skipForm);
                     skipForm.submit();
-                }
-            });
-
-            // Xử lý xem dữ liệu đã lưu
-            viewDataBtn.addEventListener('click', function () {
-                const onboardingData = localStorage.getItem('onboardingData');
-                const skippedData = localStorage.getItem('onboardingSkipped');
-                
-                if (onboardingData || skippedData) {
-                    let displayText = '';
-                    
-                    if (onboardingData) {
-                        const data = JSON.parse(onboardingData);
-                        displayText += 'Dữ liệu khảo sát:\n' + JSON.stringify(data, null, 2);
-                    }
-                    
-                    if (skippedData) {
-                        displayText += '\n\nĐã bỏ qua: ' + skippedData;
-                    }
-                    
-                    savedDataContent.textContent = displayText;
-                    savedDataDisplay.style.display = 'block';
-                } else {
-                    savedDataContent.textContent = 'Chưa có dữ liệu nào được lưu.';
-                    savedDataDisplay.style.display = 'block';
                 }
             });
 

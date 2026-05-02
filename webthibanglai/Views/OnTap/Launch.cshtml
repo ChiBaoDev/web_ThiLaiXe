@@ -1,0 +1,349 @@
+@{
+    Layout = null;
+    var topicCode = ViewBag.TopicCode as string ?? "";
+    var topicName = ViewBag.TopicName as string ?? "Ôn tập";
+    var topicTheme = ViewBag.TopicTheme as string ?? "practice-indigo";
+    var practiceUrl = Url.Action("Practice", "OnTap", new { topicCode = topicCode, embedded = true }) ?? "/OnTap/Practice";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chuẩn bị ôn tập - @topicName</title>
+    <link rel="stylesheet" href="@Url.Content("~/css/bootstrap.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/css/style.css")" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            --launch-gradient: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            --launch-surface: #ffffff;
+            --launch-surface-soft: #f8fafc;
+            --launch-border: #c7d2fe;
+            --launch-shadow: rgba(79, 70, 229, 0.18);
+            --launch-badge-bg: #e0e7ff;
+            --launch-badge-color: #3730a3;
+            --launch-icon-color: #4f46e5;
+            --launch-button-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+            --launch-button-shadow: rgba(79, 70, 229, 0.24);
+            margin: 0;
+            min-height: 100vh;
+            background: var(--launch-gradient);
+            color: #1f2937;
+            font-family: "Heebo", sans-serif;
+        }
+
+        .launch-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .launch-card {
+            width: min(760px, 100%);
+            background: var(--launch-surface);
+            border: 1px solid var(--launch-border);
+            border-radius: 32px;
+            box-shadow: 0 24px 60px var(--launch-shadow);
+            padding: 2.5rem;
+            text-align: center;
+        }
+
+        .launch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: var(--launch-badge-bg);
+            color: var(--launch-badge-color);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .launch-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: .75rem;
+        }
+
+        .launch-copy {
+            color: #6b7280;
+            max-width: 580px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .launch-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .launch-meta-item {
+            border: 1px solid var(--launch-border);
+            border-radius: 20px;
+            padding: 1rem;
+            background: var(--launch-surface-soft);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .launch-meta-item i {
+            font-size: 1.25rem;
+            color: var(--launch-icon-color);
+            flex-shrink: 0;
+        }
+
+        .launch-meta-item .label {
+            display: block;
+            color: #6b7280;
+            font-size: .85rem;
+            margin-bottom: .15rem;
+        }
+
+        .launch-meta-item strong {
+            font-size: 1rem;
+            color: #1f2937;
+        }
+
+        .launch-btn {
+            min-width: 240px;
+            border-radius: 18px;
+            font-weight: 700;
+            padding: 1rem 1.5rem;
+            border: 0;
+            background: var(--launch-button-gradient);
+            box-shadow: 0 18px 40px var(--launch-button-shadow);
+        }
+
+        .launch-btn:hover,
+        .launch-btn:focus {
+            color: #ffffff;
+            filter: brightness(1.03);
+            transform: translateY(-1px);
+        }
+
+        .practice-blue {
+            --launch-gradient: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            --launch-surface-soft: #eff6ff;
+            --launch-border: #93c5fd;
+            --launch-shadow: rgba(37, 99, 235, 0.18);
+            --launch-badge-bg: #dbeafe;
+            --launch-badge-color: #1d4ed8;
+            --launch-icon-color: #2563eb;
+            --launch-button-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --launch-button-shadow: rgba(37, 99, 235, 0.24);
+        }
+
+        .practice-red {
+            --launch-gradient: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            --launch-surface-soft: #fef2f2;
+            --launch-border: #fca5a5;
+            --launch-shadow: rgba(220, 38, 38, 0.18);
+            --launch-badge-bg: #fee2e2;
+            --launch-badge-color: #b91c1c;
+            --launch-icon-color: #dc2626;
+            --launch-button-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+            --launch-button-shadow: rgba(220, 38, 38, 0.24);
+        }
+
+        .practice-purple {
+            --launch-gradient: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            --launch-surface-soft: #faf5ff;
+            --launch-border: #d8b4fe;
+            --launch-shadow: rgba(147, 51, 234, 0.18);
+            --launch-badge-bg: #f3e8ff;
+            --launch-badge-color: #7e22ce;
+            --launch-icon-color: #9333ea;
+            --launch-button-gradient: linear-gradient(135deg, #a855f7, #9333ea);
+            --launch-button-shadow: rgba(147, 51, 234, 0.24);
+        }
+
+        .practice-amber {
+            --launch-gradient: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            --launch-surface-soft: #fffbeb;
+            --launch-border: #fcd34d;
+            --launch-shadow: rgba(217, 119, 6, 0.18);
+            --launch-badge-bg: #fef3c7;
+            --launch-badge-color: #b45309;
+            --launch-icon-color: #d97706;
+            --launch-button-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+            --launch-button-shadow: rgba(217, 119, 6, 0.24);
+        }
+
+        .practice-cyan {
+            --launch-gradient: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+            --launch-surface-soft: #ecfeff;
+            --launch-border: #67e8f9;
+            --launch-shadow: rgba(8, 145, 178, 0.18);
+            --launch-badge-bg: #cffafe;
+            --launch-badge-color: #0e7490;
+            --launch-icon-color: #0891b2;
+            --launch-button-gradient: linear-gradient(135deg, #06b6d4, #0891b2);
+            --launch-button-shadow: rgba(8, 145, 178, 0.24);
+        }
+
+        .practice-pink {
+            --launch-gradient: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            --launch-surface-soft: #fdf2f8;
+            --launch-border: #f9a8d4;
+            --launch-shadow: rgba(219, 39, 119, 0.18);
+            --launch-badge-bg: #fce7f3;
+            --launch-badge-color: #be185d;
+            --launch-icon-color: #db2777;
+            --launch-button-gradient: linear-gradient(135deg, #ec4899, #db2777);
+            --launch-button-shadow: rgba(219, 39, 119, 0.24);
+        }
+
+        .practice-lime {
+            --launch-gradient: linear-gradient(135deg, #f7fee7 0%, #ecfccb 100%);
+            --launch-surface-soft: #f7fee7;
+            --launch-border: #bef264;
+            --launch-shadow: rgba(101, 163, 13, 0.18);
+            --launch-badge-bg: #ecfccb;
+            --launch-badge-color: #4d7c0f;
+            --launch-icon-color: #65a30d;
+            --launch-button-gradient: linear-gradient(135deg, #84cc16, #65a30d);
+            --launch-button-shadow: rgba(101, 163, 13, 0.24);
+        }
+
+        .practice-indigo {
+            --launch-gradient: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+            --launch-surface-soft: #eef2ff;
+            --launch-border: #a5b4fc;
+            --launch-shadow: rgba(79, 70, 229, 0.18);
+            --launch-badge-bg: #e0e7ff;
+            --launch-badge-color: #3730a3;
+            --launch-icon-color: #4f46e5;
+            --launch-button-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+            --launch-button-shadow: rgba(79, 70, 229, 0.24);
+        }
+
+        .launch-note {
+            margin-top: 1rem;
+            color: #6b7280;
+            font-size: .95rem;
+        }
+
+        .practice-host {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            background: #fff;
+        }
+
+        body.practice-host-active {
+            background: #fff;
+            overflow: hidden;
+        }
+
+        body.practice-host-active .launch-shell {
+            display: none;
+        }
+
+        body.practice-host-active .practice-host {
+            display: block;
+        }
+
+        @@media (max-width: 767.98px) {
+            .launch-card {
+                padding: 1.5rem;
+                border-radius: 24px;
+            }
+
+            .launch-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .launch-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body class="@topicTheme">
+    <div class="launch-shell">
+        <div class="launch-card">
+            <div class="launch-badge"><i class="fas fa-expand-arrows-alt"></i> Sẵn sàng ôn tập</div>
+            <h1 class="launch-title">@topicName</h1>
+            <p class="launch-copy">Nhấn <strong>Bắt đầu ôn tập</strong> để kích hoạt chế độ toàn màn hình và bắt đầu ôn tập ngay trên trang này.</p>
+            <div class="launch-meta">
+                <div class="launch-meta-item">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <span class="label">Phản hồi</span>
+                        <strong>Ngay lập tức</strong>
+                    </div>
+                </div>
+                <div class="launch-meta-item">
+                    <i class="fas fa-bookmark"></i>
+                    <div>
+                        <span class="label">Lưu câu sai</span>
+                        <strong>Tự động</strong>
+                    </div>
+                </div>
+                <div class="launch-meta-item">
+                    <i class="fas fa-infinity"></i>
+                    <div>
+                        <span class="label">Thời gian</span>
+                        <strong>Không giới hạn</strong>
+                    </div>
+                </div>
+                <div class="launch-meta-item">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <span class="label">Theo dõi</span>
+                        <strong>Tiến độ</strong>
+                    </div>
+                </div>
+            </div>
+            <button type="button" id="launchPracticeBtn" class="btn btn-success text-white launch-btn">Bắt đầu ôn tập</button>
+            <div class="launch-note">Nếu trình duyệt chặn toàn màn hình, bài ôn tập vẫn sẽ được mở trên cùng trang để tiếp tục học.</div>
+        </div>
+    </div>
+
+    <iframe id="practiceHostFrame" class="practice-host" title="Ôn tập" referrerpolicy="same-origin"></iframe>
+
+    <script>
+        (function () {
+            var button = document.getElementById('launchPracticeBtn');
+            var frame = document.getElementById('practiceHostFrame');
+            var targetUrl = '@practiceUrl';
+
+            function openFullscreen() {
+                if (document.documentElement.requestFullscreen) {
+                    return document.documentElement.requestFullscreen();
+                }
+
+                return Promise.resolve();
+            }
+
+            function loadPractice() {
+                document.body.classList.add('practice-host-active');
+                frame.src = targetUrl;
+            }
+
+            if (!button || !frame) {
+                return;
+            }
+
+            button.addEventListener('click', function () {
+                Promise.resolve(openFullscreen())
+                    .catch(function () {
+                        return null;
+                    })
+                    .finally(function () {
+                        loadPractice();
+                    });
+            });
+        })();
+    </script>
+</body>
+</html>

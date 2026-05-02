@@ -1,0 +1,362 @@
+@{
+    ViewData["Title"] = "Ôn tập";
+}
+
+<section class="practice-topics-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 720px;">
+                    <h6 class="text-success text-uppercase mb-2">Ôn tập GPLX</h6>
+                    <h1 class="display-6 mb-4">Chọn chủ đề ôn tập</h1>
+                    <p class="mb-0">Luyện tập theo từng chủ đề với phản hồi ngay lập tức. Hệ thống sẽ lưu lại các câu sai để bạn xem lại sau.</p>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(TempData["PracticeError"]?.ToString()))
+                {
+                    <div class="alert alert-danger shadow-sm border-0 rounded-4 mb-4">
+                        @TempData["PracticeError"]
+                    </div>
+                }
+
+                <div class="practice-grid">
+                    <!-- Khái niệm và quy tắc giao thông - Blue -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_QTGT" class="practice-shortcut practice-blue text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-book-open"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Khái niệm và quy tắc giao thông</span>
+                            <span class="practice-shortcut__meta">Ôn tập các khái niệm cơ bản và quy tắc giao thông đường bộ.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Câu hỏi điểm liệt - Red -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_LIET" class="practice-shortcut practice-red text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Câu hỏi điểm liệt</span>
+                            <span class="practice-shortcut__meta">Luyện tập các câu hỏi điểm liệt quan trọng, không được sai.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Văn hóa và đạo đức - Purple -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_VH" class="practice-shortcut practice-purple text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-heart"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Văn hóa và đạo đức người lái xe</span>
+                            <span class="practice-shortcut__meta">Học về văn hóa giao thông và đạo đức khi tham gia giao thông.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Kỹ thuật lái xe - Orange -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_KT" class="practice-shortcut practice-amber text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-car"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Kỹ thuật lái xe</span>
+                            <span class="practice-shortcut__meta">Ôn tập các kỹ thuật lái xe an toàn và xử lý tình huống.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Biển báo đường bộ - Cyan -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_BH" class="practice-shortcut practice-cyan text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-traffic-light"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Biển báo đường bộ</span>
+                            <span class="practice-shortcut__meta">Học và ghi nhớ các loại biển báo giao thông đường bộ.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Sa hình - Pink -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="CD_SH" class="practice-shortcut practice-pink text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-map-marked-alt"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Sa hình</span>
+                            <span class="practice-shortcut__meta">Luyện tập xử lý các tình huống sa hình thực tế.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Bắt đầu ôn tập</span>
+                    </a>
+
+                    <!-- Tất cả 250 câu hỏi - Lime (Full width) -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="" class="practice-shortcut practice-lime practice-shortcut--featured text-decoration-none">
+                        <span class="practice-shortcut__icon practice-shortcut__icon--large"><i class="fas fa-graduation-cap"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Tất cả 250 câu hỏi</span>
+                            <span class="practice-shortcut__meta">Ôn tập tổng hợp toàn bộ 250 câu hỏi thi bằng lái xe máy A1.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-play"></i>Bắt đầu ôn tập ngay</span>
+                    </a>
+
+                    <!-- Ôn lại câu sai - Indigo -->
+                    <a asp-controller="OnTap" asp-action="Launch" asp-route-topicCode="" class="practice-shortcut practice-indigo text-decoration-none">
+                        <span class="practice-shortcut__icon"><i class="fas fa-redo-alt"></i></span>
+                        <span class="practice-shortcut__content">
+                            <span class="practice-shortcut__title">Ôn lại câu sai</span>
+                            <span class="practice-shortcut__meta">Xem lại và luyện tập các câu hỏi đã trả lời sai trước đó.</span>
+                        </span>
+                        <span class="practice-shortcut__footer"><i class="fas fa-arrow-right"></i>Xem câu sai</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .practice-topics-page {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            min-height: calc(100vh - 160px);
+        }
+
+        .practice-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.25rem;
+            grid-auto-rows: 1fr;
+        }
+
+        .practice-shortcut {
+            background: linear-gradient(135deg, var(--shortcut-bg-light) 0%, #ffffff 100%);
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            height: 100%;
+        }
+
+        .practice-shortcut::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--shortcut-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 0;
+        }
+
+        .practice-shortcut > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .practice-shortcut:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px var(--shortcut-shadow);
+            border-color: var(--shortcut-border);
+        }
+
+        .practice-shortcut:hover::before {
+            opacity: 0.08;
+        }
+
+        .practice-shortcut--featured:hover::before {
+            opacity: 0.08;
+        }
+
+        .practice-shortcut__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--shortcut-gradient);
+            color: #ffffff;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--shortcut-shadow);
+        }
+
+        .practice-shortcut__icon--large {
+            width: 72px;
+            height: 72px;
+            font-size: 2rem;
+        }
+
+        .practice-shortcut__content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .practice-shortcut__title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.3;
+        }
+
+        .practice-shortcut__meta {
+            font-size: 0.9rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .practice-shortcut__footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--shortcut-color);
+            margin-top: auto;
+        }
+
+        .practice-shortcut__footer i {
+            transition: transform 0.3s ease;
+        }
+
+        .practice-shortcut:hover .practice-shortcut__footer i {
+            transform: translateX(4px);
+        }
+
+        .practice-shortcut--featured {
+            min-height: 100%;
+            padding: 1.75rem;
+        }
+
+        .practice-shortcut--featured .practice-shortcut__content {
+            justify-content: flex-start;
+        }
+
+        .practice-shortcut--featured .practice-shortcut__title {
+            font-size: 1.15rem;
+        }
+
+        .practice-shortcut--featured .practice-shortcut__meta {
+            font-size: 0.9rem;
+        }
+
+        /* Color Themes */
+        .practice-blue {
+            --shortcut-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --shortcut-color: #2563eb;
+            --shortcut-border: #3b82f6;
+            --shortcut-shadow: rgba(59, 130, 246, 0.3);
+            --shortcut-bg-light: #eff6ff;
+        }
+
+        .practice-red {
+            --shortcut-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+            --shortcut-color: #dc2626;
+            --shortcut-border: #ef4444;
+            --shortcut-shadow: rgba(239, 68, 68, 0.3);
+            --shortcut-bg-light: #fef2f2;
+        }
+
+        .practice-purple {
+            --shortcut-gradient: linear-gradient(135deg, #a855f7, #9333ea);
+            --shortcut-color: #9333ea;
+            --shortcut-border: #a855f7;
+            --shortcut-shadow: rgba(168, 85, 247, 0.3);
+            --shortcut-bg-light: #faf5ff;
+        }
+
+        .practice-amber {
+            --shortcut-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+            --shortcut-color: #d97706;
+            --shortcut-border: #f59e0b;
+            --shortcut-shadow: rgba(245, 158, 11, 0.3);
+            --shortcut-bg-light: #fffbeb;
+        }
+
+        .practice-cyan {
+            --shortcut-gradient: linear-gradient(135deg, #06b6d4, #0891b2);
+            --shortcut-color: #0891b2;
+            --shortcut-border: #06b6d4;
+            --shortcut-shadow: rgba(6, 182, 212, 0.3);
+            --shortcut-bg-light: #ecfeff;
+        }
+
+        .practice-pink {
+            --shortcut-gradient: linear-gradient(135deg, #ec4899, #db2777);
+            --shortcut-color: #db2777;
+            --shortcut-border: #ec4899;
+            --shortcut-shadow: rgba(236, 72, 153, 0.3);
+            --shortcut-bg-light: #fdf2f8;
+        }
+
+        .practice-lime {
+            --shortcut-gradient: linear-gradient(135deg, #84cc16, #65a30d);
+            --shortcut-color: #65a30d;
+            --shortcut-border: #84cc16;
+            --shortcut-shadow: rgba(132, 204, 22, 0.3);
+            --shortcut-bg-light: #f7fee7;
+        }
+
+        .practice-indigo {
+            --shortcut-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+            --shortcut-color: #4f46e5;
+            --shortcut-border: #6366f1;
+            --shortcut-shadow: rgba(99, 102, 241, 0.3);
+            --shortcut-bg-light: #eef2ff;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .practice-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .practice-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .practice-grid {
+                grid-template-columns: 1fr;
+                grid-auto-rows: auto;
+            }
+
+            .practice-shortcut--featured {
+                min-height: auto;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .practice-shortcut {
+                padding: 1.5rem;
+            }
+
+            .practice-shortcut__icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+
+            .practice-shortcut__icon--large {
+                width: 64px;
+                height: 64px;
+                font-size: 1.75rem;
+            }
+
+            .practice-shortcut__title {
+                font-size: 1.05rem;
+            }
+
+            .practice-shortcut--featured .practice-shortcut__title {
+                font-size: 1.05rem;
+            }
+
+            .practice-shortcut__meta {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+}

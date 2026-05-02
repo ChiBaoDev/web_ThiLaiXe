@@ -75,6 +75,7 @@
             @if (isLoggedIn)
             {
                 <a asp-controller="LichHoc" asp-action="Index" class="nav-item nav-link @(currentController == "LichHoc" ? "active" : "")">Học viên</a>
+                <a asp-controller="OnTap" asp-action="Index" class="nav-item nav-link @(currentController == "OnTap" ? "active" : "")">Ôn tập</a>
             }
             <a asp-controller="Contact" asp-action="Index" class="nav-item nav-link @(currentController == "Contact" ? "active" : "")">Liên hệ</a>
         </div>
@@ -91,7 +92,7 @@
                             <div class="fw-bold">@authUsername</div>
                             <small class="text-muted">@authEmail • @roleLabel</small>
                         </div>
-                        <a class="dropdown-item" href="/Login/Profile?debug=1" target="_self"><i class="fas fa-id-card me-2 text-primary"></i>Xem profile</a>
+                        <a class="dropdown-item" href="/Login/Profile" target="_self"><i class="fas fa-id-card me-2 text-primary"></i>Xem profile</a>
                         <form method="post" action="/Login/Logout" class="m-0">
                             <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2 text-primary"></i>Đăng xuất</button>
                         </form>

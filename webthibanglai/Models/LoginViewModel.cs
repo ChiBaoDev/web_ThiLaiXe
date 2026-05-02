@@ -24,24 +24,13 @@ public class RegisterRequestModel
     public string MatKhau { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string SoDienThoai { get; set; } = string.Empty;
-    public string HoTen { get; set; } = string.Empty;
-    public DateOnly NgaySinh { get; set; }
-    public string GioiTinh { get; set; } = string.Empty;
-    public string Cccd { get; set; } = string.Empty;
-    public string DiaChi { get; set; } = string.Empty;
-    public string AnhChanDung { get; set; } = string.Empty;
 }
 
 public class UpdateProfileRequestModel
 {
+    public string HoTen { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string SoDienThoai { get; set; } = string.Empty;
-    public string HoTen { get; set; } = string.Empty;
-    public DateOnly? NgaySinh { get; set; }
-    public string GioiTinh { get; set; } = string.Empty;
-    public string Cccd { get; set; } = string.Empty;
-    public string DiaChi { get; set; } = string.Empty;
-    public string AnhChanDung { get; set; } = string.Empty;
 }
 
 public class ChangePasswordRequestModel

@@ -1,0 +1,1041 @@
+@using webthibanglai.Services
+@{
+    ViewData["Title"] = "Ôn tập";
+    var topicCode = ViewBag.TopicCode as string ?? "";
+    var topicName = ViewBag.TopicName as string ?? "Ôn tập";
+    var questions = ViewBag.Questions as List<PracticeQuestion> ?? new List<PracticeQuestion>();
+    var currentNumber = ViewBag.CurrentNumber as int? ?? 1;
+    var isEmbedded = ViewBag.IsEmbedded as bool? ?? false;
+    var total = questions.Count;
+    var current = Math.Min(Math.Max(currentNumber, 1), Math.Max(total, 1));
+    var currentQuestion = questions.ElementAtOrDefault(current - 1);
+    
+    if (currentQuestion == null)
+    {
+        <div class="container py-5">
+            <div class="alert alert-danger">Không tìm thấy câu hỏi.</div>
+        </div>
+        return;
+    }
+    
+    var questionId = currentQuestion.Id;
+    var content = currentQuestion.Content;
+    var isCritical = currentQuestion.IsCritical;
+    var imageUrl = currentQuestion.ImageUrl;
+    var answers = currentQuestion.Answers;
+    var orderedAnswers = answers.OrderBy(x => x.Order).ToList();
+}
+
+<div class="container py-5 session-practice-page @(isEmbedded ? "embedded-mode" : string.Empty)" id="practiceSessionContainer">
+    <div class="practice-hero mb-4">
+        <div class="row g-4 align-items-center position-relative">
+            <div class="col-lg-7">
+                <span class="badge rounded-pill bg-light text-primary px-3 py-2 mb-3">Chế độ ôn tập</span>
+                <h1 class="display-5 fw-bold mb-3">@topicName</h1>
+                <p class="lead mb-4">Làm bài ôn tập với phản hồi ngay lập tức. Khi chọn sai, hệ thống sẽ thông báo và lưu câu sai để bạn xem lại sau.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <div class="practice-panel-glass px-3 py-2">
+                        <i class="fas fa-layer-group me-2"></i>@total câu hỏi
+                    </div>
+                    <div class="practice-panel-glass px-3 py-2">
+                        <i class="fas fa-book-open me-2"></i>Ôn tập
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="practice-panel-glass p-4">
+                    <h4 class="fw-bold mb-3 text-dark">Thông tin ôn tập</h4>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="bg-white text-dark rounded-4 p-3 h-100">
+                                <div class="small text-uppercase text-muted mb-1">Câu hiện tại</div>
+                                <div class="fs-3 fw-bold">@current/@total</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="bg-white text-dark rounded-4 p-3 h-100">
+                                <div class="small text-uppercase text-muted mb-1">Câu sai</div>
+                                <div id="wrongCountBox" class="fs-3 fw-bold text-danger">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="practice-shell">
+        <div class="practice-workspace">
+            <aside class="practice-sidebar">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                    <div>
+                        <div class="text-uppercase small text-muted mb-1">Chủ đề ôn tập</div>
+                        <h4 class="mb-0">@topicName</h4>
+                    </div>
+                    <span class="badge rounded-pill bg-success px-3 py-2">Ôn tập</span>
+                </div>
+
+                <div class="sidebar-stat mb-3">
+                    <span class="text-muted small">Tiến độ làm bài</span>
+                    <strong id="answeredProgressText">0/@total</strong>
+                    <div class="progress mt-3" style="height: 10px;">
+                        <div id="answeredProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="sidebar-stat mb-3">
+                    <span class="text-muted small">Câu hiện tại</span>
+                    <strong>Câu @current</strong>
+                    <div class="text-muted">Chọn đáp án để kiểm tra ngay lập tức.</div>
+                </div>
+
+                <div class="practice-fullscreen-note mb-3" id="practiceFeedback">
+                    <i class="fas fa-circle-info me-2"></i><span id="practiceFeedbackText">Chọn đáp án để kiểm tra</span>
+                </div>
+
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">Tổng quan</h6>
+                        <span class="small text-muted">Câu @current / @total</span>
+                    </div>
+                    <div class="question-palette">
+                        @for (var i = 1; i <= total; i++)
+                        {
+                            <button type="button" class="palette-btn @(i == current ? "active" : "")"
+                               data-question-number="@i"
+                               data-navigate-to="@i">@i</button>
+                        }
+                    </div>
+                </div>
+            </aside>
+
+            <section class="practice-stage">
+                <div class="practice-stage-header">
+                    <div class="question-progress">
+                        <div class="question-progress-badge">
+                            <i class="fas fa-location-arrow"></i>
+                            <span>Câu @current / @total</span>
+                        </div>
+                        <div>
+                            <h5 class="question-progress-title">Bạn đang làm đến câu @current</h5>
+                            <p class="question-progress-subtitle">@(isCritical ? "Đây là câu điểm liệt, cần chú ý chọn đáp án chính xác." : "Đọc kỹ nội dung câu hỏi và chọn đáp án phù hợp nhất.")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="practiceAnswerForm" data-check-url="@Url.Action("CheckAnswer", "OnTap")" data-topic-code="@topicCode">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="questionId" value="@questionId" />
+
+                    <div class="practice-question-card">
+                        <div>
+                            <span class="question-tag">Câu hỏi @current/@total</span>
+                            <div class="question-text">@content</div>
+                            @if (!string.IsNullOrWhiteSpace(imageUrl))
+                            {
+                                <img src="@imageUrl" alt="Hình minh họa câu hỏi" class="question-image" />
+                            }
+                            <div class="option-list">
+                                @foreach (var answer in orderedAnswers)
+                                {
+                                    var answerId = answer.AnswerId;
+                                    var answerContent = answer.Content;
+                                    var answerOrder = answer.Order;
+                                    var isCorrect = answer.IsCorrect == true;
+                                    
+                                    <div class="option-item selectable" data-answer-id="@answerId" data-is-correct="@isCorrect.ToString().ToLower()">
+                                        <input class="option-input" type="radio" name="answerId" id="answer-@answerId" value="@answerId" />
+                                        <label class="option-label w-100" for="answer-@answerId">
+                                            <span class="option-marker">@((char)('A' + Math.Max(answerOrder - 1, 0)))</span>
+                                            <span class="option-copy">@answerContent</span>
+                                            <span class="option-debug-badge" data-answer-id="@answerId">
+                                                <small class="text-muted">ID: @answerId | Đúng: @(isCorrect ? "✓" : "✗")</small>
+                                            </span>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="text-muted mt-4">Mã câu hỏi: @questionId</div>
+                    </div>
+
+                    <div class="practice-nav">
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (current > 1)
+                            {
+                                <button type="button" class="btn btn-outline-secondary px-4" data-navigate-to="@(current - 1)">
+                                    <i class="fas fa-arrow-left me-2"></i>Câu trước
+                                </button>
+                            }
+                            @if (current < total)
+                            {
+                                <button type="button" class="btn btn-primary px-4" data-navigate-to="@(current + 1)">
+                                    Câu tiếp theo<i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            }
+                        </div>
+                        @if (!isEmbedded)
+                        {
+                            <a asp-controller="OnTap" asp-action="Index" class="btn btn-outline-primary px-4 py-2">Quay lại danh sách</a>
+                        }
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Ẩn header và footer cho trang Session của OnTap */
+        body:has(.session-practice-page) .container-fluid.bg-dark.text-light.p-0,
+        body:has(.session-practice-page) .navbar,
+        body:has(.session-practice-page) footer,
+        body:has(.session-practice-page) .footer,
+        body:has(.session-practice-page) .copyright,
+        body:has(.session-practice-page) .back-to-top {
+            display: none !important;
+        }
+
+        .session-practice-page {
+            max-width: 1320px;
+        }
+
+        .session-practice-page .container.py-5 {
+            padding-top: 1rem !important;
+        }
+
+        /* Embedded mode - điều chỉnh thêm cho fullscreen */
+        body.embedded-practice-mode .practice-hero {
+            display: none !important;
+        }
+
+        body.embedded-practice-mode .container.py-5 {
+            max-width: 100%;
+            padding-top: .75rem !important;
+            padding-bottom: .75rem !important;
+        }
+
+        body.embedded-practice-mode .practice-shell {
+            padding: .5rem;
+            margin-top: 0;
+        }
+
+        body.embedded-practice-mode .practice-sidebar {
+            top: 1rem;
+        }
+
+        body.embedded-practice-mode .practice-stage {
+            min-height: calc(100vh - 2rem);
+        }
+
+        .practice-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            padding: 3rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+            color: #1f2937;
+            border: 1px solid #eceff3;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        }
+
+        .practice-hero::after {
+            content: "";
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            right: -120px;
+            top: -140px;
+            border-radius: 50%;
+            background: rgba(34, 197, 94, 0.10);
+        }
+
+        .practice-panel-glass {
+            border: 1px solid #bbf7d0;
+            background: #ffffff;
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            color: #1f2937;
+            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.08);
+        }
+
+        .practice-shell {
+            margin-top: 1.5rem;
+            background: #ffffff;
+            border-radius: 32px;
+            border: 1px solid #eceff3;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .practice-workspace {
+            display: grid;
+            grid-template-columns: 320px minmax(0,1fr);
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .practice-sidebar,
+        .practice-stage,
+        .practice-question-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 1.5rem;
+            border: 1px solid #eceff3;
+            box-shadow: none;
+        }
+
+        .sidebar-stat {
+            padding: 1rem;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            display: flex;
+            flex-direction: column;
+            gap: .35rem;
+        }
+
+        .practice-fullscreen-note {
+            padding: .9rem 1rem;
+            border-radius: 18px;
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .practice-fullscreen-note.status-correct {
+            background: #ecfdf3;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .practice-fullscreen-note.status-wrong {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
+        .question-palette {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: .6rem;
+        }
+
+        .palette-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 46px;
+            border-radius: 16px;
+            border: 1px solid #eceff3;
+            background: #ffffff;
+            color: #6b7280;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all .2s ease;
+        }
+
+        .palette-btn.active {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-color: #22c55e;
+            color: #fff;
+        }
+
+        .palette-btn.answered:not(.active) {
+            background: #e8f7ee;
+            border-color: #9ed9b0;
+            color: #166534;
+        }
+
+        .palette-btn.wrong:not(.active) {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .practice-stage-header,
+        .practice-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-progress {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .question-progress-badge {
+            min-width: max-content;
+            padding: .55rem .95rem;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+            display: flex;
+            gap: .5rem;
+            align-items: center;
+        }
+
+        .question-progress-title {
+            font-weight: 700;
+            margin-bottom: .35rem;
+        }
+
+        .question-progress-subtitle {
+            color: #6b7280;
+            margin: 0;
+        }
+
+        .question-tag {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: .35rem .8rem;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 700;
+        }
+
+        .question-text {
+            font-size: 1.28rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .option-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .option-item.selectable {
+            position: relative;
+        }
+
+        .option-input {
+            position: absolute;
+            opacity: 0;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        .option-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(15,23,42,.06);
+        }
+
+        .option-item.selectable.selected .option-label,
+        .option-input:checked + .option-label {
+            border-color: #22c55e;
+            background: #dcfce7;
+            box-shadow: 0 14px 35px rgba(34, 197, 94, 0.14);
+        }
+
+        .option-item.selectable.correct .option-label {
+            border-color: #22c55e;
+            background: #dcfce7;
+            box-shadow: 0 14px 35px rgba(34, 197, 94, 0.14);
+        }
+
+        .option-item.selectable.wrong .option-label {
+            border-color: #ef4444;
+            background: #fee2e2;
+            box-shadow: 0 14px 35px rgba(239, 68, 68, 0.14);
+        }
+
+        .option-item.selectable.disabled .option-input {
+            cursor: not-allowed;
+        }
+
+        .option-item.selectable.disabled .option-label {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .option-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0fdf4;
+            color: #166534;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .option-copy {
+            color: #111827;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .option-debug-badge {
+            display: flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            margin-left: auto;
+        }
+
+        .option-debug-badge small {
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .option-input:checked + .option-label .option-marker,
+        .option-item.selectable.selected .option-label .option-marker {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #fff;
+        }
+
+        .option-item.selectable.correct .option-label .option-marker {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #fff;
+        }
+
+        .option-item.selectable.wrong .option-label .option-marker {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #fff;
+        }
+
+        @@media (max-width: 991.98px) {
+            .practice-workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .practice-hero,
+            .practice-sidebar,
+            .practice-stage,
+            .practice-question-card {
+                padding: 1.25rem;
+            }
+
+            .practice-stage-header,
+            .practice-nav,
+            .question-progress {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .question-palette {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var practiceForm = document.getElementById('practiceAnswerForm');
+            var checkUrl = practiceForm ? practiceForm.getAttribute('data-check-url') : '';
+            var topicCode = practiceForm ? practiceForm.getAttribute('data-topic-code') : '';
+            var tokenField = document.querySelector('input[name="__RequestVerificationToken"]');
+            var feedback = document.getElementById('practiceFeedback');
+            var feedbackText = document.getElementById('practiceFeedbackText');
+            var wrongCountBox = document.getElementById('wrongCountBox');
+            var progressText = document.getElementById('answeredProgressText');
+            var progressBar = document.getElementById('answeredProgressBar');
+            var totalQuestions = @total;
+            var currentQuestionNumber = @current;
+            var questionId = @questionId;
+            var answeredStorageKey = 'practice-answered-' + topicCode;
+            var wrongStorageKey = 'practice-wrong-' + topicCode;
+            var isCheckingAnswer = false;
+            var isNavigating = false;
+            var isEmbedded = @(isEmbedded ? "true" : "false");
+
+            function setFeedback(message, state) {
+                if (!feedback || !feedbackText) {
+                    return;
+                }
+
+                feedback.classList.remove('status-correct', 'status-wrong');
+                if (state) {
+                    feedback.classList.add(state);
+                }
+
+                feedbackText.textContent = message || 'Chọn đáp án để kiểm tra';
+            }
+
+            function getAnsweredQuestions() {
+                try {
+                    var raw = window.sessionStorage.getItem(answeredStorageKey);
+                    if (!raw) return [];
+                    var parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+
+            function saveAnsweredQuestions(items) {
+                var normalized = Array.from(new Set(items
+                    .map(function (value) { return parseInt(value, 10); })
+                    .filter(function (value) { return !isNaN(value) && value >= 1 && value <= totalQuestions; })))
+                    .sort(function (a, b) { return a - b; });
+
+                window.sessionStorage.setItem(answeredStorageKey, JSON.stringify(normalized));
+                return normalized;
+            }
+
+            function markAnswered(questionNumber) {
+                return saveAnsweredQuestions(getAnsweredQuestions().concat([questionNumber]));
+            }
+
+            function getWrongQuestions() {
+                try {
+                    var raw = window.sessionStorage.getItem(wrongStorageKey);
+                    if (!raw) return [];
+                    var parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+
+            function saveWrongQuestions(items) {
+                var normalized = Array.from(new Set(items
+                    .map(function (value) { return parseInt(value, 10); })
+                    .filter(function (value) { return !isNaN(value) && value >= 1 && value <= totalQuestions; })))
+                    .sort(function (a, b) { return a - b; });
+
+                window.sessionStorage.setItem(wrongStorageKey, JSON.stringify(normalized));
+                return normalized;
+            }
+
+            function markWrong(questionNumber) {
+                return saveWrongQuestions(getWrongQuestions().concat([questionNumber]));
+            }
+
+            function renderAnsweredState() {
+                var answeredQuestions = getAnsweredQuestions();
+                var wrongQuestions = getWrongQuestions();
+                var answeredCount = answeredQuestions.length;
+                var wrongCount = wrongQuestions.length;
+                var answeredMap = new Set(answeredQuestions);
+                var wrongMap = new Set(wrongQuestions);
+                var answeredPercent = totalQuestions <= 0
+                    ? 0
+                    : Math.max(0, Math.min(100, Math.round(answeredCount / totalQuestions * 100)));
+
+                var paletteButtons = document.querySelectorAll('.palette-btn[data-question-number]');
+                paletteButtons.forEach(function (button) {
+                    var number = parseInt(button.getAttribute('data-question-number') || '', 10);
+                    button.classList.remove('answered', 'wrong');
+                    
+                    if (wrongMap.has(number)) {
+                        button.classList.add('wrong');
+                    } else if (answeredMap.has(number)) {
+                        button.classList.add('answered');
+                    }
+                });
+
+                if (progressText) {
+                    progressText.textContent = answeredCount + '/' + totalQuestions;
+                }
+
+                if (progressBar) {
+                    progressBar.style.width = answeredPercent + '%';
+                    progressBar.setAttribute('aria-valuenow', answeredPercent.toString());
+                }
+
+                if (wrongCountBox) {
+                    wrongCountBox.textContent = wrongCount.toString();
+                }
+            }
+
+            function disableAllOptions() {
+                practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
+                    item.classList.add('disabled');
+                });
+                practiceForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
+                    input.disabled = true;
+                });
+            }
+
+            function highlightAnswers(selectedAnswerId, correctAnswerId, isCorrect) {
+                console.log('=== DEBUG: highlightAnswers ===');
+                console.log('selectedAnswerId:', selectedAnswerId, '(type:', typeof selectedAnswerId + ')');
+                console.log('correctAnswerId:', correctAnswerId, '(type:', typeof correctAnswerId + ')');
+                console.log('isCorrect:', isCorrect, '(type:', typeof isCorrect + ')');
+                
+                practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
+                    var itemAnswerId = parseInt(item.getAttribute('data-answer-id') || '0', 10);
+                    var itemIsCorrect = item.getAttribute('data-is-correct') === 'true';
+                    
+                    console.log('  - Checking answer ID:', itemAnswerId, '| isCorrect from data:', itemIsCorrect);
+                    console.log('    itemAnswerId === correctAnswerId:', itemAnswerId === correctAnswerId);
+                    console.log('    itemAnswerId === selectedAnswerId:', itemAnswerId === selectedAnswerId);
+                    
+                    // Tô xanh đáp án đúng
+                    if (itemAnswerId === correctAnswerId) {
+                        console.log('    → Adding GREEN (correct) to answer', itemAnswerId);
+                        item.classList.add('correct');
+                    }
+                    
+                    // Nếu chọn sai, tô đỏ đáp án đã chọn
+                    if (!isCorrect && itemAnswerId === selectedAnswerId) {
+                        console.log('    → Adding RED (wrong) to answer', itemAnswerId);
+                        item.classList.add('wrong');
+                    }
+                });
+                console.log('=== END DEBUG ===');
+            }
+
+            function checkAnswer(answerId) {
+                if (isCheckingAnswer) {
+                    return;
+                }
+
+                console.log('=== DEBUG: Client-side Check ===');
+                console.log('answerId:', answerId, '(type:', typeof answerId + ')');
+
+                isCheckingAnswer = true;
+                setFeedback('Đang kiểm tra...', '');
+
+                // Tìm đáp án được chọn và đáp án đúng từ DOM
+                var selectedAnswer = null;
+                var correctAnswer = null;
+                
+                practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
+                    var itemAnswerId = parseInt(item.getAttribute('data-answer-id') || '0', 10);
+                    var itemIsCorrect = item.getAttribute('data-is-correct') === 'true';
+                    
+                    console.log('  - Answer ID:', itemAnswerId, '| isCorrect:', itemIsCorrect);
+                    
+                    if (itemAnswerId === answerId) {
+                        selectedAnswer = { id: itemAnswerId, isCorrect: itemIsCorrect };
+                    }
+                    
+                    if (itemIsCorrect) {
+                        correctAnswer = { id: itemAnswerId };
+                    }
+                });
+
+                console.log('Selected answer:', selectedAnswer);
+                console.log('Correct answer:', correctAnswer);
+
+                if (!selectedAnswer || !correctAnswer) {
+                    setFeedback('Lỗi: Không tìm thấy thông tin đáp án.', 'status-wrong');
+                    isCheckingAnswer = false;
+                    return;
+                }
+
+                markAnswered(currentQuestionNumber);
+
+                var isCorrect = selectedAnswer.isCorrect;
+
+                if (isCorrect) {
+                    console.log('✓ User selected CORRECT answer');
+                    setFeedback('✓ Chính xác! Đáp án đúng.', 'status-correct');
+                    highlightAnswers(selectedAnswer.id, correctAnswer.id, true);
+                } else {
+                    console.log('✗ User selected WRONG answer');
+                    setFeedback('✗ Sai rồi! Đáp án đúng đã được đánh dấu màu xanh.', 'status-wrong');
+                    markWrong(currentQuestionNumber);
+                    highlightAnswers(selectedAnswer.id, correctAnswer.id, false);
+                    
+                    // Gọi API để lưu câu sai (không chờ kết quả)
+                    if (checkUrl && tokenField) {
+                        fetch(checkUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': tokenField.value,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                topicCode: topicCode,
+                                questionId: questionId,
+                                answerId: answerId
+                            })
+                        }).catch(function(err) {
+                            console.warn('Failed to save wrong answer:', err);
+                        });
+                    }
+                }
+
+                disableAllOptions();
+                renderAnsweredState();
+                isCheckingAnswer = false;
+            }
+
+            // AJAX Navigation
+            function navigateToQuestion(questionNumber) {
+                if (isNavigating) {
+                    console.log('Already navigating, skipping...');
+                    return;
+                }
+
+                if (questionNumber < 1 || questionNumber > totalQuestions) {
+                    console.warn('Invalid question number:', questionNumber);
+                    return;
+                }
+
+                isNavigating = true;
+                setFeedback('Đang tải câu hỏi...', '');
+
+                var url = '@Url.Action("GetQuestionJson", "OnTap")' +
+                    '?topicCode=' + encodeURIComponent(topicCode) +
+                    '&number=' + questionNumber;
+
+                fetch(url)
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (!data.success || !data.question) {
+                            throw new Error('Invalid response data');
+                        }
+
+                        updateQuestionUI(data.question);
+                        
+                        // Update URL without reload
+                        var newUrl = '@Url.Action("Session", "OnTap")' +
+                            '?topicCode=' + encodeURIComponent(topicCode) +
+                            '&number=' + questionNumber +
+                            (isEmbedded ? '&embedded=true' : '');
+                        window.history.pushState({ questionNumber: questionNumber }, '', newUrl);
+
+                        isNavigating = false;
+                    })
+                    .catch(function(error) {
+                        console.error('Failed to load question:', error);
+                        setFeedback('Lỗi tải câu hỏi. Vui lòng thử lại.', 'status-wrong');
+                        isNavigating = false;
+                    });
+            }
+
+            function updateQuestionUI(question) {
+                // Update global variables
+                currentQuestionNumber = question.number;
+                questionId = question.id;
+
+                // Update question content
+                var questionTag = document.querySelector('.question-tag');
+                if (questionTag) {
+                    questionTag.textContent = 'Câu hỏi ' + question.number + '/' + question.total;
+                }
+
+                var questionText = document.querySelector('.question-text');
+                if (questionText) {
+                    questionText.textContent = question.content;
+                }
+
+                // Update image
+                var questionImage = document.querySelector('.question-image');
+                if (question.imageUrl) {
+                    if (!questionImage) {
+                        questionImage = document.createElement('img');
+                        questionImage.className = 'question-image';
+                        questionImage.alt = 'Hình minh họa câu hỏi';
+                        questionText.parentNode.insertBefore(questionImage, questionText.nextSibling);
+                    }
+                    questionImage.src = question.imageUrl;
+                    questionImage.style.display = 'block';
+                } else if (questionImage) {
+                    questionImage.style.display = 'none';
+                }
+
+                // Update answers
+                var optionList = document.querySelector('.option-list');
+                if (optionList) {
+                    optionList.innerHTML = '';
+                    question.answers.forEach(function(answer, index) {
+                        var optionItem = document.createElement('div');
+                        optionItem.className = 'option-item selectable';
+                        optionItem.setAttribute('data-answer-id', answer.answerId);
+                        optionItem.setAttribute('data-is-correct', answer.isCorrect ? 'true' : 'false');
+
+                        var marker = String.fromCharCode(65 + index); // A, B, C, D
+
+                        optionItem.innerHTML =
+                            '<input class="option-input" type="radio" name="answerId" id="answer-' + answer.answerId + '" value="' + answer.answerId + '" />' +
+                            '<label class="option-label w-100" for="answer-' + answer.answerId + '">' +
+                                '<span class="option-marker">' + marker + '</span>' +
+                                '<span class="option-copy">' + answer.content + '</span>' +
+                                '<span class="option-debug-badge" data-answer-id="' + answer.answerId + '">' +
+                                    '<small class="text-muted">ID: ' + answer.answerId + ' | Đúng: ' + (answer.isCorrect ? '✓' : '✗') + '</small>' +
+                                '</span>' +
+                            '</label>';
+
+                        optionList.appendChild(optionItem);
+                    });
+
+                    // Re-attach event listeners to new radio buttons
+                    attachAnswerListeners();
+                }
+
+                // Update question ID in form
+                var questionIdInput = document.querySelector('input[name="questionId"]');
+                if (questionIdInput) {
+                    questionIdInput.value = question.id;
+                }
+
+                // Update question code display
+                var questionCodeDisplay = document.querySelector('.practice-question-card .text-muted');
+                if (questionCodeDisplay) {
+                    questionCodeDisplay.textContent = 'Mã câu hỏi: ' + question.id;
+                }
+
+                // Update progress displays
+                var progressBadge = document.querySelector('.question-progress-badge span');
+                if (progressBadge) {
+                    progressBadge.textContent = 'Câu ' + question.number + ' / ' + question.total;
+                }
+
+                var progressTitle = document.querySelector('.question-progress-title');
+                if (progressTitle) {
+                    progressTitle.textContent = 'Bạn đang làm đến câu ' + question.number;
+                }
+
+                var progressSubtitle = document.querySelector('.question-progress-subtitle');
+                if (progressSubtitle) {
+                    progressSubtitle.textContent = question.isCritical
+                        ? 'Đây là câu điểm liệt, cần chú ý chọn đáp án chính xác.'
+                        : 'Đọc kỹ nội dung câu hỏi và chọn đáp án phù hợp nhất.';
+                }
+
+                var sidebarCurrent = document.querySelector('.sidebar-stat strong');
+                if (sidebarCurrent) {
+                    sidebarCurrent.textContent = 'Câu ' + question.number;
+                }
+
+                var paletteProgress = document.querySelector('.question-palette').previousElementSibling.querySelector('.small.text-muted');
+                if (paletteProgress) {
+                    paletteProgress.textContent = 'Câu ' + question.number + ' / ' + question.total;
+                }
+
+                // Update palette active state
+                var paletteButtons = document.querySelectorAll('.palette-btn[data-question-number]');
+                paletteButtons.forEach(function(btn) {
+                    var btnNumber = parseInt(btn.getAttribute('data-question-number'), 10);
+                    if (btnNumber === question.number) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                // Update navigation buttons
+                updateNavigationButtons(question.number, question.total);
+
+                // Reset feedback
+                setFeedback('Chọn đáp án để kiểm tra', '');
+                isCheckingAnswer = false;
+            }
+
+            function updateNavigationButtons(currentNum, totalNum) {
+                var navContainer = document.querySelector('.practice-nav .d-flex');
+                if (!navContainer) return;
+
+                navContainer.innerHTML = '';
+
+                if (currentNum > 1) {
+                    var prevBtn = document.createElement('button');
+                    prevBtn.type = 'button';
+                    prevBtn.className = 'btn btn-outline-secondary px-4';
+                    prevBtn.setAttribute('data-navigate-to', currentNum - 1);
+                    prevBtn.innerHTML = '<i class="fas fa-arrow-left me-2"></i>Câu trước';
+                    navContainer.appendChild(prevBtn);
+                }
+
+                if (currentNum < totalNum) {
+                    var nextBtn = document.createElement('button');
+                    nextBtn.type = 'button';
+                    nextBtn.className = 'btn btn-primary px-4';
+                    nextBtn.setAttribute('data-navigate-to', currentNum + 1);
+                    nextBtn.innerHTML = 'Câu tiếp theo<i class="fas fa-arrow-right ms-2"></i>';
+                    navContainer.appendChild(nextBtn);
+                }
+
+                // Re-attach navigation listeners
+                attachNavigationListeners();
+            }
+
+            function attachAnswerListeners() {
+                practiceForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
+                    input.addEventListener('change', function () {
+                        if (input.disabled) return;
+
+                        practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
+                            item.classList.remove('selected');
+                        });
+
+                        var optionItem = input.closest('.option-item.selectable');
+                        if (optionItem) {
+                            optionItem.classList.add('selected');
+                        }
+
+                        checkAnswer(parseInt(input.value, 10));
+                    });
+                });
+            }
+
+            function attachNavigationListeners() {
+                document.querySelectorAll('[data-navigate-to]').forEach(function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var targetNumber = parseInt(btn.getAttribute('data-navigate-to'), 10);
+                        navigateToQuestion(targetNumber);
+                    });
+                });
+            }
+
+            // Initialize
+            if (isEmbedded === true || isEmbedded === 'true') {
+                document.body.classList.add('embedded-practice-mode');
+            }
+
+            renderAnsweredState();
+            attachAnswerListeners();
+            attachNavigationListeners();
+
+            // Handle browser back/forward
+            window.addEventListener('popstate', function(event) {
+                if (event.state && event.state.questionNumber) {
+                    navigateToQuestion(event.state.questionNumber);
+                }
+            });
+        })();
+    </script>
+}

@@ -22,6 +22,8 @@ builder.Services.AddHttpClient("ApiClient", client =>
 });
 builder.Services.AddScoped<IExamApiService, ExamApiService>();
 builder.Services.AddScoped<IStudentDashboardApiService, StudentDashboardApiService>();
+builder.Services.AddScoped<IPracticeApiService, PracticeApiService>();
+builder.Services.AddScoped<ICourseApiService, CourseApiService>();
 
 // Đăng ký AI Service
 builder.Services.AddHttpClient<IAIService, OpenAIService>();

@@ -1,18 +1,19 @@
 @model webthibanglai.Models.LoginViewModel
 @{
     ViewData["Title"] = "Hồ sơ cá nhân";
-    var profileHoTen = TempData.Peek("ProfileHoTen")?.ToString();
-    var profileTenDangNhap = TempData.Peek("ProfileTenDangNhap")?.ToString();
-    var profileEmail = TempData.Peek("ProfileEmail")?.ToString();
-    var profileSoDienThoai = TempData.Peek("ProfileSoDienThoai")?.ToString();
-    var profileTrangThai = TempData.Peek("ProfileTrangThai")?.ToString();
-    var profileNgaySinh = TempData.Peek("ProfileNgaySinh")?.ToString();
-    var profileGioiTinh = TempData.Peek("ProfileGioiTinh")?.ToString();
-    var profileCccd = TempData.Peek("ProfileCccd")?.ToString();
-    var profileDiaChi = TempData.Peek("ProfileDiaChi")?.ToString();
-    var profileAnhChanDung = TempData.Peek("ProfileAnhChanDung")?.ToString();
-    var profileUserId = TempData.Peek("ProfileUserId")?.ToString();
-    var profileHocVienId = TempData.Peek("ProfileHocVienId")?.ToString();
+    var user = Model.CurrentUser;
+    var profileHoTen = user?.HoTen ?? string.Empty;
+    var profileTenDangNhap = user?.TenDangNhap ?? string.Empty;
+    var profileEmail = user?.Email ?? string.Empty;
+    var profileSoDienThoai = user?.SoDienThoai ?? string.Empty;
+    var profileTrangThai = user?.TrangThai ?? string.Empty;
+    var profileNgaySinh = user?.NgaySinh?.ToString("dd/MM/yyyy") ?? string.Empty;
+    var profileGioiTinh = user?.GioiTinh ?? string.Empty;
+    var profileCccd = user?.Cccd ?? string.Empty;
+    var profileDiaChi = user?.DiaChi ?? string.Empty;
+    var profileAnhChanDung = user?.AnhChanDung ?? string.Empty;
+    var profileUserId = user?.UserId.ToString() ?? string.Empty;
+    var profileHocVienId = user?.HocVienId.ToString() ?? string.Empty;
     var profileUpdateSuccess = TempData["ProfileUpdateSuccess"]?.ToString();
     var profileUpdateError = TempData["ProfileUpdateError"]?.ToString();
     var changePasswordSuccess = TempData["ChangePasswordSuccess"]?.ToString();
@@ -20,9 +21,11 @@
     var initials = !string.IsNullOrWhiteSpace(profileHoTen)
         ? string.Concat(profileHoTen.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x => char.ToUpperInvariant(x[0])))
         : "U";
-    var roleLabel = "Học viên";
+    var roleLabel = user?.Roles != null && user.Roles.Any() ? string.Join(", ", user.Roles) : "Học viên";
     var statusLabel = string.IsNullOrWhiteSpace(profileTrangThai) ? "Chưa cập nhật" : profileTrangThai;
-    var profileName = !string.IsNullOrWhiteSpace(profileHoTen) ? profileHoTen : profileTenDangNhap ?? "Người dùng";
+    var profileName = !string.IsNullOrWhiteSpace(profileHoTen) ? profileHoTen : profileTenDangNhap;
+    if (string.IsNullOrWhiteSpace(profileName)) profileName = "Người dùng";
+    var activeTab = TempData.Peek("ActiveProfileTab")?.ToString() ?? string.Empty;
 }
 
 <div id="profilePage" class="container-xxl py-5">
@@ -69,140 +72,217 @@
             </div>
 
             <div class="col-lg-8">
-                <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-                        <div>
-                            <h2 class="h3 mb-2">Thông tin chi tiết bản thân</h2>
-                            <p class="text-muted mb-0">Theo dõi tiến độ ôn thi, khóa học đang tham gia và quản lý tài khoản học viên tại đây.</p>
-                        </div>
-                        <a href="/Exam" class="btn btn-primary">
-                            <i class="fas fa-book-open me-2"></i>Tiếp tục ôn thi
-                        </a>
+                <div class="bg-white shadow-sm rounded-4 p-4 border profile-content-card">
+                    <div class="d-flex flex-wrap gap-2 mb-4 profile-tab-group" role="tablist" aria-label="Chọn chức năng quản lý tài khoản">
+                        <button type="button" class="btn profile-tab-btn active" data-profile-tab="info">
+                            <i class="fas fa-user-circle me-2"></i>Thông tin tài khoản
+                        </button>
+                        <button type="button" class="btn profile-tab-btn" data-profile-tab="update">
+                            <i class="fas fa-edit me-2"></i>Cập nhật thông tin
+                        </button>
+                        <button type="button" class="btn profile-tab-btn" data-profile-tab="password">
+                            <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                        </button>
                     </div>
 
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="border rounded-4 p-4 h-100 bg-light">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Thông tin cá nhân</span>
-                                        <h3 id="profileCourseName" class="h4 mb-2">@(profileName)</h3>
-                                        <p id="profileCourseDescription" class="text-muted mb-3">Tên đăng nhập: <strong>@(profileTenDangNhap ?? "Chưa cập nhật")</strong></p>
+                    <!-- Tab: Thông tin tài khoản -->
+                    <div id="infoTabPanel" data-profile-panel="info">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                            <div>
+                                <h2 class="h3 mb-2">Thông tin tài khoản</h2>
+                                <p class="text-muted mb-0">Xem thông tin cá nhân và tài khoản của bạn.</p>
+                            </div>
+                            <a href="/Exam" class="btn btn-primary">
+                                <i class="fas fa-book-open me-2"></i>Tiếp tục ôn thi
+                            </a>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-4 h-100 bg-light">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div class="flex-grow-1">
+                                            <span class="badge bg-primary-subtle text-primary px-3 py-2 mb-3">Thông tin cơ bản</span>
+                                            <h3 id="profileCourseName" class="h4 mb-2">@(profileName)</h3>
+                                            <p id="profileCourseDescription" class="text-muted mb-3">Tên đăng nhập: <strong>@(profileTenDangNhap ?? "Chưa cập nhật")</strong></p>
+                                        </div>
+                                        <i class="fas fa-user-circle text-primary fs-2"></i>
                                     </div>
-                                    <i class="fas fa-user-circle text-primary fs-2"></i>
+                                    <div class="d-grid gap-2 small text-muted">
+                                        <div><i class="fas fa-envelope text-primary me-2"></i>Email: <strong>@(profileEmail ?? "Chưa cập nhật")</strong></div>
+                                        <div><i class="fas fa-phone text-primary me-2"></i>Số điện thoại: <strong>@(profileSoDienThoai ?? "Chưa cập nhật")</strong></div>
+                                    </div>
                                 </div>
-                                <div class="d-grid gap-2 small text-muted mb-4">
-                                    <div><i class="far fa-calendar-alt text-primary me-2"></i>Ngày sinh: <strong id="profileCourseStartDate">@(profileNgaySinh ?? "Chưa cập nhật")</strong></div>
-                                    <div><i class="far fa-clock text-primary me-2"></i>Giới tính: <strong id="profileCourseSchedule">@(profileGioiTinh ?? "Chưa cập nhật")</strong></div>
-                                    <div><i class="fas fa-user text-primary me-2"></i>Số điện thoại: <strong id="profileCourseTeacher">@(profileSoDienThoai ?? "Chưa cập nhật")</strong></div>
-                                </div>
-                                <div id="profileScheduleLink" class="btn btn-outline-primary disabled" aria-disabled="true">
-                                    <i class="fas fa-map-marker-alt me-2"></i>@(profileDiaChi ?? "Chưa cập nhật địa chỉ")
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="border rounded-4 p-4 h-100 bg-light">
+                                    <span class="badge bg-warning text-dark px-3 py-2 mb-3">Trạng thái tài khoản</span>
+                                    <h3 class="h4 mb-3">Thông tin hệ thống</h3>
+                                    <div class="d-grid gap-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">Mã người dùng</span>
+                                            <strong id="profileRegisteredCourseCount">@(profileUserId ?? "-")</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">Trạng thái</span>
+                                            <span id="profileCourseStatus" class="badge bg-success">@statusLabel</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">Vai trò</span>
+                                            <span class="badge bg-warning text-dark">@roleLabel</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="border rounded-4 p-4 h-100 bg-light">
-                                <span class="badge bg-warning text-dark px-3 py-2 mb-3">Hồ sơ tài khoản</span>
-                                <h3 class="h4 mb-3">Thông tin xác minh</h3>
-                                <div class="d-grid gap-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">Mã người dùng</span>
-                                        <strong id="profileRegisteredCourseCount">@(profileUserId ?? "-")</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">CCCD</span>
-                                        <strong id="profileNextLesson">@(profileCccd ?? "Chưa cập nhật")</strong>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="text-muted">Ảnh chân dung</span>
-                                        <span id="profileCourseStatus" class="badge bg-info">@(string.IsNullOrWhiteSpace(profileAnhChanDung) ? "Chưa có" : "Đã có")</span>
+                        @if (!string.IsNullOrWhiteSpace(profileNgaySinh) || !string.IsNullOrWhiteSpace(profileGioiTinh) || !string.IsNullOrWhiteSpace(profileCccd) || !string.IsNullOrWhiteSpace(profileDiaChi))
+                        {
+                            <div class="mt-4">
+                                <div class="border rounded-4 p-4 bg-light">
+                                    <h5 class="mb-3"><i class="fas fa-info-circle text-primary me-2"></i>Thông tin bổ sung</h5>
+                                    <div class="row g-3">
+                                        @if (!string.IsNullOrWhiteSpace(profileNgaySinh))
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted">Ngày sinh</span>
+                                                    <strong>@profileNgaySinh</strong>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileGioiTinh))
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted">Giới tính</span>
+                                                    <strong>@profileGioiTinh</strong>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileCccd))
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted">CCCD</span>
+                                                    <strong>@profileCccd</strong>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileDiaChi))
+                                        {
+                                            <div class="col-md-6">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted">Địa chỉ</span>
+                                                    <strong>@profileDiaChi</strong>
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white shadow-sm rounded-4 p-4 border">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-                        <div>
-                            <h3 class="h4 mb-2">Cập nhật hồ sơ</h3>
-                            <p class="text-muted mb-0">Chỉnh sửa thông tin cá nhân và gửi về controller để cập nhật qua API <code>PUT /api/v1/auth/me</code>.</p>
-                        </div>
+                        }
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(profileUpdateSuccess))
-                    {
-                        <div class="alert alert-success" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>@profileUpdateSuccess
+                    <!-- Tab: Cập nhật thông tin -->
+                    <div id="updateTabPanel" data-profile-panel="update" class="d-none">
+                        <div class="mb-4">
+                            <h2 class="h3 mb-2">Cập nhật thông tin</h2>
+                            <p class="text-muted mb-0">Chỉnh sửa thông tin cá nhân cơ bản của bạn.</p>
                         </div>
-                    }
 
-                    @if (!string.IsNullOrWhiteSpace(profileUpdateError))
-                    {
-                        <div class="alert alert-danger" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>@profileUpdateError
-                        </div>
-                    }
+                        @if (!string.IsNullOrWhiteSpace(profileUpdateSuccess))
+                        {
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>@profileUpdateSuccess
+                            </div>
+                        }
 
-                    <form method="post" action="/Login/Profile" class="row g-3">
-                        @Html.AntiForgeryToken()
+                        @if (!string.IsNullOrWhiteSpace(profileUpdateError))
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>@profileUpdateError
+                            </div>
+                        }
 
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.HoTen" class="form-label fw-semibold">Họ tên</label>
-                            <input asp-for="UpdateProfileRequest.HoTen" class="form-control" placeholder="Nhập họ tên" />
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Tên đăng nhập</label>
-                            <input class="form-control" value="@(profileTenDangNhap ?? string.Empty)" readonly />
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.Email" class="form-label fw-semibold">Email</label>
-                            <input asp-for="UpdateProfileRequest.Email" type="email" class="form-control" placeholder="Nhập email" />
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
-                            <input asp-for="UpdateProfileRequest.SoDienThoai" class="form-control" placeholder="Nhập số điện thoại" />
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.NgaySinh" class="form-label fw-semibold">Ngày sinh</label>
-                            <input asp-for="UpdateProfileRequest.NgaySinh" type="date" class="form-control" />
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.GioiTinh" class="form-label fw-semibold">Giới tính</label>
-                            <select asp-for="UpdateProfileRequest.GioiTinh" class="form-select">
-                                <option value="">Chọn giới tính</option>
-                                <option value="Nam">Nam</option>
-                                <option value="Nữ">Nữ</option>
-                                <option value="Khác">Khác</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.Cccd" class="form-label fw-semibold">CCCD</label>
-                            <input asp-for="UpdateProfileRequest.Cccd" class="form-control" placeholder="Nhập CCCD" />
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="UpdateProfileRequest.AnhChanDung" class="form-label fw-semibold">Ảnh chân dung</label>
-                            <input asp-for="UpdateProfileRequest.AnhChanDung" class="form-control" placeholder="Nhập URL ảnh chân dung" />
-                        </div>
-                        <div class="col-12">
-                            <label asp-for="UpdateProfileRequest.DiaChi" class="form-label fw-semibold">Địa chỉ</label>
-                            <textarea asp-for="UpdateProfileRequest.DiaChi" class="form-control" rows="3" placeholder="Nhập địa chỉ"></textarea>
-                        </div>
-                        <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="fas fa-save me-2"></i>Cập nhật hồ sơ
-                            </button>
-                        </div>
-                    </form>
+                        <form method="post" action="/Login/Profile" class="row g-3">
+                            @Html.AntiForgeryToken()
 
-                    <hr class="my-4" />
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Tên đăng nhập</label>
+                                <input class="form-control profile-input" value="@(profileTenDangNhap ?? string.Empty)" readonly />
+                                <div class="form-text">Không thể thay đổi tên đăng nhập</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="UpdateProfileRequest.Email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                                <input asp-for="UpdateProfileRequest.Email" type="email" class="form-control profile-input" placeholder="email@example.com" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="UpdateProfileRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                                <input asp-for="UpdateProfileRequest.SoDienThoai" class="form-control profile-input" placeholder="0123456789" />
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Lưu ý:</strong> Bạn chỉ có thể cập nhật email và số điện thoại. Tên đăng nhập không thể thay đổi sau khi tạo tài khoản.
+                                </div>
+                            </div>
+                            
+                            @if (!string.IsNullOrWhiteSpace(profileNgaySinh) || !string.IsNullOrWhiteSpace(profileGioiTinh) || !string.IsNullOrWhiteSpace(profileCccd) || !string.IsNullOrWhiteSpace(profileDiaChi))
+                            {
+                                <div class="col-12">
+                                    <hr class="my-3" />
+                                    <h5 class="mb-3">Thông tin bổ sung (chỉ xem)</h5>
+                                    <div class="row g-3">
+                                        @if (!string.IsNullOrWhiteSpace(profileNgaySinh))
+                                        {
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Ngày sinh</label>
+                                                <input class="form-control profile-input" value="@profileNgaySinh" readonly />
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileGioiTinh))
+                                        {
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Giới tính</label>
+                                                <input class="form-control profile-input" value="@profileGioiTinh" readonly />
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileCccd))
+                                        {
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">CCCD</label>
+                                                <input class="form-control profile-input" value="@profileCccd" readonly />
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(profileDiaChi))
+                                        {
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Địa chỉ</label>
+                                                <input class="form-control profile-input" value="@profileDiaChi" readonly />
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
+                                <button type="submit" class="btn btn-primary px-4 profile-submit">
+                                    <i class="fas fa-save me-2"></i>Cập nhật thông tin
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary px-4" data-profile-tab="info">
+                                    <i class="fas fa-times me-2"></i>Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                    <div>
-                        <h3 class="h4 mb-2">Đổi mật khẩu</h3>
-                        <p class="text-muted">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật tài khoản của bạn.</p>
+                    <!-- Tab: Đổi mật khẩu -->
+                    <div id="passwordTabPanel" data-profile-panel="password" class="d-none">
+                        <div class="mb-4">
+                            <h2 class="h3 mb-2">Đổi mật khẩu</h2>
+                            <p class="text-muted">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật tài khoản của bạn.</p>
+                        </div>
 
                         @if (!string.IsNullOrWhiteSpace(changePasswordSuccess))
                         {
@@ -222,29 +302,30 @@
                             @Html.AntiForgeryToken()
                             <div class="col-12">
                                 <label asp-for="ChangePasswordRequest.OldPassword" class="form-label fw-semibold">Mật khẩu hiện tại</label>
-                                <input asp-for="ChangePasswordRequest.OldPassword" type="password" class="form-control" placeholder="Nhập mật khẩu hiện tại" />
+                                <input asp-for="ChangePasswordRequest.OldPassword" type="password" class="form-control profile-input" placeholder="Nhập mật khẩu hiện tại" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="ChangePasswordRequest.NewPassword" class="form-label fw-semibold">Mật khẩu mới</label>
-                                <input asp-for="ChangePasswordRequest.NewPassword" type="password" class="form-control" placeholder="Tối thiểu 8 ký tự" />
+                                <input asp-for="ChangePasswordRequest.NewPassword" type="password" class="form-control profile-input" placeholder="Tối thiểu 8 ký tự" />
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="ChangePasswordRequest.ConfirmPassword" class="form-label fw-semibold">Xác nhận mật khẩu mới</label>
-                                <input asp-for="ChangePasswordRequest.ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu mới" />
+                                <input asp-for="ChangePasswordRequest.ConfirmPassword" type="password" class="form-control profile-input" placeholder="Nhập lại mật khẩu mới" />
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    <strong>Bảo mật:</strong> Mật khẩu nên có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+                                </div>
                             </div>
                             <div class="col-12 d-flex flex-wrap gap-3 align-items-center">
-                                <button type="submit" class="btn btn-primary px-4">
+                                <button type="submit" class="btn btn-primary px-4 profile-submit">
                                     <i class="fas fa-key me-2"></i>Đổi mật khẩu
                                 </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="mt-3">
-                        <form method="post" action="/Login/Logout">
-                                <button type="submit" class="btn btn-outline-danger px-4">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                <button type="button" class="btn btn-outline-secondary px-4" data-profile-tab="info">
+                                    <i class="fas fa-times me-2"></i>Hủy
                                 </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -267,12 +348,146 @@
             background: linear-gradient(135deg, #f3bd00, #ff9f1c);
             box-shadow: 0 14px 32px rgba(243, 189, 0, 0.22);
         }
+
+        .profile-content-card {
+            min-height: 500px;
+        }
+
+        .profile-tab-group {
+            display: flex;
+            background: #fff8df;
+            border-radius: 18px;
+            padding: .35rem;
+            width: 100%;
+        }
+
+        .profile-tab-btn {
+            border-radius: 14px;
+            font-weight: 700;
+            color: #7c5a00;
+            background: transparent;
+            border: 0;
+            padding: .8rem 1.2rem;
+            transition: all 0.3s ease;
+            flex: 1;
+            white-space: nowrap;
+        }
+
+        .profile-tab-btn:hover {
+            background: rgba(243, 189, 0, 0.2);
+        }
+
+        .profile-tab-btn.active {
+            background: #f3bd00;
+            color: #1f2937;
+            box-shadow: 0 8px 20px rgba(243, 189, 0, 0.28);
+        }
+
+        .profile-input {
+            min-height: 50px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            box-shadow: none;
+        }
+
+        .profile-input:focus {
+            border-color: #f3bd00;
+            box-shadow: 0 0 0 .2rem rgba(243, 189, 0, 0.15);
+        }
+
+        .profile-submit {
+            min-height: 50px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        @@media (max-width: 991.98px) {
+            .profile-card-main {
+                position: relative;
+                top: 0;
+            }
+
+            .profile-tab-group {
+                width: 100%;
+            }
+
+            .profile-tab-btn {
+                flex: 1;
+                min-width: 0;
+                padding: .7rem .8rem;
+                font-size: 0.9rem;
+            }
+
+            .profile-tab-btn i {
+                display: none;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .profile-tab-btn {
+                font-size: 0.85rem;
+                padding: .6rem .6rem;
+            }
+        }
     </style>
 }
 
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('[data-profile-tab]');
+            const infoPanel = document.querySelector('[data-profile-panel="info"]');
+            const updatePanel = document.querySelector('[data-profile-panel="update"]');
+            const passwordPanel = document.querySelector('[data-profile-panel="password"]');
+            const activeTabFromServer = '@(activeTab)';
+
+            function activateTab(tabName) {
+                buttons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.profileTab === tabName);
+                });
+
+                if (infoPanel) {
+                    infoPanel.classList.toggle('d-none', tabName !== 'info');
+                }
+
+                if (updatePanel) {
+                    updatePanel.classList.toggle('d-none', tabName !== 'update');
+                }
+
+                if (passwordPanel) {
+                    passwordPanel.classList.toggle('d-none', tabName !== 'password');
+                }
+
+                // Scroll to top of content card on mobile
+                if (window.innerWidth < 992) {
+                    document.querySelector('.profile-content-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function () {
+                    activateTab(button.dataset.profileTab);
+                });
+            });
+
+            // Determine initial tab based on server state or form values
+            const hasUpdateError = '@(!string.IsNullOrWhiteSpace(profileUpdateError))' === 'True';
+            const hasUpdateSuccess = '@(!string.IsNullOrWhiteSpace(profileUpdateSuccess))' === 'True';
+            const hasPasswordError = '@(!string.IsNullOrWhiteSpace(changePasswordError))' === 'True';
+            const hasPasswordSuccess = '@(!string.IsNullOrWhiteSpace(changePasswordSuccess))' === 'True';
+
+            if (activeTabFromServer) {
+                activateTab(activeTabFromServer);
+            } else if (hasPasswordError || hasPasswordSuccess) {
+                activateTab('password');
+            } else if (hasUpdateError || hasUpdateSuccess) {
+                activateTab('update');
+            } else {
+                activateTab('info');
+            }
+
+            // Handle logout form submission
             document.querySelectorAll('form[action="/Login/Logout"]').forEach(form => {
                 form.addEventListener('submit', function () {
                     const submitButton = form.querySelector('button[type="submit"]');

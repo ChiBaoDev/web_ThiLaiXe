@@ -1,5 +1,28 @@
+@model webthibanglai.Models.KhoaHocViewModel
+
 @{
     ViewData["Title"] = "Khóa học";
+
+    static string FormatPrice(long price) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", price);
+    static string FormatDate(DateOnly? date) => date?.ToString("dd/MM/yyyy") ?? "Đang cập nhật";
+    static string GetStatusLabel(string status) => status switch
+    {
+        "DangMo" => "Đang mở đăng ký",
+        "DangMoDangKy" => "Đang mở đăng ký",
+        "DaDay" => "Đã đủ học viên",
+        "DaDuHocVien" => "Đã đủ học viên",
+        "TamDung" => "Tạm dừng",
+        _ => "Sắp khai giảng"
+    };
+    static string GetStatusClass(string status) => status switch
+    {
+        "DangMo" => "bg-success",
+        "DangMoDangKy" => "bg-success",
+        "DaDay" => "bg-warning text-dark",
+        "DaDuHocVien" => "bg-warning text-dark",
+        "TamDung" => "bg-secondary",
+        _ => "bg-primary"
+    };
 }
 
 <div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
@@ -18,138 +41,126 @@
     <div class="container">
         <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 650px;">
             <h6 class="text-primary text-uppercase mb-2">Lộ trình đào tạo</h6>
-            <h1 class="display-6 mb-4">Nhiều khóa học thực tế để học viên dễ chọn và đăng ký</h1>
+            <h1 class="display-6 mb-4">Khóa học thực tế từ hệ thống để học viên dễ chọn và đăng ký</h1>
             <p>
-                Chọn khóa học phù hợp với mục tiêu của bạn, từ ôn lý thuyết, luyện đề cho đến khóa tăng tốc chuẩn bị sát hạch.
+                Danh sách dưới đây lấy trực tiếp từ API khóa học, ưu tiên hiển thị rõ học phí, lịch khai giảng, số chỗ còn lại và trạng thái đăng ký.
             </p>
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Khóa học A1 cơ bản" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.200.000đ</div>
-                        <h5 class="mb-3">Khóa học A1 cơ bản</h5>
-                        <p>
-                            Dành cho học viên mới bắt đầu, bao gồm lý thuyết, biển báo, sa hình cơ bản và hướng dẫn hồ sơ đăng ký thi.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-signal text-primary me-2"></i>Cơ bản</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>4 tuần</span>
-                            <span><i class="fa fa-user-graduate text-primary me-2"></i>1 kèm 1</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
+        <div class="row g-4 mb-5">
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="bg-light rounded p-4 h-100 border-start border-4 border-primary shadow-sm">
+                    <p class="text-uppercase text-primary mb-2 small">Tổng khóa học</p>
+                    <h3 class="mb-0">@Model.TotalCourses</h3>
                 </div>
             </div>
-
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-2.jpg" alt="Khóa học luyện thi tăng tốc" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.500.000đ</div>
-                        <h5 class="mb-3">Khóa luyện thi tăng tốc</h5>
-                        <p>
-                            Tập trung ôn câu hỏi thường sai, luyện mẹo làm bài và thực hành sát cấu trúc thi thật để tăng tỷ lệ đậu.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-signal text-primary me-2"></i>Nâng cao</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>2 tuần</span>
-                            <span><i class="fa fa-file-alt text-primary me-2"></i>Luyện đề chuyên sâu</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="bg-light rounded p-4 h-100 border-start border-4 border-success shadow-sm">
+                    <p class="text-uppercase text-success mb-2 small">Đang mở đăng ký</p>
+                    <h3 class="mb-0">@Model.OpenCourses</h3>
                 </div>
             </div>
-
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-3.jpg" alt="Khóa học cuối tuần" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.350.000đ</div>
-                        <h5 class="mb-3">Khóa học cuối tuần</h5>
-                        <p>
-                            Phù hợp người đi làm hoặc sinh viên bận rộn, lịch học linh hoạt vào thứ 7 và chủ nhật, dễ theo kịp tiến độ.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-clock text-primary me-2"></i>Linh hoạt</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>5 tuần</span>
-                            <span><i class="fa fa-users text-primary me-2"></i>Nhóm nhỏ</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Khóa ôn lý thuyết trực tuyến" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">890.000đ</div>
-                        <h5 class="mb-3">Khóa ôn lý thuyết trực tuyến</h5>
-                        <p>
-                            Học online mọi lúc, có video bài giảng, câu hỏi mô phỏng và bộ đề tự luyện phù hợp cho người tự học tại nhà.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-laptop text-primary me-2"></i>Online</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>3 tuần</span>
-                            <span><i class="fa fa-book text-primary me-2"></i>Tài liệu đầy đủ</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-2.jpg" alt="Khóa luyện sa hình thực hành" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">1.800.000đ</div>
-                        <h5 class="mb-3">Khóa luyện sa hình thực hành</h5>
-                        <p>
-                            Tăng thời lượng thực hành với giáo viên hướng dẫn sát sao, giúp học viên vững kỹ năng điều khiển và xử lý tình huống.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-motorcycle text-primary me-2"></i>Thực hành</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>4 tuần</span>
-                            <span><i class="fa fa-chalkboard-teacher text-primary me-2"></i>Giảng viên kinh nghiệm</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                    <div class="position-relative">
-                        <img class="img-fluid" src="~/img/courses-3.jpg" alt="Khóa trọn gói từ A đến đậu" />
-                    </div>
-                    <div class="text-center p-4">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">2.200.000đ</div>
-                        <h5 class="mb-3">Khóa trọn gói từ A đến đậu</h5>
-                        <p>
-                            Lộ trình đầy đủ gồm hồ sơ, học lý thuyết, thực hành, luyện đề, thi thử và hỗ trợ sát ngày thi cho học viên mới.
-                        </p>
-                        <div class="d-flex justify-content-center flex-wrap gap-3 small text-muted mb-4">
-                            <span><i class="fa fa-star text-primary me-2"></i>Trọn gói</span>
-                            <span><i class="fa fa-calendar-alt text-primary me-2"></i>6 tuần</span>
-                            <span><i class="fa fa-headset text-primary me-2"></i>Hỗ trợ liên tục</span>
-                        </div>
-                        <a class="btn btn-primary py-2 px-4" asp-controller="Contact" asp-action="Index">Đăng ký ngay</a>
-                    </div>
+            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="bg-light rounded p-4 h-100 border-start border-4 border-warning shadow-sm">
+                    <p class="text-uppercase text-warning mb-2 small">Học phí từ</p>
+                    <h3 class="mb-0">@(Model.LowestPrice > 0 ? FormatPrice(Model.LowestPrice) : "Đang cập nhật")</h3>
                 </div>
             </div>
         </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-warning wow fadeInUp" data-wow-delay="0.1s">
+                <i class="fa fa-circle-info me-2"></i>@Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.Courses.Count == 0)
+        {
+            <div class="row">
+                <div class="col-12 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="bg-light rounded shadow-sm p-5 text-center">
+                        <i class="fa fa-layer-group text-primary mb-3" style="font-size: 2.5rem;"></i>
+                        <h4 class="mb-3">Chưa có khóa học để hiển thị</h4>
+                        <p class="text-muted mb-0">Trang này đang chờ dữ liệu từ API hoặc API chưa kết nối đúng với ứng dụng web.</p>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+        <div class="row g-4">
+            @foreach (var course in Model.Courses)
+            {
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
+                        <div class="position-relative">
+                            <img class="img-fluid" src="@Url.Content(course.HinhAnh)" alt="@course.TenKhoaHoc" style="height: 220px; width: 100%; object-fit: cover;" />
+                            <span class="badge @GetStatusClass(course.TrangThai) position-absolute top-0 end-0 m-3 px-3 py-2">@GetStatusLabel(course.TrangThai)</span>
+                        </div>
+                        <div class="p-4 d-flex flex-column h-100">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <div class="text-primary small fw-semibold mb-1">@course.MaKhoaHoc</div>
+                                    <h5 class="mb-0">@course.TenKhoaHoc</h5>
+                                </div>
+                                <div class="text-end">
+                                    <div class="d-inline-block bg-primary text-white fs-6 py-2 px-3 rounded-pill fw-semibold">@FormatPrice(course.HocPhi)</div>
+                                </div>
+                            </div>
+
+                            <p class="text-muted mb-3">@course.MoTaNgan</p>
+
+                            <div class="row g-2 small mb-3">
+                                <div class="col-6">
+                                    <div class="bg-white rounded p-3 h-100 border">
+                                        <div class="text-muted mb-1">Loại bằng</div>
+                                        <strong>@course.LoaiBangLai</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-white rounded p-3 h-100 border">
+                                        <div class="text-muted mb-1">Số buổi</div>
+                                        <strong>@course.SoBuoiHoc buổi</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-white rounded p-3 h-100 border">
+                                        <div class="text-muted mb-1">Khai giảng</div>
+                                        <strong>@FormatDate(course.ThoiGianBatDau)</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="bg-white rounded p-3 h-100 border">
+                                        <div class="text-muted mb-1">Kết thúc</div>
+                                        <strong>@FormatDate(course.ThoiGianKetThuc)</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="text-muted">Số lượng học viên</span>
+                                    <span class="fw-semibold">@course.SoLuongHienTai/@course.SoLuongToiDa</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar @(course.OccupancyRate >= 100 ? "bg-warning" : "bg-primary")" role="progressbar" style="width: @course.OccupancyRate%;" aria-valuenow="@course.OccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <div class="small text-muted mb-4">
+                                <div class="mb-2"><i class="fa fa-calendar-alt text-primary me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)</div>
+                                <div><i class="fa fa-circle-check text-primary me-2"></i>@(course.IsOpenForRegistration ? "Có thể đăng ký ngay" : "Tạm thời chưa nhận đăng ký mới")</div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <a class="btn btn-primary w-100 py-2" asp-controller="Contact" asp-action="Index">Tư vấn đăng ký</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        }
     </div>
 </div>

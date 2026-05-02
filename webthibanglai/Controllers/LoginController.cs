@@ -125,25 +125,17 @@ namespace webthibanglai.Controllers
         {
             var request = model.RegisterRequest;
 
-            // Validate từng trường và thêm lỗi cụ thể
+            // Validate các trường bắt buộc
             if (string.IsNullOrWhiteSpace(request.TenDangNhap))
                 ModelState.AddModelError("RegisterRequest.TenDangNhap", "Tên đăng nhập không được để trống.");
             if (string.IsNullOrWhiteSpace(request.MatKhau))
                 ModelState.AddModelError("RegisterRequest.MatKhau", "Mật khẩu không được để trống.");
+            if (request.MatKhau.Length < 8)
+                ModelState.AddModelError("RegisterRequest.MatKhau", "Mật khẩu phải có ít nhất 8 ký tự.");
             if (string.IsNullOrWhiteSpace(request.Email))
                 ModelState.AddModelError("RegisterRequest.Email", "Email không được để trống.");
-            if (string.IsNullOrWhiteSpace(request.SoDienThoai))
-                ModelState.AddModelError("RegisterRequest.SoDienThoai", "Số điện thoại không được để trống.");
-            if (string.IsNullOrWhiteSpace(request.HoTen))
-                ModelState.AddModelError("RegisterRequest.HoTen", "Họ tên không được để trống.");
-            if (request.NgaySinh == default)
-                ModelState.AddModelError("RegisterRequest.NgaySinh", "Ngày sinh không được để trống.");
-            if (string.IsNullOrWhiteSpace(request.GioiTinh))
-                ModelState.AddModelError("RegisterRequest.GioiTinh", "Giới tính không được để trống.");
-            if (string.IsNullOrWhiteSpace(request.Cccd))
-                ModelState.AddModelError("RegisterRequest.Cccd", "CCCD không được để trống.");
-            if (string.IsNullOrWhiteSpace(request.DiaChi))
-                ModelState.AddModelError("RegisterRequest.DiaChi", "Địa chỉ không được để trống.");
+            if (!IsValidEmail(request.Email))
+                ModelState.AddModelError("RegisterRequest.Email", "Email không hợp lệ.");
 
             if (!ModelState.IsValid)
             {
@@ -157,13 +149,7 @@ namespace webthibanglai.Controllers
                 ten_dang_nhap = request.TenDangNhap.Trim(),
                 mat_khau = request.MatKhau,
                 email = request.Email.Trim(),
-                so_dien_thoai = request.SoDienThoai.Trim(),
-                ho_ten = request.HoTen.Trim(),
-                ngay_sinh = request.NgaySinh.ToString("yyyy-MM-dd"),
-                gioi_tinh = request.GioiTinh.Trim(),
-                cccd = request.Cccd.Trim(),
-                dia_chi = request.DiaChi.Trim(),
-                anh_chan_dung = request.AnhChanDung?.Trim() ?? string.Empty
+                so_dien_thoai = string.IsNullOrWhiteSpace(request.SoDienThoai) ? null : request.SoDienThoai.Trim()
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
@@ -275,16 +261,57 @@ namespace webthibanglai.Controllers
         }
 
         [HttpGet]
-        public IActionResult Profile(bool debug = false)
+        public async Task<IActionResult> Profile(bool debug = false)
         {
-            var model = BuildProfileViewModel();
-
-            if (debug)
+            var token = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(token))
             {
-                return View(model);
+                TempData["LoginError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                return RedirectToAction(nameof(Index));
             }
 
-            return View(model);
+            try
+            {
+                var client = _httpClientFactory.CreateClient("ApiClient");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.GetAsync("/api/v1/auth/me");
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to get user profile. Status: {StatusCode}, Body: {Body}", response.StatusCode, responseBody);
+                    TempData["ProfileError"] = "Không thể tải thông tin hồ sơ. Vui lòng thử lại.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<CurrentUserInfo>>(responseBody, JsonOptions());
+                if (apiResponse?.Data == null)
+                {
+                    TempData["ProfileError"] = "Không đọc được dữ liệu hồ sơ.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                var model = new LoginViewModel
+                {
+                    CurrentUser = apiResponse.Data,
+                    UpdateProfileRequest = new UpdateProfileRequestModel
+                    {
+                        HoTen = apiResponse.Data.HoTen,
+                        Email = apiResponse.Data.Email,
+                        SoDienThoai = apiResponse.Data.SoDienThoai
+                    },
+                    ChangePasswordRequest = new ChangePasswordRequestModel()
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading profile");
+                TempData["ProfileError"] = "Đã xảy ra lỗi khi tải hồ sơ.";
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         [HttpPost]
@@ -299,41 +326,55 @@ namespace webthibanglai.Controllers
             }
 
             var request = model.UpdateProfileRequest;
-            if (string.IsNullOrWhiteSpace(request.HoTen))
+            
+            // Validate thông tin cơ bản (chỉ email vì bảng nguoi_dung không có ho_ten)
+            if (string.IsNullOrWhiteSpace(request.Email))
             {
-                TempData["ProfileUpdateError"] = "Họ tên không được để trống.";
+                TempData["ProfileUpdateError"] = "Email không được để trống.";
+                TempData["ActiveProfileTab"] = "update";
                 return RedirectToAction(nameof(Profile));
             }
 
-            if (!string.IsNullOrWhiteSpace(request.Email) && !IsValidEmail(request.Email))
+            if (!IsValidEmail(request.Email))
             {
                 TempData["ProfileUpdateError"] = "Email không hợp lệ.";
+                TempData["ActiveProfileTab"] = "update";
                 return RedirectToAction(nameof(Profile));
             }
 
             var client = _httpClientFactory.CreateClient("ApiClient");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+            // Chỉ cập nhật email và số điện thoại vì bảng nguoi_dung không có trường ho_ten
             var payload = new
             {
-                email = request.Email?.Trim(),
-                so_dien_thoai = request.SoDienThoai?.Trim(),
-                ho_ten = request.HoTen.Trim(),
-                ngay_sinh = request.NgaySinh?.ToString("yyyy-MM-dd"),
-                gioi_tinh = string.IsNullOrWhiteSpace(request.GioiTinh) ? null : request.GioiTinh.Trim(),
-                cccd = string.IsNullOrWhiteSpace(request.Cccd) ? null : request.Cccd.Trim(),
-                dia_chi = string.IsNullOrWhiteSpace(request.DiaChi) ? null : request.DiaChi.Trim(),
-                anh_chan_dung = string.IsNullOrWhiteSpace(request.AnhChanDung) ? null : request.AnhChanDung.Trim()
+                email = request.Email.Trim(),
+                so_dien_thoai = string.IsNullOrWhiteSpace(request.SoDienThoai) ? null : request.SoDienThoai.Trim()
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+            _logger.LogInformation("Update profile API request payload: {Payload}", JsonSerializer.Serialize(payload));
+            
             var response = await client.PutAsync("/api/v1/auth/me", content);
             var responseBody = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Update profile API raw response: {ResponseBody}", responseBody);
+            _logger.LogInformation("Update profile API response - Status: {StatusCode}, Body: {ResponseBody}", response.StatusCode, responseBody);
 
             if (!response.IsSuccessStatusCode)
             {
-                TempData["ProfileUpdateError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Cập nhật hồ sơ thất bại.";
+                var errorMessage = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody);
+                
+                // Nếu là lỗi 500 và message chung chung, cung cấp thông tin chi tiết hơn
+                if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                {
+                    _logger.LogError("Update profile failed with 500 error. Response: {ResponseBody}", responseBody);
+                    if (string.IsNullOrEmpty(errorMessage) || errorMessage.Contains("unexpected error", StringComparison.OrdinalIgnoreCase))
+                    {
+                        errorMessage = $"Lỗi server khi cập nhật hồ sơ. Vui lòng kiểm tra logs hoặc thử lại sau. (Status: {response.StatusCode})";
+                    }
+                }
+                
+                TempData["ProfileUpdateError"] = errorMessage ?? "Cập nhật hồ sơ thất bại.";
+                TempData["ActiveProfileTab"] = "update";
                 PreserveProfileTempDataFromRequest(request, model);
                 return RedirectToAction(nameof(Profile));
             }
@@ -342,12 +383,14 @@ namespace webthibanglai.Controllers
             if (apiResponse?.Data == null)
             {
                 TempData["ProfileUpdateError"] = "Không đọc được dữ liệu hồ sơ sau khi cập nhật.";
+                TempData["ActiveProfileTab"] = "update";
                 PreserveProfileTempDataFromRequest(request, model);
                 return RedirectToAction(nameof(Profile));
             }
 
             PopulateProfileTempData(apiResponse.Data);
             TempData["ProfileUpdateSuccess"] = "Cập nhật hồ sơ thành công.";
+            TempData["ActiveProfileTab"] = "update";
             return RedirectToAction(nameof(Profile));
         }
 
@@ -370,18 +413,21 @@ namespace webthibanglai.Controllers
                 || string.IsNullOrWhiteSpace(request.ConfirmPassword))
             {
                 TempData["ChangePasswordError"] = "Vui lòng nhập đầy đủ thông tin đổi mật khẩu.";
+                TempData["ActiveProfileTab"] = "password";
                 return RedirectToAction(nameof(Profile));
             }
 
             if (request.NewPassword.Length < 8)
             {
                 TempData["ChangePasswordError"] = "Mật khẩu mới phải có ít nhất 8 ký tự.";
+                TempData["ActiveProfileTab"] = "password";
                 return RedirectToAction(nameof(Profile));
             }
 
             if (!string.Equals(request.NewPassword, request.ConfirmPassword, StringComparison.Ordinal))
             {
                 TempData["ChangePasswordError"] = "Xác nhận mật khẩu không khớp.";
+                TempData["ActiveProfileTab"] = "password";
                 return RedirectToAction(nameof(Profile));
             }
 
@@ -402,11 +448,13 @@ namespace webthibanglai.Controllers
             if (!response.IsSuccessStatusCode)
             {
                 TempData["ChangePasswordError"] = ExtractDetailedErrorMessage(responseBody) ?? ExtractErrorMessage(responseBody) ?? "Đổi mật khẩu thất bại.";
+                TempData["ActiveProfileTab"] = "password";
                 return RedirectToAction(nameof(Profile));
             }
 
             ClearChangePasswordTempData();
             TempData["ChangePasswordSuccess"] = ExtractErrorMessage(responseBody) ?? "Đổi mật khẩu thành công.";
+            TempData["ActiveProfileTab"] = "password";
             return RedirectToAction(nameof(Profile));
         }
 
@@ -618,12 +666,7 @@ namespace webthibanglai.Controllers
                 {
                     HoTen = TempData.Peek("ProfileHoTen")?.ToString() ?? string.Empty,
                     Email = TempData.Peek("ProfileEmail")?.ToString() ?? string.Empty,
-                    SoDienThoai = TempData.Peek("ProfileSoDienThoai")?.ToString() ?? string.Empty,
-                    NgaySinh = ParseDateOnly(TempData.Peek("ProfileNgaySinh")?.ToString()),
-                    GioiTinh = TempData.Peek("ProfileGioiTinh")?.ToString() ?? string.Empty,
-                    Cccd = TempData.Peek("ProfileCccd")?.ToString() ?? string.Empty,
-                    DiaChi = TempData.Peek("ProfileDiaChi")?.ToString() ?? string.Empty,
-                    AnhChanDung = TempData.Peek("ProfileAnhChanDung")?.ToString() ?? string.Empty
+                    SoDienThoai = TempData.Peek("ProfileSoDienThoai")?.ToString() ?? string.Empty
                 },
                 ChangePasswordRequest = new ChangePasswordRequestModel
                 {
@@ -678,11 +721,6 @@ namespace webthibanglai.Controllers
             TempData["ProfileHoTen"] = request.HoTen;
             TempData["ProfileEmail"] = request.Email;
             TempData["ProfileSoDienThoai"] = request.SoDienThoai;
-            TempData["ProfileNgaySinh"] = request.NgaySinh?.ToString("dd/MM/yyyy");
-            TempData["ProfileGioiTinh"] = request.GioiTinh;
-            TempData["ProfileCccd"] = request.Cccd;
-            TempData["ProfileDiaChi"] = request.DiaChi;
-            TempData["ProfileAnhChanDung"] = request.AnhChanDung;
             model.UpdateProfileRequest = request;
         }
 

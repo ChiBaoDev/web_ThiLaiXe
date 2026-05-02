@@ -13,23 +13,7 @@
                             <div class="login-hero d-flex flex-column justify-content-center h-100">
                                 <span class="login-badge"><i class="fas fa-user-shield"></i> Khu vực tài khoản hệ thống</span>
                                 <h1 class="display-6 mb-3">Đăng nhập nhanh hoặc tạo tài khoản mới</h1>
-                                <p class="login-note mb-4">Kết nối trực tiếp API thật để đăng nhập và đăng ký học viên với giao diện sáng, gọn và dễ dùng.</p>
-
-                                <div class="login-demo-box position-relative">
-                                    <h6 class="fw-bold mb-3">Thông tin tích hợp</h6>
-                                    <div class="login-demo-item">
-                                        <span><strong>API Login</strong></span>
-                                        <span>/api/v1/auth/login</span>
-                                    </div>
-                                    <div class="login-demo-item">
-                                        <span><strong>API Register</strong></span>
-                                        <span>/api/v1/auth/register</span>
-                                    </div>
-                                    <div class="login-demo-item">
-                                        <span><strong>Dữ liệu</strong></span>
-                                        <span>Tài khoản thật từ database</span>
-                                    </div>
-                                </div>
+                                <p class="login-note mb-4">Quản lý tài khoản học viên và theo dõi tiến độ học tập của bạn.</p>
                             </div>
                         </div>
 
@@ -96,8 +80,8 @@
                                 </div>
 
                                 <div id="registerTabPanel" data-login-panel="register" class="d-none">
-                                    <h2 class="h3 mb-2">Đăng ký tài khoản học viên</h2>
-                                    <p class="login-note mb-4">Tạo tài khoản mới theo đúng dữ liệu yêu cầu từ API.</p>
+                                    <h2 class="h3 mb-2">Đăng ký tài khoản</h2>
+                                    <p class="login-note mb-4">Tạo tài khoản mới với thông tin cơ bản. Bạn có thể cập nhật thêm thông tin sau khi đăng nhập.</p>
 
                                     @if (!ViewData.ModelState.IsValid && TempData.Peek("ActiveLoginTab")?.ToString() == "register")
                                     {
@@ -105,60 +89,31 @@
                                     }
 
                                     <form method="post" action="/Login/Register" class="row g-3" novalidate>
-                                        <div class="col-md-6">
-                                            <label asp-for="RegisterRequest.TenDangNhap" class="form-label fw-semibold">Tên đăng nhập</label>
-                                            <input asp-for="RegisterRequest.TenDangNhap" class="form-control login-input" placeholder="vd: nguyenvana" />
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.TenDangNhap" class="form-label fw-semibold">Tên đăng nhập <span class="text-danger">*</span></label>
+                                            <input asp-for="RegisterRequest.TenDangNhap" class="form-control login-input" placeholder="vd: nguyenvana" required />
                                             <span asp-validation-for="RegisterRequest.TenDangNhap" class="text-danger small"></span>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label asp-for="RegisterRequest.Email" class="form-label fw-semibold">Email</label>
-                                            <input asp-for="RegisterRequest.Email" type="email" class="form-control login-input" placeholder="name@email.com" />
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.Email" class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                                            <input asp-for="RegisterRequest.Email" type="email" class="form-control login-input" placeholder="name@email.com" required />
                                             <span asp-validation-for="RegisterRequest.Email" class="text-danger small"></span>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label asp-for="RegisterRequest.MatKhau" class="form-label fw-semibold">Mật khẩu</label>
-                                            <input asp-for="RegisterRequest.MatKhau" type="password" class="form-control login-input" placeholder="Nhập mật khẩu" />
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.MatKhau" class="form-label fw-semibold">Mật khẩu <span class="text-danger">*</span></label>
+                                            <input asp-for="RegisterRequest.MatKhau" type="password" class="form-control login-input" placeholder="Tối thiểu 8 ký tự" required />
                                             <span asp-validation-for="RegisterRequest.MatKhau" class="text-danger small"></span>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label asp-for="RegisterRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại</label>
+                                        <div class="col-12">
+                                            <label asp-for="RegisterRequest.SoDienThoai" class="form-label fw-semibold">Số điện thoại <span class="text-muted fw-normal">(không bắt buộc)</span></label>
                                             <input asp-for="RegisterRequest.SoDienThoai" class="form-control login-input" placeholder="Nhập số điện thoại" />
                                             <span asp-validation-for="RegisterRequest.SoDienThoai" class="text-danger small"></span>
                                         </div>
                                         <div class="col-12">
-                                            <label asp-for="RegisterRequest.HoTen" class="form-label fw-semibold">Họ tên</label>
-                                            <input asp-for="RegisterRequest.HoTen" class="form-control login-input" placeholder="Nhập họ tên đầy đủ" />
-                                            <span asp-validation-for="RegisterRequest.HoTen" class="text-danger small"></span>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label asp-for="RegisterRequest.NgaySinh" class="form-label fw-semibold">Ngày sinh</label>
-                                            <input asp-for="RegisterRequest.NgaySinh" type="date" class="form-control login-input" />
-                                            <span asp-validation-for="RegisterRequest.NgaySinh" class="text-danger small"></span>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label asp-for="RegisterRequest.GioiTinh" class="form-label fw-semibold">Giới tính</label>
-                                            <select asp-for="RegisterRequest.GioiTinh" class="form-select login-input">
-                                                <option value="">Chọn giới tính</option>
-                                                <option value="Nam">Nam</option>
-                                                <option value="Nữ">Nữ</option>
-                                                <option value="Khác">Khác</option>
-                                            </select>
-                                            <span asp-validation-for="RegisterRequest.GioiTinh" class="text-danger small"></span>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label asp-for="RegisterRequest.Cccd" class="form-label fw-semibold">CCCD</label>
-                                            <input asp-for="RegisterRequest.Cccd" class="form-control login-input" placeholder="Nhập CCCD" />
-                                            <span asp-validation-for="RegisterRequest.Cccd" class="text-danger small"></span>
-                                        </div>
-                                        <div class="col-12">
-                                            <label asp-for="RegisterRequest.DiaChi" class="form-label fw-semibold">Địa chỉ</label>
-                                            <input asp-for="RegisterRequest.DiaChi" class="form-control login-input" placeholder="Nhập địa chỉ" />
-                                            <span asp-validation-for="RegisterRequest.DiaChi" class="text-danger small"></span>
-                                        </div>
-                                        <div class="col-12">
-                                            <label for="RegisterRequest_AnhChanDung" class="form-label fw-semibold">Ảnh chân dung <span class="text-muted fw-normal">(không bắt buộc)</span></label>
-                                            <input id="RegisterRequest_AnhChanDung" name="RegisterRequest.AnhChanDung" type="text" class="form-control login-input" placeholder="Để trống nếu chưa có ảnh" value="@Model.RegisterRequest.AnhChanDung" />
-                                            <div class="form-text">Có thể cập nhật sau trong trang hồ sơ cá nhân.</div>
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Sau khi đăng ký, bạn có thể cập nhật thêm thông tin cá nhân như họ tên, ngày sinh, địa chỉ trong trang hồ sơ.
+                                            </div>
                                         </div>
                                         <div class="col-12">
                                             <button type="submit" class="btn btn-primary w-100 login-submit">Đăng ký tài khoản</button>
@@ -228,8 +183,6 @@
                                         </div>
                                     </form>
                                 </div>
-
-                                <div id="loginApiDebug" class="alert alert-info mt-3 d-none"></div>
                             </div>
                         </div>
                     </div>
