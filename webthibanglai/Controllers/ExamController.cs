@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using System.Text.Json.Serialization;
 using webthibanglai.Models;
 using webthibanglai.Services;
@@ -8,6 +9,7 @@ namespace webthibanglai.Controllers
     public class ExamController : Controller
     {
         private const string AccessTokenSessionKey = "AccessToken";
+        private const string ActiveMockExamSessionKey = "ActiveMockExamSessionId";
         private readonly IExamApiService _examApiService;
 
         public ExamController(IExamApiService examApiService)
@@ -44,10 +46,17 @@ namespace webthibanglai.Controllers
             var startedSession = await _examApiService.StartSampleExamAsync(sampleExamId, accessToken, cancellationToken);
             if (startedSession == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để bắt đầu thi.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = "Không thể khởi tạo phiên thi cho đề mẫu đã chọn.";
                 return RedirectToAction(nameof(Index));
             }
 
+            HttpContext.Session.SetString(ActiveMockExamSessionKey, startedSession.SessionId.ToString());
             return RedirectToAction(nameof(Launch), new { sessionId = startedSession.SessionId, number = 1 });
         }
 
@@ -85,6 +94,12 @@ namespace webthibanglai.Controllers
             var session = await _examApiService.GetSessionAsync(sessionId, accessToken, cancellationToken);
             if (session == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để bắt đầu thi.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = "Không tìm thấy phiên thi vừa tạo.";
                 return RedirectToAction(nameof(Index));
             }
@@ -119,6 +134,12 @@ namespace webthibanglai.Controllers
             var session = await _examApiService.GetSessionAsync(sessionId, accessToken, cancellationToken);
             if (session == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục làm bài.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = "Không tìm thấy phiên thi.";
                 return RedirectToAction(nameof(Index));
             }
@@ -132,6 +153,12 @@ namespace webthibanglai.Controllers
             var question = await _examApiService.GetQuestionAsync(sessionId, safeNumber, accessToken, cancellationToken);
             if (question == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục làm bài.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = "Không tải được câu hỏi của phiên thi.";
                 return RedirectToAction(nameof(Index));
             }
@@ -167,6 +194,12 @@ namespace webthibanglai.Controllers
                 var saved = await _examApiService.SubmitAnswerAsync(sessionId, questionId, answerId.Value, accessToken, cancellationToken);
                 if (!saved)
                 {
+                    if (IsUnauthorizedApiResponse())
+                    {
+                        TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục làm bài.";
+                        return RedirectToLogin(nameof(Index));
+                    }
+
                     TempData["ExamError"] = "Không thể lưu đáp án. Vui lòng thử lại.";
                     return RedirectToAction(nameof(Session), new { sessionId, number = currentNumber });
                 }
@@ -203,6 +236,12 @@ namespace webthibanglai.Controllers
             var result = await _examApiService.SubmitSessionAsync(sessionId, autoSubmit, accessToken, cancellationToken);
             if (result == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để xem kết quả.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = autoSubmit
                     ? "Hết thời gian nhưng hệ thống chưa thể tự nộp bài. Vui lòng thử nộp lại thủ công."
                     : "Không thể nộp bài thi.";
@@ -232,6 +271,12 @@ namespace webthibanglai.Controllers
             var saved = await _examApiService.SubmitAnswerAsync(request.SessionId, request.QuestionId, request.AnswerId, accessToken, cancellationToken);
             if (!saved)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Json(new { success = false, message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." });
+                }
+
                 Response.StatusCode = StatusCodes.Status400BadRequest;
                 return Json(new { success = false, message = "Không thể lưu đáp án. Vui lòng thử lại." });
             }
@@ -266,6 +311,12 @@ namespace webthibanglai.Controllers
             var result = await _examApiService.SubmitSessionAsync(request.SessionId, request.AutoSubmit, accessToken, cancellationToken);
             if (result == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Json(new { success = false, message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." });
+                }
+
                 Response.StatusCode = StatusCodes.Status400BadRequest;
                 return Json(new
                 {
@@ -296,6 +347,12 @@ namespace webthibanglai.Controllers
             var result = await _examApiService.GetResultAsync(sessionId, accessToken, cancellationToken);
             if (result == null)
             {
+                if (IsUnauthorizedApiResponse())
+                {
+                    TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để xem kết quả.";
+                    return RedirectToLogin(nameof(Index));
+                }
+
                 TempData["ExamError"] = "Không tải được kết quả bài thi.";
                 return RedirectToAction(nameof(Index));
             }
@@ -326,7 +383,19 @@ namespace webthibanglai.Controllers
 
             return session.Status.Contains("submit", StringComparison.OrdinalIgnoreCase)
                 || session.Status.Contains("complete", StringComparison.OrdinalIgnoreCase)
-                || session.Status.Contains("finish", StringComparison.OrdinalIgnoreCase);
+                || session.Status.Contains("finish", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(session.Status, "da_nop", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(session.Status, "tu_dong_nop", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsUnauthorizedApiResponse()
+        {
+            return _examApiService.LastStatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden;
+        }
+
+        private IActionResult RedirectToLogin(string returnAction)
+        {
+            return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(returnAction, "Exam") });
         }
 
         public class SaveAnswerAjaxRequest

@@ -584,7 +584,7 @@
 @section Scripts {
     <script>
         (function () {
-            var remainSeconds = @(session.RemainingSeconds > 0 ? session.RemainingSeconds : session.DurationMinutes * 60);
+            var remainSeconds = @session.RemainingSeconds;
             var timerBox = document.getElementById('timerBox');
             var timerInline = document.getElementById('timerInline');
             var isReviewMode = @(isReviewMode ? "true" : "false");
@@ -751,6 +751,11 @@
                     setSaveStatus(payload.message || 'Đã lưu đáp án.', 'status-success');
                     return { success: true, payload: payload };
                 } catch (error) {
+                    if (response && response.status === 401) {
+                        window.location.href = '@Url.Action("Index", "Login", new { returnUrl = Url.Action("Index", "Exam") })';
+                        return { success: false, message: 'Phiên đăng nhập đã hết hạn.' };
+                    }
+
                     setSaveStatus(error && error.message ? error.message : 'Không thể lưu đáp án.', 'status-error');
                     return { success: false, message: error && error.message ? error.message : 'Không thể lưu đáp án.' };
                 } finally {
@@ -795,6 +800,11 @@
 
                     window.location.href = payload.redirectUrl || resultUrl;
                 } catch (error) {
+                    if (response && response.status === 401) {
+                        window.location.href = '@Url.Action("Index", "Login", new { returnUrl = Url.Action("Index", "Exam") })';
+                        return;
+                    }
+
                     isSubmittingExam = false;
                     setFormBusy(false);
                     setSaveStatus(error && error.message ? error.message : 'Không thể nộp bài thi.', 'status-error');
@@ -819,6 +829,11 @@
             renderAnsweredState();
 
             if (isReviewMode === true || isReviewMode === 'true') {
+                return;
+            }
+
+            if (remainSeconds <= 0) {
+                submitExam(true);
                 return;
             }
 

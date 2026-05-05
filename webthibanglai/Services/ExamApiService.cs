@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +9,7 @@ namespace webthibanglai.Services;
 
 public interface IExamApiService
 {
+    HttpStatusCode? LastStatusCode { get; }
     Task<ExamViewModel> GetSampleExamsAsync(string? accessToken, CancellationToken cancellationToken = default);
     Task<SampleExamItem?> GetSampleExamAsync(long sampleExamId, CancellationToken cancellationToken = default);
     Task<StartExamSessionResponseViewModel?> StartSampleExamAsync(long sampleExamId, string? accessToken, CancellationToken cancellationToken = default);
@@ -23,6 +25,7 @@ public class ExamApiService : IExamApiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ExamApiService> _logger;
+    public HttpStatusCode? LastStatusCode { get; private set; }
 
     public ExamApiService(IHttpClientFactory httpClientFactory, ILogger<ExamApiService> logger)
     {
@@ -32,6 +35,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<ExamViewModel> GetSampleExamsAsync(string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         var model = new ExamViewModel
         {
             IsAuthenticated = !string.IsNullOrWhiteSpace(accessToken)
@@ -40,7 +44,8 @@ public class ExamApiService : IExamApiService
         try
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
-            var response = await client.GetAsync("/api/v1/mock-exams", cancellationToken);
+            var response = await client.GetAsync("/api/v1/mock-exams?page=1&pageSize=20", cancellationToken);
+            LastStatusCode = response.StatusCode;
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -70,6 +75,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<SampleExamItem?> GetSampleExamAsync(long sampleExamId, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (sampleExamId <= 0)
         {
             return null;
@@ -79,6 +85,7 @@ public class ExamApiService : IExamApiService
         {
             var client = _httpClientFactory.CreateClient("ApiClient");
             var response = await client.GetAsync($"/api/v1/mock-exams/{sampleExamId}", cancellationToken);
+            LastStatusCode = response.StatusCode;
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -99,6 +106,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<StartExamSessionResponseViewModel?> StartSampleExamAsync(long sampleExamId, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return null;
@@ -106,6 +114,7 @@ public class ExamApiService : IExamApiService
 
         var client = CreateAuthorizedClient(accessToken);
         var response = await client.PostAsync($"/api/v1/mock-exams/{sampleExamId}/start", new StringContent(string.Empty, Encoding.UTF8, "application/json"), cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -120,6 +129,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<ExamSessionPageViewModel?> GetSessionAsync(long sessionId, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return null;
@@ -127,6 +137,7 @@ public class ExamApiService : IExamApiService
 
         var client = CreateAuthorizedClient(accessToken);
         var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}", cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -141,6 +152,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<ExamSessionQuestionViewModel?> GetQuestionAsync(long sessionId, int number, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return null;
@@ -148,6 +160,7 @@ public class ExamApiService : IExamApiService
 
         var client = CreateAuthorizedClient(accessToken);
         var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/questions/{number}", cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -162,6 +175,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<bool> SubmitAnswerAsync(long sessionId, long questionId, long answerId, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return false;
@@ -178,6 +192,7 @@ public class ExamApiService : IExamApiService
             $"/api/v1/mock-exams/sessions/{sessionId}/answers",
             new StringContent(payload, Encoding.UTF8, "application/json"),
             cancellationToken);
+        LastStatusCode = response.StatusCode;
 
         if (!response.IsSuccessStatusCode)
         {
@@ -191,6 +206,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<ExamSessionResultViewModel?> SubmitSessionAsync(long sessionId, bool autoSubmit, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return null;
@@ -200,6 +216,7 @@ public class ExamApiService : IExamApiService
         var endpoint = $"/api/v1/mock-exams/sessions/{sessionId}/submit";
 
         var response = await client.PostAsync(endpoint, new StringContent(string.Empty, Encoding.UTF8, "application/json"), cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -214,6 +231,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<ExamSessionResultViewModel?> GetResultAsync(long sessionId, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return null;
@@ -221,6 +239,7 @@ public class ExamApiService : IExamApiService
 
         var client = CreateAuthorizedClient(accessToken);
         var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/result", cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -235,6 +254,7 @@ public class ExamApiService : IExamApiService
 
     public async Task<List<ExamSessionReviewItemViewModel>> GetReviewAsync(long sessionId, string? accessToken, CancellationToken cancellationToken = default)
     {
+        LastStatusCode = null;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             return new List<ExamSessionReviewItemViewModel>();
@@ -242,6 +262,7 @@ public class ExamApiService : IExamApiService
 
         var client = CreateAuthorizedClient(accessToken);
         var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/review", cancellationToken);
+        LastStatusCode = response.StatusCode;
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
