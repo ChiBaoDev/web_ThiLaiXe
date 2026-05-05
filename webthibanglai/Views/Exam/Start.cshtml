@@ -1,0 +1,205 @@
+@model ExamViewModel
+@{
+    ViewData["Title"] = "Bắt đầu thi thử";
+    var exam = Model.SelectedSampleExam!;
+    var questionProgress = exam.TotalQuestions <= 0
+        ? 0
+        : Math.Clamp((int)Math.Round((double)exam.LinkedQuestionCount / exam.TotalQuestions * 100, MidpointRounding.AwayFromZero), 0, 100);
+}
+
+<section class="exam-start-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-10">
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger shadow-sm border-0 rounded-4 mb-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>@Model.ErrorMessage
+                    </div>
+                }
+
+                <div class="exam-start-card">
+                    <div class="exam-start-card__content">
+                        <span class="exam-start-badge"><i class="fas fa-clipboard-check me-2"></i>Đề thi thử thật từ MockExams API</span>
+                        <h1>@exam.Name</h1>
+                        <p class="lead">Bạn sắp bắt đầu phiên thi thật. Hệ thống sẽ gọi API tạo phiên thi, tải từng câu hỏi, lưu đáp án, nộp bài và xem kết quả bằng giao diện Exam hiện có.</p>
+
+                        <div class="exam-start-meta">
+                            <div>
+                                <span>Mã đề</span>
+                                <strong>@(string.IsNullOrWhiteSpace(exam.Code) ? $"#{exam.Id}" : exam.Code)</strong>
+                            </div>
+                            <div>
+                                <span>Số câu</span>
+                                <strong>@exam.TotalQuestions</strong>
+                            </div>
+                            <div>
+                                <span>Thời gian</span>
+                                <strong>@exam.DurationMinutes phút</strong>
+                            </div>
+                            <div>
+                                <span>Trạng thái</span>
+                                <strong>@(string.IsNullOrWhiteSpace(exam.Status) ? "published" : exam.Status)</strong>
+                            </div>
+                        </div>
+
+                        <div class="exam-start-progress mt-4">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span>Câu hỏi đã liên kết</span>
+                                <strong>@exam.LinkedQuestionCount/@exam.TotalQuestions</strong>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: @questionProgress%;" aria-valuenow="@questionProgress" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+
+                        <div class="exam-start-actions mt-4">
+                            @if (Model.IsAuthenticated)
+                            {
+                                <form asp-controller="Exam" asp-action="Start" method="post" class="d-inline-flex">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="sampleExamId" value="@exam.Id" />
+                                    <button type="submit" class="btn btn-warning text-dark exam-start-primary-btn">
+                                        <i class="fas fa-play me-2"></i>Bắt đầu phiên thi
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-controller="Login" asp-action="Index" asp-route-returnUrl="@Url.Action("Start", "Exam", new { id = exam.Id })" class="btn btn-warning text-dark exam-start-primary-btn">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để bắt đầu thi
+                                </a>
+                            }
+
+                            <a asp-controller="Exam" asp-action="Index" class="btn btn-outline-secondary exam-start-secondary-btn">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách đề
+                            </a>
+                        </div>
+                    </div>
+
+                    <aside class="exam-start-rules">
+                        <h5><i class="fas fa-circle-info me-2"></i>Lưu ý khi làm bài</h5>
+                        <ul>
+                            <li>Đáp án được lưu ngay khi bạn chọn trên giao diện Exam cũ.</li>
+                            <li>Hết giờ, web sẽ gọi API nộp bài của phiên thi thử.</li>
+                            <li>Sau khi nộp, bạn có thể xem kết quả và phần review theo dữ liệu API.</li>
+                        </ul>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .exam-start-page {
+            min-height: calc(100vh - 160px);
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        .exam-start-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+            gap: 1.5rem;
+            border-radius: 32px;
+            background: #ffffff;
+            border: 1px solid #eceff3;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .08);
+            padding: clamp(1.5rem, 4vw, 3rem);
+        }
+
+        .exam-start-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #a16207;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .exam-start-card h1 {
+            color: #0b2c4d;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .exam-start-meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .exam-start-meta div,
+        .exam-start-rules {
+            border: 1px solid #eceff3;
+            border-radius: 22px;
+            background: #fffdf7;
+            padding: 1rem;
+        }
+
+        .exam-start-meta span {
+            display: block;
+            color: #64748b;
+            font-size: .9rem;
+            margin-bottom: .35rem;
+        }
+
+        .exam-start-meta strong {
+            color: #0f172a;
+            font-size: 1.05rem;
+        }
+
+        .exam-start-progress .progress {
+            height: 10px;
+            border-radius: 999px;
+            background: #e2e8f0;
+        }
+
+        .exam-start-progress .progress-bar {
+            background: linear-gradient(90deg, #f7b900, #f59e0b);
+        }
+
+        .exam-start-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .exam-start-primary-btn,
+        .exam-start-secondary-btn {
+            border-radius: 999px;
+            padding: .85rem 1.35rem;
+            font-weight: 800;
+        }
+
+        .exam-start-rules h5 {
+            color: #0b2c4d;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .exam-start-rules ul {
+            padding-left: 1.2rem;
+            margin-bottom: 0;
+            color: #526173;
+            line-height: 1.8;
+        }
+
+        @@media (max-width: 991.98px) {
+            .exam-start-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .exam-start-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}

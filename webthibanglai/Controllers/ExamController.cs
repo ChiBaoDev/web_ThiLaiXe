@@ -27,11 +27,18 @@ namespace webthibanglai.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Start(long sampleExamId, CancellationToken cancellationToken)
         {
+            var sampleExam = await _examApiService.GetSampleExamAsync(sampleExamId, cancellationToken);
+            if (sampleExam == null)
+            {
+                TempData["ExamError"] = "Không tìm thấy đề thi thử đã chọn.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
             if (string.IsNullOrWhiteSpace(accessToken))
             {
-                TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để bắt đầu thi.";
-                return RedirectToAction(nameof(Index));
+                TempData["ExamError"] = "Vui lòng đăng nhập để bắt đầu phiên thi thử thật.";
+                return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(nameof(Index), "Exam") });
             }
 
             var startedSession = await _examApiService.StartSampleExamAsync(sampleExamId, accessToken, cancellationToken);
@@ -45,13 +52,34 @@ namespace webthibanglai.Controllers
         }
 
         [HttpGet]
+        [ActionName("Start")]
+        public async Task<IActionResult> StartPreview(long id, CancellationToken cancellationToken)
+        {
+            var sampleExam = await _examApiService.GetSampleExamAsync(id, cancellationToken);
+            if (sampleExam == null)
+            {
+                TempData["ExamError"] = "Không tìm thấy đề thi thử đã chọn.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var model = new ExamViewModel
+            {
+                IsAuthenticated = !string.IsNullOrWhiteSpace(HttpContext.Session.GetString(AccessTokenSessionKey)),
+                SelectedSampleExam = sampleExam,
+                ErrorMessage = TempData["ExamError"]?.ToString()
+            };
+
+            return View("Start", model);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Launch(long sessionId, int number = 1, CancellationToken cancellationToken = default)
         {
             var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để bắt đầu thi.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(nameof(Index), "Exam") });
             }
 
             var session = await _examApiService.GetSessionAsync(sessionId, accessToken, cancellationToken);
@@ -85,7 +113,7 @@ namespace webthibanglai.Controllers
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 TempData["ExamError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục làm bài.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(nameof(Index), "Exam") });
             }
 
             var session = await _examApiService.GetSessionAsync(sessionId, accessToken, cancellationToken);

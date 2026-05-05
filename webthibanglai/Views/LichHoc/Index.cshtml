@@ -3,10 +3,126 @@
     ViewData["Title"] = "Trang học viên";
     var profile = Model.Profile;
     var stats = Model.Stats;
+    var registration = Model.Registration;
 }
 
 <div id="studentPortalPage" class="container-xxl py-5 student-portal-page">
     <div class="container">
+        @if (!string.IsNullOrWhiteSpace(Model.RegistrationSuccessMessage))
+        {
+            <div class="alert alert-success rounded-4 border-0 shadow-sm mb-4">@Model.RegistrationSuccessMessage</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(TempData["StudentProfileNotice"]?.ToString()))
+        {
+            <div class="alert alert-warning rounded-4 border-0 shadow-sm mb-4">
+                <i class="fas fa-circle-info me-2"></i>@TempData["StudentProfileNotice"]
+            </div>
+        }
+
+        @if (!Model.HasStudentProfile)
+        {
+            <div class="student-register-shell mb-5">
+                <div class="student-register-shell__backdrop"></div>
+                <div class="row g-4 align-items-stretch position-relative">
+                    <div class="col-lg-5">
+                        <div class="student-register-intro h-100">
+                            <span class="badge rounded-pill student-register-intro__badge">Chưa có hồ sơ học viên</span>
+                            <h2 class="student-register-intro__title mt-4 mb-3">Đăng ký hồ sơ để mở khóa đầy đủ lịch học và tiện ích cá nhân</h2>
+                            <p class="student-register-intro__text mb-4">Sau khi hoàn tất đăng ký, hệ thống sẽ hiển thị thông tin học viên, lịch học, khóa học đã đăng ký và các thống kê ôn tập ngay trên trang này.</p>
+
+                            <div class="student-register-highlight-list d-grid gap-3">
+                                <div class="student-register-highlight-item">
+                                    <div class="student-register-highlight-item__icon"><i class="fas fa-id-card"></i></div>
+                                    <div>
+                                        <div class="fw-semibold">Thông tin hồ sơ rõ ràng</div>
+                                        <div class="small text-muted">Khai báo họ tên, ngày sinh, CCCD và địa chỉ chính xác để đối chiếu.</div>
+                                    </div>
+                                </div>
+                                <div class="student-register-highlight-item">
+                                    <div class="student-register-highlight-item__icon"><i class="fas fa-calendar-check"></i></div>
+                                    <div>
+                                        <div class="fw-semibold">Đồng bộ lịch học</div>
+                                        <div class="small text-muted">Nhận lịch học và lộ trình khóa học phù hợp với hồ sơ học viên.</div>
+                                    </div>
+                                </div>
+                                <div class="student-register-highlight-item">
+                                    <div class="student-register-highlight-item__icon"><i class="fas fa-shield-alt"></i></div>
+                                    <div>
+                                        <div class="fw-semibold">Bảo mật và tiện lợi</div>
+                                        <div class="small text-muted">Dữ liệu được gắn với tài khoản để theo dõi mọi lúc trên cổng học viên.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="student-register-card h-100">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                                <div>
+                                    <span class="student-register-card__eyebrow">Form đăng ký học viên</span>
+                                    <h3 class="h4 mb-1 mt-2">Hoàn thiện thông tin trong vài bước</h3>
+                                    <p class="text-muted mb-0">Vui lòng điền đúng thông tin để trung tâm xác nhận hồ sơ nhanh hơn.</p>
+                                </div>
+                                <div class="student-register-card__step">Bước 1/1</div>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.RegistrationErrorMessage))
+                            {
+                                <div class="alert alert-danger rounded-4 border-0 mb-4">@Model.RegistrationErrorMessage</div>
+                            }
+
+                            <form asp-controller="LichHoc" asp-action="RegisterStudentProfile" method="post" class="row g-3">
+                                @Html.AntiForgeryToken()
+
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Họ và tên <span class="text-danger">*</span></label>
+                                    <input asp-for="Registration.HoTen" class="form-control form-control-lg student-register-input" placeholder="Ví dụ: Nguyễn Văn A" value="@registration.HoTen" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Ngày sinh</label>
+                                    <input asp-for="Registration.NgaySinh" type="date" class="form-control student-register-input" value="@registration.NgaySinh" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Giới tính</label>
+                                    <select asp-for="Registration.GioiTinh" class="form-select student-register-input">
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="Nam" selected="@(registration.GioiTinh == "Nam")">Nam</option>
+                                        <option value="Nữ" selected="@(registration.GioiTinh == "Nữ")">Nữ</option>
+                                        <option value="Khác" selected="@(registration.GioiTinh == "Khác")">Khác</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">CCCD</label>
+                                    <input asp-for="Registration.Cccd" class="form-control student-register-input" placeholder="Nhập số CCCD" value="@registration.Cccd" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Ảnh chân dung</label>
+                                    <input asp-for="Registration.AnhChanDung" class="form-control student-register-input" placeholder="Dán URL ảnh chân dung nếu có" value="@registration.AnhChanDung" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold">Địa chỉ</label>
+                                    <textarea asp-for="Registration.DiaChi" class="form-control student-register-input" rows="4" placeholder="Nhập địa chỉ hiện tại">@registration.DiaChi</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="student-register-card__footer d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                        <div class="small text-muted">
+                                            <i class="fas fa-circle-info me-2 text-primary"></i>Thông tin của bạn sẽ được dùng để đối chiếu hồ sơ học viên tại trung tâm.
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-lg px-4 student-register-submit">
+                                            <i class="fas fa-user-plus me-2"></i>Đăng ký học viên
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.HasStudentProfile)
+        {
         <div class="row g-4 mb-4 align-items-stretch">
             <div class="col-lg-8">
                 <div class="bg-white shadow-sm rounded-4 p-4 border h-100 student-hero-card">
@@ -17,7 +133,7 @@
                             <h1 class="display-6 mb-2">@(string.IsNullOrWhiteSpace(profile.HoTen) ? "Học viên" : profile.HoTen)</h1>
                             <p class="text-muted mb-3">Theo dõi hồ sơ cá nhân, kết quả ôn luyện, khóa học đã đăng ký và lịch học của bạn trên cùng một màn hình.</p>
                             <div class="d-flex flex-wrap gap-2">
-                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-id-card me-2 text-primary"></i>Mã học viên: @(profile.HocVienId > 0 ? profile.HocVienId : 0)</span>
+                                <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-id-card me-2 text-primary"></i>Mã học viên: @profile.HocVienId</span>
                                 <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-user-check me-2 text-success"></i>@(string.IsNullOrWhiteSpace(profile.TrangThai) ? "Đang hoạt động" : profile.TrangThai)</span>
                                 <span class="badge rounded-pill bg-light text-dark border px-3 py-2"><i class="fas fa-layer-group me-2 text-warning"></i>@Model.RegisteredCourses.Count khóa học</span>
                             </div>
@@ -40,7 +156,10 @@
                 </div>
             </div>
         </div>
+        }
 
+        @if (Model.HasStudentProfile)
+        {
         <div class="row g-4 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="portal-stat-card stat-primary h-100">
@@ -203,6 +322,7 @@
                 </div>
             </div>
         </div>
+        }
     </div>
 </div>
 
@@ -228,6 +348,136 @@
             font-size: 2rem;
             font-weight: 700;
             box-shadow: 0 18px 32px rgba(13, 110, 253, .22);
+        }
+
+        .student-register-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+            border: 1px solid #f0e2b6;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+        }
+
+        .student-register-shell {
+            position: relative;
+            overflow: hidden;
+            border-radius: 2rem;
+            padding: 2rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fffaf0 100%);
+            border: 10px solid #f3bd00;
+            box-shadow: 0 24px 60px rgba(243, 189, 0, 0.12);
+        }
+
+        .student-register-shell__backdrop {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at top right, rgba(243, 189, 0, .14), transparent 28%),
+                radial-gradient(circle at bottom left, rgba(243, 189, 0, .10), transparent 24%);
+            pointer-events: none;
+        }
+
+        .student-register-intro {
+            position: relative;
+            z-index: 1;
+            color: #1f2937;
+            padding: 1rem;
+        }
+
+        .student-register-intro__badge {
+            background: #fff8df;
+            color: #a16207;
+            border: 1px solid #f0e2b6;
+            padding: .7rem 1rem;
+            font-size: .82rem;
+            letter-spacing: .02em;
+        }
+
+        .student-register-intro__title {
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .student-register-intro__text {
+            max-width: 36rem;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .student-register-highlight-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1rem 1.1rem;
+            border-radius: 1.25rem;
+            background: #fffef9;
+            border: 1px solid #f0e2b6;
+            box-shadow: 0 10px 24px rgba(243, 189, 0, 0.08);
+        }
+
+        .student-register-highlight-item__icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff8df;
+            border: 1px solid #f0e2b6;
+            color: #a16207;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .student-register-card__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .45rem .85rem;
+            background: #fff8df;
+            color: #a16207;
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .student-register-card__step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 90px;
+            padding: .65rem 1rem;
+            border-radius: 999px;
+            background: #fff8df;
+            color: #7c5a00;
+            font-weight: 700;
+            border: 1px solid #f0e2b6;
+        }
+
+        .student-register-input {
+            border-radius: 1rem;
+            border-color: #e5e7eb;
+            padding: .9rem 1rem;
+            box-shadow: none;
+            transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+        }
+
+        .student-register-input:focus {
+            border-color: #f3bd00;
+            box-shadow: 0 0 0 .2rem rgba(243, 189, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .student-register-card__footer {
+            margin-top: .5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f5ecd0;
+        }
+
+        .student-register-submit {
+            border-radius: 999px;
+            padding-inline: 1.75rem;
+            box-shadow: 0 12px 28px rgba(243, 189, 0, 0.22);
         }
 
         .portal-stat-card {
@@ -385,10 +635,34 @@
         }
 
         @@media (max-width: 991.98px) {
+            .student-register-shell {
+                padding: 1.25rem;
+                border-radius: 1.5rem;
+            }
+
+            .student-register-intro {
+                padding: .25rem;
+            }
+
             .student-avatar {
                 width: 78px;
                 height: 78px;
                 font-size: 1.5rem;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .student-register-card {
+                padding: 1.2rem;
+            }
+
+            .student-register-card__step {
+                min-width: auto;
+                align-self: flex-start;
+            }
+
+            .student-register-highlight-item {
+                padding: .9rem 1rem;
             }
         }
     </style>

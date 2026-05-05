@@ -3,6 +3,7 @@ namespace webthibanglai.Models;
 public class ExamViewModel
 {
     public List<SampleExamItem> SampleExams { get; set; } = new();
+    public SampleExamItem? SelectedSampleExam { get; set; }
     public ExamSessionPageViewModel? SessionPage { get; set; }
     public ExamSessionResultViewModel? SessionResult { get; set; }
     public string? ErrorMessage { get; set; }

@@ -1,0 +1,122 @@
+@model WeeklyScheduleTableViewModel
+
+@{
+    var selectedWeekTable = Model.WeekTables.FirstOrDefault(table => table.WeekIndex == Model.SelectedWeekIndex)
+        ?? Model.WeekTables.FirstOrDefault();
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+    <div>
+        <div class="fw-semibold weekly-schedule-title">@selectedWeekTable?.Label</div>
+        <div class="small text-muted">Hiển thị lịch học của một tuần</div>
+    </div>
+
+    @if (Model.Weeks.Count > 1)
+    {
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var week in Model.Weeks)
+            {
+                <button type="button"
+                        class="btn @(week.Index == Model.SelectedWeekIndex ? "btn-primary" : "btn-outline-primary") btn-sm weekly-schedule-switch"
+                        data-week-index="@week.Index"
+                        data-week-label="@week.Label">
+                    Tuần @(week.Index + 1)
+                </button>
+            }
+        </div>
+    }
+</div>
+
+@for (var weekIndex = 0; weekIndex < Model.Weeks.Count; weekIndex++)
+{
+    var isVisible = weekIndex == Model.SelectedWeekIndex;
+    var weekTable = Model.WeekTables.FirstOrDefault(table => table.WeekIndex == weekIndex);
+    if (weekTable is null)
+    {
+        continue;
+    }
+    <div class="weekly-schedule-panel @(isVisible ? string.Empty : "d-none")" data-week-panel="@weekIndex">
+<div class="table-responsive">
+    <table class="table table-bordered align-middle weekly-schedule-table bg-white mb-0">
+        <thead>
+            <tr class="table-light text-center">
+                <th style="min-width: 140px;">Ca học</th>
+                @foreach (var day in weekTable.Days)
+                {
+                    <th style="min-width: 180px;">
+                        <div>@day.Label</div>
+                        <div class="small text-muted fw-normal">@day.Date.ToString("dd/MM")</div>
+                    </th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in weekTable.Rows)
+            {
+                <tr>
+                    <th class="table-light align-middle">@row.SessionLabel</th>
+                    @foreach (var cell in row.Cells)
+                    {
+                        <td>
+                            @if (cell.Items.Count == 0)
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                            else
+                            {
+                                <div class="d-grid gap-2">
+                                    @foreach (var item in cell.Items)
+                                    {
+                                        <div class="border rounded-3 p-2 bg-light h-100">
+                                            <div class="fw-semibold text-primary small mb-1">@(item.NgayHoc?.ToString("dd/MM") ?? "Chưa rõ ngày")</div>
+                                            <div class="small mb-1">@item.GioBatDau - @item.GioKetThuc</div>
+                                            <div class="small text-muted">@(string.IsNullOrWhiteSpace(item.DiaDiem) ? "Địa điểm đang cập nhật" : item.DiaDiem)</div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+</div>
+}
+
+<script>
+    (() => {
+        const container = document.currentScript?.previousElementSibling?.parentElement;
+        if (!container) {
+            return;
+        }
+
+        const buttons = container.querySelectorAll('.weekly-schedule-switch');
+        const panels = container.querySelectorAll('.weekly-schedule-panel');
+        const title = container.querySelector('.weekly-schedule-title');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const weekIndex = button.getAttribute('data-week-index');
+                const label = button.getAttribute('data-week-label');
+
+                buttons.forEach(item => {
+                    item.classList.remove('btn-primary');
+                    item.classList.add('btn-outline-primary');
+                });
+
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-primary');
+
+                panels.forEach(panel => {
+                    panel.classList.toggle('d-none', panel.getAttribute('data-week-panel') !== weekIndex);
+                });
+
+                if (title && label) {
+                    title.textContent = label;
+                }
+            });
+        });
+    })();
+</script>

@@ -1,5 +1,7 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using webthibanglai.Models;
@@ -9,7 +11,10 @@ namespace webthibanglai.Services;
 public interface IStudentDashboardApiService
 {
     Task<LichHocViewModel> GetDashboardAsync(string? accessToken, CancellationToken cancellationToken = default);
+    Task<RegisterStudentProfileResult> RegisterStudentProfileAsync(string? accessToken, StudentProfileRegistrationModel request, CancellationToken cancellationToken = default);
 }
+
+public record RegisterStudentProfileResult(bool IsSuccess, string? ErrorMessage, LichHocViewModel? Dashboard);
 
 public class StudentDashboardApiService : IStudentDashboardApiService
 {
@@ -35,13 +40,15 @@ public class StudentDashboardApiService : IStudentDashboardApiService
         try
         {
             var meTask = client.GetAsync("/api/v1/auth/me", cancellationToken);
+            var studentProfileTask = client.GetAsync("/api/v1/auth/me/student-profile", cancellationToken);
             var historyTask = client.GetAsync("/api/v1/history/analytics", cancellationToken);
             var wrongSummaryTask = client.GetAsync("/api/v1/wrong-questions/summary", cancellationToken);
             var criticalStatsTask = client.GetAsync("/api/v1/dashboard/critical-question-stats", cancellationToken);
 
-            await Task.WhenAll(meTask, historyTask, wrongSummaryTask, criticalStatsTask);
+            await Task.WhenAll(meTask, studentProfileTask, historyTask, wrongSummaryTask, criticalStatsTask);
 
             await PopulateProfileAsync(model, meTask.Result, cancellationToken);
+            await PopulateStudentProfileAsync(model, studentProfileTask.Result, cancellationToken);
             await PopulateHistoryStatsAsync(model, historyTask.Result, cancellationToken);
             await PopulateWrongQuestionStatsAsync(model, wrongSummaryTask.Result, cancellationToken);
             await PopulateCriticalStatsAsync(model, criticalStatsTask.Result, cancellationToken);
@@ -53,6 +60,43 @@ public class StudentDashboardApiService : IStudentDashboardApiService
 
         model.Stats.PracticeCount = model.Stats.TotalExams;
         return model;
+    }
+
+    public async Task<RegisterStudentProfileResult> RegisterStudentProfileAsync(string? accessToken, StudentProfileRegistrationModel request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return new RegisterStudentProfileResult(false, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", null);
+        }
+
+        var client = CreateAuthorizedClient(accessToken);
+        var payload = new
+        {
+            ho_ten = request.HoTen.Trim(),
+            ngay_sinh = string.IsNullOrWhiteSpace(request.NgaySinh) ? null : request.NgaySinh.Trim(),
+            gioi_tinh = string.IsNullOrWhiteSpace(request.GioiTinh) ? null : request.GioiTinh.Trim(),
+            cccd = string.IsNullOrWhiteSpace(request.Cccd) ? null : request.Cccd.Trim(),
+            dia_chi = string.IsNullOrWhiteSpace(request.DiaChi) ? null : request.DiaChi.Trim(),
+            anh_chan_dung = string.IsNullOrWhiteSpace(request.AnhChanDung) ? null : request.AnhChanDung.Trim()
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync("/api/v1/auth/register-student-profile", content, cancellationToken);
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = ExtractErrorMessage(responseBody);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                errorMessage ??= "Không tìm thấy API đăng ký hồ sơ học viên.";
+            }
+
+            return new RegisterStudentProfileResult(false, errorMessage ?? "Đăng ký hồ sơ học viên thất bại.", null);
+        }
+
+        var dashboard = await GetDashboardAsync(accessToken, cancellationToken);
+        return new RegisterStudentProfileResult(true, null, dashboard);
     }
 
     private async Task PopulateProfileAsync(LichHocViewModel model, HttpResponseMessage response, CancellationToken cancellationToken)
@@ -90,6 +134,53 @@ public class StudentDashboardApiService : IStudentDashboardApiService
             TrangThai = string.IsNullOrWhiteSpace(user.TrangThai) ? "Đang hoạt động" : user.TrangThai,
             Initials = BuildInitials(displayName),
             RoleLabel = isAdmin ? "Quản trị viên" : "Học viên"
+        };
+
+        model.Registration.HoTen = displayName;
+    }
+
+    private async Task PopulateStudentProfileAsync(LichHocViewModel model, HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            model.HasStudentProfile = false;
+            return;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get auth/me/student-profile failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
+            model.HasStudentProfile = false;
+            return;
+        }
+
+        var apiResponse = Deserialize<ApiEnvelope<StudentProfileApiResponse>>(responseBody);
+        var profile = apiResponse?.Data;
+        if (profile == null)
+        {
+            model.HasStudentProfile = false;
+            return;
+        }
+
+        model.HasStudentProfile = true;
+        model.Profile.HocVienId = profile.HocVienId;
+        model.Profile.HoTen = string.IsNullOrWhiteSpace(profile.HoTen) ? model.Profile.HoTen : profile.HoTen;
+        model.Profile.GioiTinh = profile.GioiTinh ?? string.Empty;
+        model.Profile.NgaySinhText = profile.NgaySinh?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật";
+        model.Profile.Cccd = profile.Cccd ?? string.Empty;
+        model.Profile.DiaChi = profile.DiaChi ?? string.Empty;
+        model.Profile.AnhChanDung = profile.AnhChanDung ?? string.Empty;
+        model.Profile.Initials = BuildInitials(model.Profile.HoTen);
+
+        model.Registration = new StudentProfileRegistrationModel
+        {
+            HoTen = model.Profile.HoTen,
+            NgaySinh = profile.NgaySinh?.ToString("yyyy-MM-dd") ?? string.Empty,
+            GioiTinh = profile.GioiTinh ?? string.Empty,
+            Cccd = profile.Cccd ?? string.Empty,
+            DiaChi = profile.DiaChi ?? string.Empty,
+            AnhChanDung = profile.AnhChanDung ?? string.Empty
         };
     }
 
@@ -316,6 +407,54 @@ public class StudentDashboardApiService : IStudentDashboardApiService
         return JsonSerializer.Deserialize<T>(responseBody, JsonOptions());
     }
 
+    private static string? ExtractErrorMessage(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            var root = document.RootElement;
+
+            if (TryGetPropertyIgnoreCase(root, "message", out var messageElement) && messageElement.ValueKind == JsonValueKind.String)
+            {
+                return messageElement.GetString();
+            }
+
+            if (TryGetPropertyIgnoreCase(root, "errors", out var errorsElement) && errorsElement.ValueKind == JsonValueKind.Array)
+            {
+                var details = errorsElement.EnumerateArray()
+                    .Select(item =>
+                    {
+                        if (item.ValueKind == JsonValueKind.String)
+                        {
+                            return item.GetString();
+                        }
+
+                        if (item.ValueKind == JsonValueKind.Object && TryGetPropertyIgnoreCase(item, "detail", out var detailElement) && detailElement.ValueKind == JsonValueKind.String)
+                        {
+                            return detailElement.GetString();
+                        }
+
+                        return null;
+                    })
+                    .Where(item => !string.IsNullOrWhiteSpace(item));
+
+                var combined = string.Join(" ", details!);
+                return string.IsNullOrWhiteSpace(combined) ? null : combined;
+            }
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        return null;
+    }
+
     private static JsonSerializerOptions JsonOptions()
     {
         return new JsonSerializerOptions
@@ -340,4 +479,16 @@ public class StudentDashboardApiService : IStudentDashboardApiService
         var initials = string.Concat(parts);
         return string.IsNullOrWhiteSpace(initials) ? "HV" : initials;
     }
+}
+
+internal sealed class StudentProfileApiResponse
+{
+    public long HocVienId { get; set; }
+    public long UserId { get; set; }
+    public string HoTen { get; set; } = string.Empty;
+    public DateOnly? NgaySinh { get; set; }
+    public string? GioiTinh { get; set; }
+    public string? Cccd { get; set; }
+    public string? DiaChi { get; set; }
+    public string? AnhChanDung { get; set; }
 }

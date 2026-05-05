@@ -5,9 +5,13 @@ namespace webthibanglai.Models;
 public class LichHocViewModel
 {
     public StudentDashboardProfile Profile { get; set; } = new();
+    public StudentProfileRegistrationModel Registration { get; set; } = new();
     public StudentDashboardStats Stats { get; set; } = new();
     public List<StudentRegisteredCourseItem> RegisteredCourses { get; set; } = new();
     public List<StudentScheduleItem> Schedule { get; set; } = new();
+    public bool HasStudentProfile { get; set; }
+    public string? RegistrationErrorMessage { get; set; }
+    public string? RegistrationSuccessMessage { get; set; }
 }
 
 public class StudentDashboardProfile
@@ -26,6 +30,16 @@ public class StudentDashboardProfile
     public string TrangThai { get; set; } = string.Empty;
     public string Initials { get; set; } = "HV";
     public string RoleLabel { get; set; } = "Học viên";
+}
+
+public class StudentProfileRegistrationModel
+{
+    public string HoTen { get; set; } = string.Empty;
+    public string NgaySinh { get; set; } = string.Empty;
+    public string GioiTinh { get; set; } = string.Empty;
+    public string Cccd { get; set; } = string.Empty;
+    public string DiaChi { get; set; } = string.Empty;
+    public string AnhChanDung { get; set; } = string.Empty;
 }
 
 public class StudentDashboardStats

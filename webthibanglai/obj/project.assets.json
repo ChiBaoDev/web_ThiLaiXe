@@ -15,11 +15,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai.csproj",
+      "projectUniqueName": "c:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai.csproj",
       "projectName": "webthibanglai",
-      "projectPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai.csproj",
+      "projectPath": "c:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\webthibanglai.csproj",
       "packagesPath": "C:\\Users\\Bao\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\obj\\",
+      "outputPath": "c:\\Users\\Bao\\OneDrive\\Máy tính\\thibanglai\\ThiBangLaiXe\\webthibanglai\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\DevExpress 22.2\\Components\\Offline Packages",

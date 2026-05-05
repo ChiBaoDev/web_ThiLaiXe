@@ -1,6 +1,7 @@
 @using webthibanglai.Services
 @{
     ViewData["Title"] = "Ôn tập";
+    var apiBaseUrl = (Context.RequestServices.GetService<IConfiguration>()?["ApiSettings:BaseUrl"] ?? string.Empty).TrimEnd('/');
     var topicCode = ViewBag.TopicCode as string ?? "";
     var topicName = ViewBag.TopicName as string ?? "Ôn tập";
     var questions = ViewBag.Questions as List<PracticeQuestion> ?? new List<PracticeQuestion>();
@@ -21,7 +22,12 @@
     var questionId = currentQuestion.Id;
     var content = currentQuestion.Content;
     var isCritical = currentQuestion.IsCritical;
-    var imageUrl = currentQuestion.ImageUrl;
+    var rawImageUrl = currentQuestion.ImageUrl;
+    var imageUrl = !string.IsNullOrWhiteSpace(rawImageUrl) && Uri.TryCreate(rawImageUrl, UriKind.Absolute, out _)
+        ? rawImageUrl
+        : (!string.IsNullOrWhiteSpace(rawImageUrl) && !string.IsNullOrWhiteSpace(apiBaseUrl)
+            ? $"{apiBaseUrl}/{rawImageUrl.TrimStart('/')}"
+            : rawImageUrl);
     var answers = currentQuestion.Answers;
     var orderedAnswers = answers.OrderBy(x => x.Order).ToList();
 }
@@ -571,6 +577,7 @@
             var wrongCountBox = document.getElementById('wrongCountBox');
             var progressText = document.getElementById('answeredProgressText');
             var progressBar = document.getElementById('answeredProgressBar');
+            var apiBaseUrl = '@apiBaseUrl';
             var totalQuestions = @total;
             var currentQuestionNumber = @current;
             var questionId = @questionId;
@@ -591,6 +598,18 @@
                 }
 
                 feedbackText.textContent = message || 'Chọn đáp án để kiểm tra';
+            }
+
+            function normalizeImageUrl(imageUrl) {
+                if (!imageUrl) {
+                    return imageUrl;
+                }
+
+                if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('//') || !apiBaseUrl) {
+                    return imageUrl;
+                }
+
+                return apiBaseUrl.replace(/\/$/, '') + '/' + imageUrl.replace(/^\//, '');
             }
 
             function getAnsweredQuestions() {
@@ -870,7 +889,7 @@
                         questionImage.alt = 'Hình minh họa câu hỏi';
                         questionText.parentNode.insertBefore(questionImage, questionText.nextSibling);
                     }
-                    questionImage.src = question.imageUrl;
+                    questionImage.src = normalizeImageUrl(question.imageUrl);
                     questionImage.style.display = 'block';
                 } else if (questionImage) {
                     questionImage.style.display = 'none';

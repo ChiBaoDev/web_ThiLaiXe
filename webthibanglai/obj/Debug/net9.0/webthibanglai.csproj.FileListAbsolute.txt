@@ -268,3 +268,12 @@ C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\ref\webthibanglai.dll
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\qgof93l79g-24xtw3kn52.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\md2v015nyo-1lts34tnra.gz
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\appsettings.Development.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\appsettings.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\global.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.staticwebassets.runtime.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.staticwebassets.endpoints.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.deps.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.runtimeconfig.json
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.dll
+c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\bin\Verify\webthibanglai.pdb

@@ -23,22 +23,72 @@
         "TamDung" => "bg-secondary",
         _ => "bg-primary"
     };
+
+    var featuredCourse = Model.Courses
+        .Where(course => course.IsOpenForRegistration)
+        .OrderBy(course => course.ThoiGianBatDau ?? DateOnly.MaxValue)
+        .ThenBy(course => course.HocPhi)
+        .FirstOrDefault()
+        ?? Model.Courses.FirstOrDefault();
 }
 
-<div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
-    <div class="container text-center">
-        <h1 class="display-4 text-white animated slideInDown mb-4">Khóa học</h1>
-        <nav aria-label="breadcrumb animated slideInDown">
-            <ol class="breadcrumb justify-content-center mb-0">
-                <li class="breadcrumb-item"><a class="text-white" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item text-primary active" aria-current="page">Khóa học</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+
 
 <div class="container-xxl py-6">
     <div class="container">
+        @if (featuredCourse is not null)
+        {
+            <section class="course-for-you-hero mb-5 wow fadeInUp" data-wow-delay="0.1s" id="courseForYouHero">
+                <div class="course-for-you-hero__content">
+                    <span class="course-for-you-hero__eyebrow"><i class="fa fa-wand-magic-sparkles me-2"></i>Khóa học cho bạn</span>
+                    <h1 class="course-for-you-hero__title" id="recommendedCourseTitle">@featuredCourse.TenKhoaHoc</h1>
+                    <p class="course-for-you-hero__text" id="recommendedCourseReason">Dựa trên thông tin khảo sát ban đầu và danh sách khóa học đang mở, đây là lựa chọn phù hợp để bạn bắt đầu lộ trình học bằng lái xe máy.</p>
+                    <div class="course-for-you-hero__actions">
+                        <a class="btn btn-light course-for-you-hero__btn" id="recommendedCourseDetailLink" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@featuredCourse.CourseId">
+                            <i class="fa fa-circle-info me-2"></i>Xem khóa học phù hợp
+                        </a>
+                        <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="course-for-you-hero__form" id="recommendedCourseRegisterForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="courseId" id="recommendedCourseRegisterId" value="@featuredCourse.CourseId" />
+                            <input type="hidden" name="ghiChu" value="Đăng ký từ gợi ý khóa học cho bạn" />
+                            <button type="submit" class="btn btn-warning text-dark course-for-you-hero__register" id="recommendedCourseRegisterButton" @(featuredCourse.IsOpenForRegistration ? null : "disabled")>
+                                <i class="fa fa-paper-plane me-2"></i>Đăng ký ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="course-for-you-hero__panel">
+                    <div class="course-for-you-card">
+                        <div class="course-for-you-card__top">
+                            <span class="course-for-you-card__icon"><i class="fa fa-motorcycle"></i></span>
+                            <span class="badge @GetStatusClass(featuredCourse.TrangThai)" id="recommendedCourseStatus">@GetStatusLabel(featuredCourse.TrangThai)</span>
+                        </div>
+                        <div class="course-for-you-card__name" id="recommendedCourseName">@featuredCourse.TenKhoaHoc</div>
+                        <div class="course-for-you-card__desc" id="recommendedCourseDesc">@featuredCourse.MoTaNgan</div>
+                        <div class="course-for-you-card__metrics">
+                            <div>
+                                <span>Học phí</span>
+                                <strong id="recommendedCoursePrice">@FormatPrice(featuredCourse.HocPhi)</strong>
+                            </div>
+                            <div>
+                                <span>Số buổi</span>
+                                <strong id="recommendedCourseLessons">@featuredCourse.SoBuoiHoc buổi</strong>
+                            </div>
+                            <div>
+                                <span>Khai giảng</span>
+                                <strong id="recommendedCourseStart">@FormatDate(featuredCourse.ThoiGianBatDau)</strong>
+                            </div>
+                            <div>
+                                <span>Còn chỗ</span>
+                                <strong id="recommendedCourseSlots">@Math.Max(featuredCourse.SoLuongToiDa - featuredCourse.SoLuongHienTai, 0)</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        }
+
         <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 650px;">
             <h6 class="text-primary text-uppercase mb-2">Lộ trình đào tạo</h6>
             <h1 class="display-6 mb-4">Khóa học thực tế từ hệ thống để học viên dễ chọn và đăng ký</h1>
@@ -92,7 +142,20 @@
         <div class="row g-4">
             @foreach (var course in Model.Courses)
             {
-                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                <div class="col-lg-4 col-md-6 wow fadeInUp course-result-item"
+                     data-wow-delay="0.1s"
+                     data-course-id="@course.CourseId"
+                     data-course-name="@course.TenKhoaHoc"
+                     data-course-code="@course.MaKhoaHoc"
+                     data-course-license="@course.LoaiBangLai"
+                     data-course-desc="@course.MoTaNgan"
+                     data-course-price="@course.HocPhi"
+                     data-course-price-text="@FormatPrice(course.HocPhi)"
+                     data-course-lessons="@course.SoBuoiHoc"
+                     data-course-start="@FormatDate(course.ThoiGianBatDau)"
+                     data-course-status="@GetStatusLabel(course.TrangThai)"
+                     data-course-open="@(course.IsOpenForRegistration ? "true" : "false")"
+                     data-course-slots="@Math.Max(course.SoLuongToiDa - course.SoLuongHienTai, 0)">
                     <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
                         <div class="position-relative">
                             <img class="img-fluid" src="@Url.Content(course.HinhAnh)" alt="@course.TenKhoaHoc" style="height: 220px; width: 100%; object-fit: cover;" />
@@ -153,8 +216,14 @@
                                 <div><i class="fa fa-circle-check text-primary me-2"></i>@(course.IsOpenForRegistration ? "Có thể đăng ký ngay" : "Tạm thời chưa nhận đăng ký mới")</div>
                             </div>
 
-                            <div class="mt-auto">
-                                <a class="btn btn-primary w-100 py-2" asp-controller="Contact" asp-action="Index">Tư vấn đăng ký</a>
+                            <div class="mt-auto d-grid gap-2">
+                                <a class="btn btn-outline-primary w-100 py-2" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">Xem chi tiết</a>
+                                <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="courseId" value="@course.CourseId" />
+                                    <input type="hidden" name="ghiChu" value="Đăng ký từ danh sách khóa học" />
+                                    <button type="submit" class="btn btn-primary w-100 py-2" @(course.IsOpenForRegistration ? null : "disabled")>Đăng ký ngay</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -164,3 +233,332 @@
         }
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .course-for-you-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 2rem;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            background: radial-gradient(circle at top left, rgba(247, 185, 0, .22), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fff8df 50%, #f7b900 100%);
+            color: #0b2c4d;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(300px, .8fr);
+            gap: 2rem;
+            border: 1px solid rgba(247, 185, 0, .3);
+            box-shadow: 0 22px 60px rgba(11, 44, 77, .12);
+        }
+
+        .course-for-you-hero::after {
+            content: '';
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            right: -90px;
+            top: -90px;
+            border-radius: 50%;
+            background: rgba(11, 44, 77, .08);
+        }
+
+        .course-for-you-hero__content,
+        .course-for-you-hero__panel {
+            position: relative;
+            z-index: 1;
+        }
+
+        .course-for-you-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: rgba(247, 185, 0, .16);
+            border: 1px solid rgba(247, 185, 0, .34);
+            color: #b47f00;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-size: .82rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .course-for-you-hero__title {
+            max-width: 760px;
+            font-size: clamp(2rem, 4vw, 3.35rem);
+            font-weight: 900;
+            line-height: 1.08;
+            margin-bottom: 1rem;
+        }
+
+        .course-for-you-hero__text {
+            max-width: 680px;
+            color: #526173;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-for-you-hero__actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .course-for-you-hero__btn,
+        .course-for-you-hero__register {
+            border-radius: 999px;
+            padding: .85rem 1.25rem;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(11, 44, 77, .08);
+        }
+
+        .course-for-you-hero__btn {
+            color: #0b2c4d;
+            background: #ffffff;
+            border: 1px solid rgba(247, 185, 0, .28);
+        }
+
+        .course-for-you-hero__form {
+            margin: 0;
+        }
+
+        .course-for-you-card {
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, .82);
+            border: 1px solid rgba(255, 255, 255, .72);
+            box-shadow: 0 14px 34px rgba(11, 44, 77, .1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+        }
+
+        .course-for-you-card__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .course-for-you-card__icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f7b900, #f59e0b);
+            color: #0b2c4d;
+            font-size: 1.55rem;
+            box-shadow: 0 6px 16px rgba(247, 185, 0, .32);
+        }
+
+        .course-for-you-card__name {
+            color: #0b2c4d;
+            font-size: 1.35rem;
+            font-weight: 900;
+            line-height: 1.25;
+            margin-bottom: .6rem;
+        }
+
+        .course-for-you-card__desc {
+            color: #526173;
+            line-height: 1.55;
+            margin-bottom: 1rem;
+        }
+
+        .course-for-you-card__metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .course-for-you-card__metrics div {
+            border-radius: 1rem;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            padding: .85rem;
+        }
+
+        .course-for-you-card__metrics span,
+        .course-for-you-card__metrics strong {
+            display: block;
+        }
+
+        .course-for-you-card__metrics span {
+            color: #6b7280;
+            font-size: .82rem;
+            margin-bottom: .2rem;
+        }
+
+        .course-for-you-card__metrics strong {
+            color: #111827;
+            font-size: .98rem;
+        }
+
+        @@media (max-width: 991.98px) {
+            .course-for-you-hero {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .course-for-you-card__metrics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var hero = document.getElementById('courseForYouHero');
+            if (!hero) {
+                return;
+            }
+
+            var courseItems = Array.from(document.querySelectorAll('.course-result-item[data-course-id]'));
+            if (courseItems.length === 0) {
+                return;
+            }
+
+            function readOnboardingData() {
+                try {
+                    var raw = window.localStorage.getItem('onboardingData');
+                    return raw ? JSON.parse(raw) : null;
+                } catch {
+                    return null;
+                }
+            }
+
+            function normalize(value) {
+                return (value || '').toString().toLowerCase();
+            }
+
+            function scoreCourse(course, onboarding) {
+                var text = normalize(course.name + ' ' + course.code + ' ' + course.license + ' ' + course.desc);
+                var score = course.isOpen ? 50 : 0;
+
+                if (course.slots > 0) {
+                    score += Math.min(course.slots, 10);
+                }
+
+                if (!onboarding) {
+                    return score - Math.min(course.price / 100000, 15);
+                }
+
+                if (onboarding.purpose === 'hoc_thi_bang_lai') {
+                    score += 18;
+                    if (text.includes('cơ bản') || text.includes('a1') || text.includes('lần đầu')) score += 12;
+                }
+
+                if (onboarding.purpose === 'thi_thu' || onboarding.level === 'sap_thi' || onboarding.style === 'hoc_theo_de') {
+                    score += 14;
+                    if (course.lessons <= 12) score += 10;
+                    if (text.includes('cấp tốc') || text.includes('ôn thi') || text.includes('thi')) score += 12;
+                }
+
+                if (onboarding.purpose === 'on_lai_kien_thuc' || onboarding.level === 'da_thi_rot') {
+                    score += 14;
+                    if (text.includes('ôn') || text.includes('bổ trợ') || text.includes('củng cố')) score += 12;
+                }
+
+                if (onboarding.purpose === 'xem_meo_thi' || onboarding.style === 'hoc_nhanh') {
+                    score += 10;
+                    if (course.lessons > 0 && course.lessons <= 10) score += 10;
+                }
+
+                if (onboarding.level === 'chua_biet_gi' || onboarding.style === 'ly_thuyet_truoc' || onboarding.style === 'hoc_tu_tu') {
+                    score += 12;
+                    if (course.lessons >= 10) score += 8;
+                    if (text.includes('cơ bản') || text.includes('lý thuyết')) score += 10;
+                }
+
+                return score - Math.min(course.price / 150000, 10);
+            }
+
+            function buildReason(course, onboarding) {
+                if (!onboarding) {
+                    return 'Bạn chưa hoàn tất khảo sát ban đầu, nên hệ thống đang ưu tiên khóa học đang mở đăng ký, còn chỗ và có lịch khai giảng phù hợp.';
+                }
+
+                var purposeMap = {
+                    hoc_thi_bang_lai: 'học để thi bằng lái lần đầu',
+                    thi_thu: 'thi thử để đánh giá năng lực',
+                    on_lai_kien_thuc: 'ôn lại kiến thức đã học',
+                    xem_meo_thi: 'xem mẹo thi và kinh nghiệm'
+                };
+
+                var levelMap = {
+                    chua_biet_gi: 'mới bắt đầu',
+                    da_hoc_qua: 'đã có nền tảng cơ bản',
+                    sap_thi: 'sắp thi và cần ôn tập tích cực',
+                    da_thi_rot: 'cần củng cố lại sau lần thi chưa đạt',
+                    da_co_bang: 'muốn củng cố kiến thức'
+                };
+
+                var purpose = purposeMap[onboarding.purpose] || 'học bằng lái xe máy';
+                var level = levelMap[onboarding.level] || 'cần một lộ trình phù hợp';
+                return 'Dựa trên khảo sát: bạn muốn ' + purpose + ', hiện đang ' + level + '. Hệ thống đã đối chiếu với danh sách khóa học từ API và gợi ý khóa học này.';
+            }
+
+            var onboarding = readOnboardingData();
+            var courses = courseItems.map(function (item) {
+                return {
+                    id: item.getAttribute('data-course-id') || '',
+                    name: item.getAttribute('data-course-name') || '',
+                    code: item.getAttribute('data-course-code') || '',
+                    license: item.getAttribute('data-course-license') || '',
+                    desc: item.getAttribute('data-course-desc') || '',
+                    price: parseInt(item.getAttribute('data-course-price') || '0', 10) || 0,
+                    priceText: item.getAttribute('data-course-price-text') || 'Đang cập nhật',
+                    lessons: parseInt(item.getAttribute('data-course-lessons') || '0', 10) || 0,
+                    start: item.getAttribute('data-course-start') || 'Đang cập nhật',
+                    status: item.getAttribute('data-course-status') || 'Sắp khai giảng',
+                    isOpen: item.getAttribute('data-course-open') === 'true',
+                    slots: parseInt(item.getAttribute('data-course-slots') || '0', 10) || 0
+                };
+            });
+
+            var recommended = courses
+                .map(function (course) {
+                    course.score = scoreCourse(course, onboarding);
+                    return course;
+                })
+                .sort(function (a, b) {
+                    return b.score - a.score;
+                })[0];
+
+            if (!recommended) {
+                return;
+            }
+
+            var detailLink = document.getElementById('recommendedCourseDetailLink');
+            var registerId = document.getElementById('recommendedCourseRegisterId');
+            var registerButton = document.getElementById('recommendedCourseRegisterButton');
+
+            document.getElementById('recommendedCourseTitle').textContent = recommended.name;
+            document.getElementById('recommendedCourseReason').textContent = buildReason(recommended, onboarding);
+            document.getElementById('recommendedCourseStatus').textContent = recommended.status;
+            document.getElementById('recommendedCourseName').textContent = recommended.name;
+            document.getElementById('recommendedCourseDesc').textContent = recommended.desc || 'Khóa học đang được cập nhật mô tả chi tiết.';
+            document.getElementById('recommendedCoursePrice').textContent = recommended.priceText;
+            document.getElementById('recommendedCourseLessons').textContent = recommended.lessons + ' buổi';
+            document.getElementById('recommendedCourseStart').textContent = recommended.start;
+            document.getElementById('recommendedCourseSlots').textContent = recommended.slots.toString();
+
+            if (detailLink) {
+                detailLink.href = '/KhoaHoc/Detail/' + encodeURIComponent(recommended.id);
+            }
+
+            if (registerId) {
+                registerId.value = recommended.id;
+            }
+
+            if (registerButton) {
+                registerButton.disabled = !recommended.isOpen;
+            }
+        })();
+    </script>
+}

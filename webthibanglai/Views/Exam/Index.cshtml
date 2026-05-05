@@ -1,78 +1,156 @@
 @model ExamViewModel
 @{
     ViewData["Title"] = "Thi thử";
+
+    var totalExams = Model.SampleExams.Count;
+    var totalQuestions = Model.SampleExams.Sum(exam => exam.TotalQuestions);
+    var averageDuration = totalExams > 0
+        ? (int)Math.Round(Model.SampleExams.Average(exam => exam.DurationMinutes), MidpointRounding.AwayFromZero)
+        : 0;
+
+    static string GetExamTheme(int index) => (index % 6) switch
+    {
+        0 => "exam-blue",
+        1 => "exam-amber",
+        2 => "exam-purple",
+        3 => "exam-cyan",
+        4 => "exam-red",
+        _ => "exam-indigo"
+    };
+
+    static string FormatStatus(string status) => status switch
+    {
+        "Published" => "Đã phát hành",
+        "Draft" => "Bản nháp",
+        "Archived" => "Đã lưu trữ",
+        _ when string.IsNullOrWhiteSpace(status) => "Sẵn sàng",
+        _ => status
+    };
 }
 
-<section class="sample-exams-page py-5">
+<section class="mock-exams-page py-5">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 720px;">
-                    <h6 class="text-primary text-uppercase mb-2">Thi thử GPLX</h6>
-                    <h1 class="display-6 mb-4">Danh sách đề thi mẫu</h1>
-                    <p class="mb-0">Chọn một đề thi để bắt đầu luyện tập theo bộ đề mẫu từ hệ thống.</p>
+        <div class="mock-exams-hero mb-5 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="mock-exams-hero__content">
+                <span class="mock-exams-hero__eyebrow"><i class="fas fa-clipboard-check me-2"></i>Thi thử GPLX</span>
+                <h1 class="mock-exams-hero__title">Luyện đề thi thử theo bộ đề từ hệ thống</h1>
+                <p class="mock-exams-hero__text">Chọn đề phù hợp để làm bài trong thời gian giới hạn, kiểm tra kết quả ngay và xem lại những câu cần cải thiện.</p>
+                <div class="mock-exams-hero__actions">
+                    <a asp-controller="OnTap" asp-action="Index" class="btn btn-light mock-exams-hero__btn">
+                        <i class="fas fa-book-open me-2"></i>Ôn tập trước
+                    </a>
+                    <span class="mock-exams-hero__hint"><i class="fas fa-shield-alt me-2"></i>Dữ liệu lấy từ MockExams API</span>
                 </div>
+            </div>
+            <div class="mock-exams-hero__panel">
+                <div class="mock-exams-stat">
+                    <span class="mock-exams-stat__icon"><i class="fas fa-file-alt"></i></span>
+                    <div>
+                        <span class="mock-exams-stat__value">@totalExams</span>
+                        <span class="mock-exams-stat__label">Đề thi</span>
+                    </div>
+                </div>
+                <div class="mock-exams-stat">
+                    <span class="mock-exams-stat__icon"><i class="fas fa-question-circle"></i></span>
+                    <div>
+                        <span class="mock-exams-stat__value">@totalQuestions</span>
+                        <span class="mock-exams-stat__label">Câu hỏi</span>
+                    </div>
+                </div>
+                <div class="mock-exams-stat">
+                    <span class="mock-exams-stat__icon"><i class="fas fa-stopwatch"></i></span>
+                    <div>
+                        <span class="mock-exams-stat__value">@(averageDuration > 0 ? averageDuration.ToString() : "--")</span>
+                        <span class="mock-exams-stat__label">Phút / đề</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="row justify-content-center">
+            <div class="col-xl-11">
                 @if (!string.IsNullOrWhiteSpace(TempData["ExamError"]?.ToString()))
                 {
                     <div class="alert alert-danger shadow-sm border-0 rounded-4 mb-4">
-                        @TempData["ExamError"]
+                        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ExamError"]
                     </div>
                 }
 
                 @if (!Model.IsAuthenticated)
                 {
                     <div class="alert alert-warning shadow-sm border-0 rounded-4 mb-4">
-                        @Model.ErrorMessage
+                        <i class="fas fa-circle-info me-2"></i>@Model.ErrorMessage
                     </div>
                 }
                 else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage) && Model.SampleExams.Count == 0)
                 {
                     <div class="alert alert-info shadow-sm border-0 rounded-4 mb-4">
-                        @Model.ErrorMessage
+                        <i class="fas fa-circle-info me-2"></i>@Model.ErrorMessage
                     </div>
                 }
 
                 @if (Model.SampleExams.Count > 0)
                 {
-                    <div class="row g-4">
-                        @foreach (var exam in Model.SampleExams)
+                    <div class="mock-exams-section-heading mb-4">
+                        <div>
+                            <h2 class="h4 mb-1">Danh sách đề thi thử</h2>
+                            <p class="text-muted mb-0">Mỗi đề có thời gian, số câu và trạng thái rõ ràng để bạn dễ chọn.</p>
+                        </div>
+                        <span class="mock-exams-section-heading__badge">@totalExams đề đang hiển thị</span>
+                    </div>
+
+                    <div class="mock-exams-grid">
+                        @for (var index = 0; index < Model.SampleExams.Count; index++)
                         {
-                            <div class="col-md-6">
-                                <div class="exam-card h-100">
-                                    <div class="exam-card__header">
-                                        <div>
-                                            <h2 class="exam-card__title">@exam.Name</h2>
-                                        </div>
-                                        <span class="exam-card__status">@exam.Status</span>
-                                    </div>
+                            var exam = Model.SampleExams[index];
+                            var theme = GetExamTheme(index);
+                            var questionProgress = exam.TotalQuestions <= 0
+                                ? 0
+                                : Math.Clamp((int)Math.Round((double)exam.LinkedQuestionCount / exam.TotalQuestions * 100, MidpointRounding.AwayFromZero), 0, 100);
 
-                                    <div class="exam-card__body">
-                                        <div class="exam-meta-grid">
-                                            <div class="exam-meta-item">
-                                                <span class="label">Số câu hỏi</span>
-                                                <strong>@exam.TotalQuestions câu</strong>
-                                            </div>
-                                            <div class="exam-meta-item">
-                                                <span class="label">Thời gian</span>
-                                                <strong>@exam.DurationMinutes phút</strong>
-                                            </div>
-                                            <div class="exam-meta-item">
-                                                <span class="label">Bộ đề</span>
-                                                <strong>@exam.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</strong>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <article class="mock-exam-card @theme wow fadeInUp" data-wow-delay="0.1s">
+                                <div class="mock-exam-card__glow"></div>
+                                <div class="mock-exam-card__header">
+                                    <span class="mock-exam-card__icon"><i class="fas fa-file-signature"></i></span>
+                                    <span class="mock-exam-card__status">@FormatStatus(exam.Status)</span>
+                                </div>
 
-                                    <div class="exam-card__footer">
-                                        <form asp-controller="Exam" asp-action="Start" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="sampleExamId" value="@exam.Id" />
-                                            <button type="submit" class="btn btn-primary btn-start">Bắt đầu thi</button>
-                                        </form>
+                                <div class="mock-exam-card__content">
+                                    <h3 class="mock-exam-card__title">@exam.Name</h3>
+                                    <p class="mock-exam-card__desc">Mô phỏng cấu trúc thi thật, làm bài theo thời gian và nhận kết quả ngay sau khi nộp.</p>
+                                </div>
+
+                                <div class="mock-exam-card__metrics">
+                                    <div class="mock-exam-metric">
+                                        <span>Số câu</span>
+                                        <strong>@exam.TotalQuestions</strong>
+                                    </div>
+                                    <div class="mock-exam-metric">
+                                        <span>Thời gian</span>
+                                        <strong>@exam.DurationMinutes phút</strong>
+                                    </div>
+                                    <div class="mock-exam-metric mock-exam-metric--wide">
+                                        <span>Ngày tạo</span>
+                                        <strong>@exam.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</strong>
                                     </div>
                                 </div>
-                            </div>
+
+                                <div class="mock-exam-card__progress">
+                                    <div class="d-flex justify-content-between small mb-2">
+                                        <span>Câu hỏi đã liên kết</span>
+                                        <strong>@exam.LinkedQuestionCount/@exam.TotalQuestions</strong>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar" role="progressbar" style="width: @questionProgress%;" aria-valuenow="@questionProgress" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mock-exam-card__footer d-grid">
+                                    <a asp-controller="Exam" asp-action="Start" asp-route-id="@exam.Id" class="mock-exam-card__button text-decoration-none text-center">
+                                        <i class="fas fa-play me-2"></i>Thi thử
+                                    </a>
+                                </div>
+                            </article>
                         }
                     </div>
                 }
@@ -83,101 +161,399 @@
 
 @section Styles {
     <style>
-        .sample-exams-page {
-            background: linear-gradient(180deg, #f5f9ff 0%, #ffffff 100%);
+        .mock-exams-page {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
             min-height: calc(100vh - 160px);
         }
 
-        .exam-card {
+        .mock-exams-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 2rem;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            background: radial-gradient(circle at top left, rgba(247, 185, 0, .22), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fff8df 52%, #f7b900 100%);
+            color: #0b2c4d;
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, .75fr);
+            gap: 2rem;
+            border: 1px solid rgba(247, 185, 0, .28);
+            box-shadow: 0 22px 60px rgba(11, 44, 77, .12);
+        }
+
+        .mock-exams-hero::after {
+            content: '';
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: -80px;
+            top: -80px;
+            border-radius: 50%;
+            background: rgba(11, 44, 77, .08);
+        }
+
+        .mock-exams-hero__content,
+        .mock-exams-hero__panel {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mock-exams-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: rgba(247, 185, 0, .16);
+            border: 1px solid rgba(247, 185, 0, .34);
+            color: #b47f00;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            font-size: .82rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .mock-exams-hero__title {
+            max-width: 760px;
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            margin-bottom: 1rem;
+        }
+
+        .mock-exams-hero__text {
+            max-width: 650px;
+            color: #526173;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .mock-exams-hero__actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .mock-exams-hero__btn {
+            border-radius: 999px;
+            padding: .8rem 1.25rem;
+            font-weight: 800;
+            color: #0b2c4d;
             background: #ffffff;
-            border: 1px solid #e9eef5;
-            border-radius: 1.5rem;
+            border: 1px solid rgba(247, 185, 0, .28);
+            box-shadow: 0 8px 20px rgba(11, 44, 77, .08);
+        }
+
+        .mock-exams-hero__hint {
+            color: #0b2c4d;
+            font-weight: 600;
+        }
+
+        .mock-exams-hero__panel {
+            display: grid;
+            gap: 1rem;
+            align-content: center;
+        }
+
+        .mock-exams-stat {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1.25rem;
+            background: rgba(255, 255, 255, .72);
+            border: 1px solid rgba(247, 185, 0, .26);
+            backdrop-filter: blur(10px);
+        }
+
+        .mock-exams-stat__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f7b900, #ffc93c);
+            color: #0b2c4d;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .mock-exams-stat__value,
+        .mock-exams-stat__label {
+            display: block;
+        }
+
+        .mock-exams-stat__value {
+            font-size: 1.55rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .mock-exams-stat__label {
+            color: #6b7280;
+            margin-top: .25rem;
+        }
+
+        .mock-exams-section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .mock-exams-section-heading__badge {
+            padding: .65rem 1rem;
+            border-radius: 999px;
+            color: #0f3a66;
+            background: #fff8df;
+            border: 1px solid #ffe29a;
+            font-weight: 800;
+        }
+
+        .mock-exams-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        .mock-exam-card {
+            --exam-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --exam-color: #2563eb;
+            --exam-border: #3b82f6;
+            --exam-shadow: rgba(59, 130, 246, .25);
+            --exam-bg-light: #eff6ff;
+            position: relative;
+            overflow: hidden;
+            min-height: 100%;
             padding: 1.5rem;
-            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            border-radius: 1.35rem;
+            background: linear-gradient(135deg, var(--exam-bg-light) 0%, #ffffff 100%);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            gap: 1.1rem;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s ease, border-color .3s ease;
         }
 
-        .exam-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
+        .mock-exam-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--exam-border);
+            box-shadow: 0 14px 34px var(--exam-shadow);
         }
 
-        .exam-card__header {
+        .mock-exam-card__glow {
+            position: absolute;
+            inset: 0;
+            background: var(--exam-gradient);
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+        .mock-exam-card:hover .mock-exam-card__glow {
+            opacity: .08;
+        }
+
+        .mock-exam-card > *:not(.mock-exam-card__glow) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mock-exam-card__header {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             gap: 1rem;
         }
 
-        .exam-card__title {
-            font-size: 1.35rem;
-            font-weight: 700;
+        .mock-exam-card__icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--exam-gradient);
+            color: #ffffff;
+            font-size: 1.45rem;
+            box-shadow: 0 5px 14px var(--exam-shadow);
+        }
+
+        .mock-exam-card__status {
+            padding: .45rem .8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .88);
+            color: var(--exam-color);
+            border: 1px solid color-mix(in srgb, var(--exam-border), transparent 70%);
+            font-weight: 800;
+            font-size: .82rem;
+            white-space: nowrap;
+        }
+
+        .mock-exam-card__title {
             color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 850;
+            line-height: 1.35;
+            margin-bottom: .55rem;
+        }
+
+        .mock-exam-card__desc {
+            color: #6b7280;
+            font-size: .92rem;
+            line-height: 1.55;
             margin: 0;
         }
 
-        .exam-card__status {
-            white-space: nowrap;
-            padding: 0.45rem 0.8rem;
-            border-radius: 999px;
-            background: #e8f7ee;
-            color: #198754;
-            font-weight: 700;
-            font-size: 0.85rem;
-            text-transform: capitalize;
-        }
-
-        .exam-meta-grid {
+        .mock-exam-card__metrics {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
+            gap: .75rem;
         }
 
-        .exam-meta-item {
-            padding: 1rem;
+        .mock-exam-metric {
+            padding: .85rem;
             border-radius: 1rem;
-            background: #f8fbff;
+            background: rgba(255, 255, 255, .86);
             border: 1px solid #edf2f7;
         }
 
-        .exam-meta-item .label {
+        .mock-exam-metric--wide {
+            grid-column: 1 / -1;
+        }
+
+        .mock-exam-metric span,
+        .mock-exam-metric strong {
             display: block;
+        }
+
+        .mock-exam-metric span {
             color: #6b7280;
-            font-size: 0.9rem;
-            margin-bottom: 0.35rem;
+            font-size: .82rem;
+            margin-bottom: .2rem;
         }
 
-        .exam-meta-item strong {
+        .mock-exam-metric strong {
             color: #111827;
-            font-size: 1rem;
+            font-size: .98rem;
         }
 
-        .exam-card__footer {
+        .mock-exam-card__progress {
+            color: #6b7280;
+            font-size: .9rem;
+        }
+
+        .mock-exam-card__progress strong {
+            color: var(--exam-color);
+        }
+
+        .mock-exam-card__progress .progress {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .08);
+        }
+
+        .mock-exam-card__progress .progress-bar {
+            border-radius: 999px;
+            background: var(--exam-gradient);
+        }
+
+        .mock-exam-card__footer {
             margin-top: auto;
         }
 
-        .btn-start {
+        .mock-exam-card__button {
+            display: block;
             width: 100%;
-            border-radius: 0.95rem;
-            padding: 0.9rem 1rem;
-            font-weight: 700;
-            font-size: 1rem;
+            border: 0;
+            border-radius: 1rem;
+            padding: .95rem 1rem;
+            color: #ffffff;
+            background: var(--exam-gradient);
+            font-weight: 850;
+            box-shadow: 0 6px 16px var(--exam-shadow);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .mock-exam-card__button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px var(--exam-shadow);
+        }
+
+        .exam-blue {
+            --exam-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --exam-color: #2563eb;
+            --exam-border: #3b82f6;
+            --exam-shadow: rgba(59, 130, 246, .3);
+            --exam-bg-light: #eff6ff;
+        }
+
+        .exam-amber {
+            --exam-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+            --exam-color: #d97706;
+            --exam-border: #f59e0b;
+            --exam-shadow: rgba(245, 158, 11, .3);
+            --exam-bg-light: #fffbeb;
+        }
+
+        .exam-purple {
+            --exam-gradient: linear-gradient(135deg, #a855f7, #9333ea);
+            --exam-color: #9333ea;
+            --exam-border: #a855f7;
+            --exam-shadow: rgba(168, 85, 247, .3);
+            --exam-bg-light: #faf5ff;
+        }
+
+        .exam-cyan {
+            --exam-gradient: linear-gradient(135deg, #06b6d4, #0891b2);
+            --exam-color: #0891b2;
+            --exam-border: #06b6d4;
+            --exam-shadow: rgba(6, 182, 212, .3);
+            --exam-bg-light: #ecfeff;
+        }
+
+        .exam-red {
+            --exam-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+            --exam-color: #dc2626;
+            --exam-border: #ef4444;
+            --exam-shadow: rgba(239, 68, 68, .3);
+            --exam-bg-light: #fef2f2;
+        }
+
+        .exam-indigo {
+            --exam-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+            --exam-color: #4f46e5;
+            --exam-border: #6366f1;
+            --exam-shadow: rgba(99, 102, 241, .3);
+            --exam-bg-light: #eef2ff;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .mock-exams-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 991.98px) {
+            .mock-exams-hero {
+                grid-template-columns: 1fr;
+            }
         }
 
         @@media (max-width: 767.98px) {
-            .exam-card {
-                padding: 1.25rem;
-            }
-
-            .exam-card__header {
-                flex-direction: column;
-            }
-
-            .exam-meta-grid {
+            .mock-exams-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .mock-exams-hero {
+                border-radius: 1.5rem;
+            }
+
+            .mock-exams-section-heading {
+                align-items: flex-start;
             }
         }
     </style>

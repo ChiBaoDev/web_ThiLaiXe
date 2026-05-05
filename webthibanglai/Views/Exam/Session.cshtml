@@ -584,7 +584,7 @@
 @section Scripts {
     <script>
         (function () {
-            var remainSeconds = @session.RemainingSeconds;
+            var remainSeconds = @(session.RemainingSeconds > 0 ? session.RemainingSeconds : session.DurationMinutes * 60);
             var timerBox = document.getElementById('timerBox');
             var timerInline = document.getElementById('timerInline');
             var isReviewMode = @(isReviewMode ? "true" : "false");
@@ -863,6 +863,11 @@
                     var targetUrl = submitter ? (submitter.getAttribute('data-target-url') || '') : '';
                     if (!targetUrl) {
                         targetUrl = '@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Min(current + 1, total), review = false, embedded = isEmbeddedMode })';
+                    }
+
+                    var savedBeforeNavigate = await saveSelectedAnswer();
+                    if (savedBeforeNavigate.success === false && savedBeforeNavigate.skipped !== true) {
+                        return;
                     }
 
                     window.location.href = targetUrl;

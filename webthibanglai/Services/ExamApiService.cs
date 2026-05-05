@@ -9,6 +9,7 @@ namespace webthibanglai.Services;
 public interface IExamApiService
 {
     Task<ExamViewModel> GetSampleExamsAsync(string? accessToken, CancellationToken cancellationToken = default);
+    Task<SampleExamItem?> GetSampleExamAsync(long sampleExamId, CancellationToken cancellationToken = default);
     Task<StartExamSessionResponseViewModel?> StartSampleExamAsync(long sampleExamId, string? accessToken, CancellationToken cancellationToken = default);
     Task<ExamSessionPageViewModel?> GetSessionAsync(long sessionId, string? accessToken, CancellationToken cancellationToken = default);
     Task<ExamSessionQuestionViewModel?> GetQuestionAsync(long sessionId, int number, string? accessToken, CancellationToken cancellationToken = default);
@@ -36,22 +37,16 @@ public class ExamApiService : IExamApiService
             IsAuthenticated = !string.IsNullOrWhiteSpace(accessToken)
         };
 
-        if (string.IsNullOrWhiteSpace(accessToken))
-        {
-            model.ErrorMessage = "Vui lòng đăng nhập để xem danh sách đề thi mẫu.";
-            return model;
-        }
-
         try
         {
-            var client = CreateAuthorizedClient(accessToken);
-            var response = await client.GetAsync("/api/v1/sample-exams", cancellationToken);
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync("/api/v1/mock-exams", cancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Get sample exams failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
-                model.ErrorMessage = ExtractErrorMessage(responseBody) ?? "Không tải được danh sách đề thi mẫu.";
+                _logger.LogWarning("Get mock exams failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
+                model.ErrorMessage = ExtractErrorMessage(responseBody) ?? "Không tải được danh sách đề thi thử.";
                 return model;
             }
 
@@ -60,7 +55,7 @@ public class ExamApiService : IExamApiService
 
             if (model.SampleExams.Count == 0)
             {
-                model.ErrorMessage = apiResponse?.Message ?? "Hiện chưa có đề thi mẫu nào.";
+                model.ErrorMessage = apiResponse?.Message ?? "Hiện chưa có đề thi thử nào.";
             }
 
             return model;
@@ -73,6 +68,35 @@ public class ExamApiService : IExamApiService
         }
     }
 
+    public async Task<SampleExamItem?> GetSampleExamAsync(long sampleExamId, CancellationToken cancellationToken = default)
+    {
+        if (sampleExamId <= 0)
+        {
+            return null;
+        }
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync($"/api/v1/mock-exams/{sampleExamId}", cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Get mock exam detail failed. SampleExamId={SampleExamId}, StatusCode={StatusCode}, Response={Response}", sampleExamId, response.StatusCode, responseBody);
+                return null;
+            }
+
+            var apiResponse = Deserialize<ApiEnvelope<SampleExamItem>>(responseBody);
+            return apiResponse?.Data;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while getting mock exam detail. SampleExamId={SampleExamId}", sampleExamId);
+            return null;
+        }
+    }
+
     public async Task<StartExamSessionResponseViewModel?> StartSampleExamAsync(long sampleExamId, string? accessToken, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
@@ -81,7 +105,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var response = await client.PostAsync($"/api/v1/exams/sample/{sampleExamId}/start", new StringContent(string.Empty, Encoding.UTF8, "application/json"), cancellationToken);
+        var response = await client.PostAsync($"/api/v1/mock-exams/{sampleExamId}/start", new StringContent(string.Empty, Encoding.UTF8, "application/json"), cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -102,7 +126,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var response = await client.GetAsync($"/api/v1/exams/sessions/{sessionId}", cancellationToken);
+        var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}", cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -123,7 +147,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var response = await client.GetAsync($"/api/v1/exams/sessions/{sessionId}/questions/{number}", cancellationToken);
+        var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/questions/{number}", cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -151,7 +175,7 @@ public class ExamApiService : IExamApiService
         }, JsonOptions());
 
         var response = await client.PostAsync(
-            $"/api/v1/exams/sessions/{sessionId}/answers",
+            $"/api/v1/mock-exams/sessions/{sessionId}/answers",
             new StringContent(payload, Encoding.UTF8, "application/json"),
             cancellationToken);
 
@@ -173,9 +197,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var endpoint = autoSubmit
-            ? $"/api/v1/exams/sessions/{sessionId}/auto-submit"
-            : $"/api/v1/exams/sessions/{sessionId}/submit";
+        var endpoint = $"/api/v1/mock-exams/sessions/{sessionId}/submit";
 
         var response = await client.PostAsync(endpoint, new StringContent(string.Empty, Encoding.UTF8, "application/json"), cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -198,7 +220,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var response = await client.GetAsync($"/api/v1/exams/sessions/{sessionId}/result", cancellationToken);
+        var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/result", cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -219,7 +241,7 @@ public class ExamApiService : IExamApiService
         }
 
         var client = CreateAuthorizedClient(accessToken);
-        var response = await client.GetAsync($"/api/v1/exams/sessions/{sessionId}/review", cancellationToken);
+        var response = await client.GetAsync($"/api/v1/mock-exams/sessions/{sessionId}/review", cancellationToken);
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)

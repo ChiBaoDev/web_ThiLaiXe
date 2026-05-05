@@ -1,0 +1,405 @@
+@model webthibanglai.Models.KhoaHocDetailViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết khóa học";
+
+    static string FormatPrice(long price) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", price);
+    static string FormatDate(DateOnly? date) => date?.ToString("dd/MM/yyyy") ?? "Đang cập nhật";
+    static string FormatDayOfWeek(int day) => day switch
+    {
+        2 => "Thứ 2",
+        3 => "Thứ 3",
+        4 => "Thứ 4",
+        5 => "Thứ 5",
+        6 => "Thứ 6",
+        7 => "Thứ 7",
+        8 => "Chủ nhật",
+        _ => $"Thứ {day}"
+    };
+    static string GetStatusLabel(string status) => status switch
+    {
+        "DangMo" => "Đang mở đăng ký",
+        "DangMoDangKy" => "Đang mở đăng ký",
+        "DaDay" => "Đã đủ học viên",
+        "DaDuHocVien" => "Đã đủ học viên",
+        "TamDung" => "Tạm dừng",
+        _ => "Sắp khai giảng"
+    };
+    static string GetStatusClass(string status) => status switch
+    {
+        "DangMo" => "bg-success",
+        "DangMoDangKy" => "bg-success",
+        "DaDay" => "bg-warning text-dark",
+        "DaDuHocVien" => "bg-warning text-dark",
+        "TamDung" => "bg-secondary",
+        _ => "bg-primary"
+    };
+}
+
+<div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
+    <div class="container text-center">
+        <h1 class="display-4 text-white animated slideInDown mb-4">Chi tiết khóa học</h1>
+        <nav aria-label="breadcrumb animated slideInDown">
+            <ol class="breadcrumb justify-content-center mb-0">
+                <li class="breadcrumb-item"><a class="text-white" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a class="text-white" asp-controller="KhoaHoc" asp-action="Index">Khóa học</a></li>
+                <li class="breadcrumb-item text-primary active" aria-current="page">Chi tiết</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container-xxl py-6">
+    <div class="container">
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-warning mb-4">
+                <i class="fa fa-circle-info me-2"></i>@Model.ErrorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.RegistrationMessage))
+        {
+            <div class="alert alert-success mb-4">
+                <i class="fa fa-circle-check me-2"></i>@Model.RegistrationMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.RegistrationErrorMessage))
+        {
+            <div class="alert alert-danger mb-4">
+                <i class="fa fa-triangle-exclamation me-2"></i>@Model.RegistrationErrorMessage
+            </div>
+        }
+
+        @if (Model.Course is null)
+        {
+            <div class="bg-light rounded shadow-sm p-5 text-center">
+                <i class="fa fa-layer-group text-primary mb-3" style="font-size: 2.5rem;"></i>
+                <h4 class="mb-3">Không có dữ liệu khóa học</h4>
+                <p class="text-muted mb-4">Chi tiết khóa học hiện chưa thể hiển thị.</p>
+                <a class="btn btn-primary" asp-controller="KhoaHoc" asp-action="Index">Quay lại danh sách khóa học</a>
+            </div>
+        }
+        else
+        {
+            var course = Model.Course;
+            var sessionDefinitions = new[]
+            {
+                new { Key = "Sang", Label = "Sáng" },
+                new { Key = "Chieu", Label = "Chiều" },
+                new { Key = "Toi", Label = "Tối" }
+            };
+
+            static int NormalizeDayOfWeek(System.DayOfWeek dayOfWeek) => dayOfWeek switch
+            {
+                System.DayOfWeek.Monday => 2,
+                System.DayOfWeek.Tuesday => 3,
+                System.DayOfWeek.Wednesday => 4,
+                System.DayOfWeek.Thursday => 5,
+                System.DayOfWeek.Friday => 6,
+                System.DayOfWeek.Saturday => 7,
+                System.DayOfWeek.Sunday => 8,
+                _ => 0
+            };
+
+            static string DetectSession(string startTime)
+            {
+                if (!TimeOnly.TryParse(startTime, out var time))
+                {
+                    return "Khac";
+                }
+
+                if (time < new TimeOnly(12, 0))
+                {
+                    return "Sang";
+                }
+
+                if (time < new TimeOnly(18, 0))
+                {
+                    return "Chieu";
+                }
+
+                return "Toi";
+            }
+
+            var expandedSchedule = new List<(int DayOfWeek, string SessionKey, WeeklyScheduleOccurrenceItem Item)>();
+
+            if (course.NgayBatDau.HasValue && course.NgayKetThuc.HasValue && course.NgayBatDau <= course.NgayKetThuc)
+            {
+                for (var currentDate = course.NgayBatDau.Value; currentDate <= course.NgayKetThuc.Value; currentDate = currentDate.AddDays(1))
+                {
+                    var normalizedDay = NormalizeDayOfWeek(currentDate.DayOfWeek);
+                    var matchedItems = course.LichHocMau
+                        .Where(item => item.ThuTrongTuan == normalizedDay)
+                        .ToList();
+
+                    foreach (var matchedItem in matchedItems)
+                    {
+                        expandedSchedule.Add((
+                            normalizedDay,
+                            DetectSession(matchedItem.GioBatDau),
+                            new WeeklyScheduleOccurrenceItem
+                            {
+                                NgayHoc = currentDate,
+                                GioBatDau = matchedItem.GioBatDau,
+                                GioKetThuc = matchedItem.GioKetThuc,
+                                DiaDiem = matchedItem.DiaDiem
+                            }));
+                    }
+                }
+            }
+            else
+            {
+                expandedSchedule = course.LichHocMau
+                    .Select(item => (
+                        item.ThuTrongTuan,
+                        DetectSession(item.GioBatDau),
+                        new WeeklyScheduleOccurrenceItem
+                        {
+                            NgayHoc = null,
+                            GioBatDau = item.GioBatDau,
+                            GioKetThuc = item.GioKetThuc,
+                            DiaDiem = item.DiaDiem
+                        }))
+                    .ToList();
+            }
+
+            static DateOnly GetStartOfWeek(DateOnly date)
+            {
+                var normalizedDay = NormalizeDayOfWeek(date.DayOfWeek);
+                var offset = normalizedDay - 2;
+                return date.AddDays(-offset);
+            }
+
+            var effectiveStartDate = course.NgayBatDau ?? expandedSchedule
+                .Where(item => item.Item.NgayHoc.HasValue)
+                .Select(item => item.Item.NgayHoc!.Value)
+                .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
+                .Min();
+
+            var effectiveEndDate = course.NgayKetThuc ?? expandedSchedule
+                .Where(item => item.Item.NgayHoc.HasValue)
+                .Select(item => item.Item.NgayHoc!.Value)
+                .DefaultIfEmpty(effectiveStartDate)
+                .Max();
+
+            var firstWeekStart = GetStartOfWeek(effectiveStartDate);
+            var lastWeekStart = GetStartOfWeek(effectiveEndDate);
+            var weekOptions = new List<WeeklyScheduleWeekOption>();
+
+            for (var weekStart = firstWeekStart; weekStart <= lastWeekStart; weekStart = weekStart.AddDays(7))
+            {
+                var weekEnd = weekStart.AddDays(6);
+                weekOptions.Add(new WeeklyScheduleWeekOption
+                {
+                    Index = weekOptions.Count,
+                    StartDate = weekStart,
+                    EndDate = weekEnd,
+                    Label = $"Tuần {weekOptions.Count + 1}: {weekStart:dd/MM} - {weekEnd:dd/MM}"
+                });
+            }
+
+            if (weekOptions.Count == 0)
+            {
+                weekOptions.Add(new WeeklyScheduleWeekOption
+                {
+                    Index = 0,
+                    StartDate = firstWeekStart,
+                    EndDate = firstWeekStart.AddDays(6),
+                    Label = $"Tuần 1: {firstWeekStart:dd/MM} - {firstWeekStart.AddDays(6):dd/MM}"
+                });
+            }
+
+            var scheduleTable = new WeeklyScheduleTableViewModel
+            {
+                Weeks = weekOptions,
+                SelectedWeekIndex = 0,
+                WeekTables = new List<WeeklyScheduleWeekTable>()
+            };
+
+            foreach (var week in weekOptions)
+            {
+                var weekTable = new WeeklyScheduleWeekTable
+                {
+                    WeekIndex = week.Index,
+                    Label = week.Label,
+                    Days = Enumerable.Range(0, 7)
+                        .Select(offset => week.StartDate.AddDays(offset))
+                        .Select(date => new WeeklyScheduleDayColumn
+                        {
+                            DayOfWeek = NormalizeDayOfWeek(date.DayOfWeek),
+                            Label = FormatDayOfWeek(NormalizeDayOfWeek(date.DayOfWeek)),
+                            Date = date
+                        })
+                        .ToList(),
+                    Rows = new List<WeeklyScheduleRow>()
+                };
+
+                foreach (var session in sessionDefinitions)
+                {
+                    var row = new WeeklyScheduleRow
+                    {
+                        SessionKey = session.Key,
+                        SessionLabel = session.Label,
+                        Cells = weekTable.Days.Select(day => new WeeklyScheduleCell
+                        {
+                            DayOfWeek = day.DayOfWeek,
+                            SessionKey = session.Key,
+                            Items = expandedSchedule
+                                .Where(item => item.DayOfWeek == day.DayOfWeek
+                                    && item.SessionKey == session.Key
+                                    && item.Item.NgayHoc == day.Date)
+                                .Select(item => item.Item)
+                                .OrderBy(item => item.NgayHoc)
+                                .ThenBy(item => item.GioBatDau)
+                                .ToList()
+                        }).ToList()
+                    };
+
+                    weekTable.Rows.Add(row);
+                }
+
+                scheduleTable.WeekTables.Add(weekTable);
+            }
+
+            <div class="row g-5 align-items-start">
+                <div class="col-lg-8">
+                    <div class="bg-light rounded shadow-sm overflow-hidden mb-4">
+                        <img class="img-fluid w-100" src="@Url.Content(course.HinhAnh)" alt="@course.TenKhoaHoc" style="max-height: 420px; object-fit: cover;" />
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                        <span class="badge @GetStatusClass(course.TrangThai) px-3 py-2">@GetStatusLabel(course.TrangThai)</span>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2">@course.MaKhoaHoc</span>
+                        <span class="badge bg-light text-dark border px-3 py-2">@course.LoaiBangLai</span>
+                    </div>
+
+                    <h2 class="mb-3">@course.TenKhoaHoc</h2>
+                    <p class="text-muted mb-4">@course.MoTa</p>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="bg-light border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Học phí</div>
+                                <div class="fw-bold fs-5 text-primary">@FormatPrice(course.HocPhi)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Khai giảng</div>
+                                <div class="fw-bold">@FormatDate(course.NgayBatDau)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Kết thúc</div>
+                                <div class="fw-bold">@FormatDate(course.NgayKetThuc)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="bg-white border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Số buổi học</div>
+                                <div class="fw-semibold">@course.SoBuoiHoc buổi</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Đã đăng ký</div>
+                                <div class="fw-semibold">@course.SoLuongHienTai / @course.SoLuongToiDa học viên</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white border rounded p-3 h-100">
+                                <div class="text-muted small mb-1">Còn lại</div>
+                                <div class="fw-semibold">@course.RemainingSlots chỗ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span class="text-muted">Tiến độ lấp đầy lớp</span>
+                            <span class="fw-semibold">@course.OccupancyRate%</span>
+                        </div>
+                        <div class="progress" style="height: 12px;">
+                            <div class="progress-bar @(course.OccupancyRate >= 100 ? "bg-warning" : "bg-primary")" role="progressbar" style="width: @course.OccupancyRate%;" aria-valuenow="@course.OccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-light rounded shadow-sm p-4">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                            <h4 class="mb-0">Lịch học mẫu</h4>
+                            <span class="text-muted small">Dữ liệu lấy từ API chi tiết khóa học</span>
+                        </div>
+
+                        @if (course.LichHocMau.Count == 0)
+                        {
+                            <p class="text-muted mb-0">Lịch học mẫu đang được cập nhật.</p>
+                        }
+                        else
+                        {
+                            @await Html.PartialAsync("~/Views/Shared/Components/WeeklyScheduleTable/Default.cshtml", scheduleTable)
+
+                            <div class="bg-white border rounded-3 p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fa fa-circle-info text-primary"></i>
+                                    <span class="fw-semibold">Tổng quan lịch học</span>
+                                </div>
+                                <div class="small text-muted">
+                                    Khóa học hiện có <strong>@expandedSchedule.Count</strong> buổi trong khoảng thời gian học, học vào
+                                    <strong>@string.Join(", ", course.LichHocMau.Select(item => item.ThuTrongTuan).Distinct().OrderBy(day => day).Select(FormatDayOfWeek))</strong>.
+                                    Lịch thực tế có thể được trung tâm điều chỉnh trước ngày khai giảng.
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="bg-white border rounded shadow-sm p-4 sticky-top" style="top: 110px;">
+                        <h4 class="mb-4">Đăng ký khóa học</h4>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Giảng viên chính</div>
+                            <div class="fw-semibold">@(string.IsNullOrWhiteSpace(course.GiaoVienChinh) ? "Đang cập nhật" : course.GiaoVienChinh)</div>
+                            @if (!string.IsNullOrWhiteSpace(course.SoDienThoaiGiaoVien))
+                            {
+                                <div class="small text-muted mt-1">Liên hệ: @course.SoDienThoaiGiaoVien</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Trạng thái nhận đăng ký</div>
+                            <div class="fw-semibold @(course.IsOpenForRegistration ? "text-success" : "text-warning")">
+                                @(course.IsOpenForRegistration ? "Có thể đăng ký" : "Tạm thời chưa nhận đăng ký")
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info small">
+                            Khi bấm đăng ký, hệ thống sẽ kiểm tra hồ sơ học viên của bạn và gửi yêu cầu đăng ký khóa học trực tiếp đến API.
+                        </div>
+
+                        <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid gap-2 mb-3">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="courseId" value="@course.CourseId" />
+                            <div>
+                                <label class="form-label fw-semibold">Ghi chú</label>
+                                <textarea name="ghiChu" class="form-control" rows="3" placeholder="Nhập ghi chú nếu cần"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" @(course.IsOpenForRegistration ? null : "disabled")>Đăng ký ngay</button>
+                        </form>
+
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-outline-primary" asp-controller="Contact" asp-action="Index">Tư vấn thêm</a>
+                            <a class="btn btn-outline-secondary" asp-controller="KhoaHoc" asp-action="Index">Quay lại danh sách</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
