@@ -18,7 +18,7 @@ namespace webthibanglai.Services
             _logger = logger;
             
             // Lấy API key từ configuration
-            _apiKey = _configuration["OpenAI:ApiKey"] ?? "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";
+            _apiKey = _configuration["OpenAI:ApiKey"] ?? "";
             _apiUrl = _configuration["OpenAI:ApiUrl"] ?? "https://api.openai.com/v1/chat/completions";
         }
 
