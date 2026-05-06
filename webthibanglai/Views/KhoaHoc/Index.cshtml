@@ -23,6 +23,15 @@
         "TamDung" => "bg-secondary",
         _ => "bg-primary"
     };
+    static string GetCourseTheme(int index) => (index % 6) switch
+    {
+        0 => "course-blue",
+        1 => "course-amber",
+        2 => "course-purple",
+        3 => "course-cyan",
+        4 => "course-red",
+        _ => "course-indigo"
+    };
 
     var featuredCourse = Model.Courses
         .Where(course => course.IsOpenForRegistration)
@@ -139,13 +148,17 @@
         }
         else
         {
-        <div class="row g-4">
-            @foreach (var course in Model.Courses)
+        <div class="course-cards-grid">
+            @for (var index = 0; index < Model.Courses.Count; index++)
             {
-                <div class="col-lg-4 col-md-6 wow fadeInUp course-result-item"
-                     data-wow-delay="0.1s"
-                     data-course-id="@course.CourseId"
-                     data-course-name="@course.TenKhoaHoc"
+                var course = Model.Courses[index];
+                var theme = GetCourseTheme(index);
+                var occupancyRate = Math.Clamp(course.OccupancyRate, 0, 100);
+
+                <article class="course-modern-card @theme wow fadeInUp course-result-item"
+                      data-wow-delay="0.1s"
+                      data-course-id="@course.CourseId"
+                      data-course-name="@course.TenKhoaHoc"
                      data-course-code="@course.MaKhoaHoc"
                      data-course-license="@course.LoaiBangLai"
                      data-course-desc="@course.MoTaNgan"
@@ -153,81 +166,73 @@
                      data-course-price-text="@FormatPrice(course.HocPhi)"
                      data-course-lessons="@course.SoBuoiHoc"
                      data-course-start="@FormatDate(course.ThoiGianBatDau)"
-                     data-course-status="@GetStatusLabel(course.TrangThai)"
-                     data-course-open="@(course.IsOpenForRegistration ? "true" : "false")"
-                     data-course-slots="@Math.Max(course.SoLuongToiDa - course.SoLuongHienTai, 0)">
-                    <div class="courses-item d-flex flex-column bg-light overflow-hidden h-100 shadow-sm rounded">
-                        <div class="position-relative">
-                            <img class="img-fluid" src="@Url.Content(course.HinhAnh)" alt="@course.TenKhoaHoc" style="height: 220px; width: 100%; object-fit: cover;" />
-                            <span class="badge @GetStatusClass(course.TrangThai) position-absolute top-0 end-0 m-3 px-3 py-2">@GetStatusLabel(course.TrangThai)</span>
+                      data-course-status="@GetStatusLabel(course.TrangThai)"
+                      data-course-open="@(course.IsOpenForRegistration ? "true" : "false")"
+                      data-course-slots="@Math.Max(course.SoLuongToiDa - course.SoLuongHienTai, 0)">
+                    <div class="course-modern-card__glow"></div>
+
+                    <div class="course-modern-card__body">
+                        <div class="course-modern-card__header">
+                            <span class="course-modern-card__icon"><i class="fa fa-motorcycle"></i></span>
+                            <span class="course-modern-card__status">@GetStatusLabel(course.TrangThai)</span>
                         </div>
-                        <div class="p-4 d-flex flex-column h-100">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                                <div>
-                                    <div class="text-primary small fw-semibold mb-1">@course.MaKhoaHoc</div>
-                                    <h5 class="mb-0">@course.TenKhoaHoc</h5>
-                                </div>
-                                <div class="text-end">
-                                    <div class="d-inline-block bg-primary text-white fs-6 py-2 px-3 rounded-pill fw-semibold">@FormatPrice(course.HocPhi)</div>
-                                </div>
-                            </div>
 
-                            <p class="text-muted mb-3">@course.MoTaNgan</p>
+                        <div class="course-modern-card__content">
+                            <div class="course-modern-card__code">@course.MaKhoaHoc</div>
+                            <h3 class="course-modern-card__title">@course.TenKhoaHoc</h3>
+                            <p class="course-modern-card__desc">@course.MoTaNgan</p>
+                        </div>
 
-                            <div class="row g-2 small mb-3">
-                                <div class="col-6">
-                                    <div class="bg-white rounded p-3 h-100 border">
-                                        <div class="text-muted mb-1">Loại bằng</div>
-                                        <strong>@course.LoaiBangLai</strong>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="bg-white rounded p-3 h-100 border">
-                                        <div class="text-muted mb-1">Số buổi</div>
-                                        <strong>@course.SoBuoiHoc buổi</strong>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="bg-white rounded p-3 h-100 border">
-                                        <div class="text-muted mb-1">Khai giảng</div>
-                                        <strong>@FormatDate(course.ThoiGianBatDau)</strong>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="bg-white rounded p-3 h-100 border">
-                                        <div class="text-muted mb-1">Kết thúc</div>
-                                        <strong>@FormatDate(course.ThoiGianKetThuc)</strong>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="course-modern-card__price">
+                            <span>Học phí</span>
+                            <strong>@FormatPrice(course.HocPhi)</strong>
+                        </div>
 
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between small mb-2">
-                                    <span class="text-muted">Số lượng học viên</span>
-                                    <span class="fw-semibold">@course.SoLuongHienTai/@course.SoLuongToiDa</span>
-                                </div>
-                                <div class="progress" style="height: 10px;">
-                                    <div class="progress-bar @(course.OccupancyRate >= 100 ? "bg-warning" : "bg-primary")" role="progressbar" style="width: @course.OccupancyRate%;" aria-valuenow="@course.OccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
+                        <div class="course-modern-card__metrics">
+                            <div class="course-modern-metric">
+                                <span>Số buổi</span>
+                                <strong>@course.SoBuoiHoc buổi</strong>
                             </div>
+                            <div class="course-modern-metric">
+                                <span>Khai giảng</span>
+                                <strong>@FormatDate(course.ThoiGianBatDau)</strong>
+                            </div>
+                            <div class="course-modern-metric course-modern-metric--wide">
+                                <span>Kết thúc</span>
+                                <strong>@FormatDate(course.ThoiGianKetThuc)</strong>
+                            </div>
+                        </div>
 
-                            <div class="small text-muted mb-4">
-                                <div class="mb-2"><i class="fa fa-calendar-alt text-primary me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)</div>
-                                <div><i class="fa fa-circle-check text-primary me-2"></i>@(course.IsOpenForRegistration ? "Có thể đăng ký ngay" : "Tạm thời chưa nhận đăng ký mới")</div>
+                        <div class="course-modern-card__progress">
+                            <div class="d-flex justify-content-between small mb-2">
+                                <span>Số lượng học viên</span>
+                                <strong>@course.SoLuongHienTai/@course.SoLuongToiDa</strong>
                             </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: @occupancyRate%;" aria-valuenow="@occupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
 
-                            <div class="mt-auto d-grid gap-2">
-                                <a class="btn btn-outline-primary w-100 py-2" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">Xem chi tiết</a>
-                                <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="courseId" value="@course.CourseId" />
-                                    <input type="hidden" name="ghiChu" value="Đăng ký từ danh sách khóa học" />
-                                    <button type="submit" class="btn btn-primary w-100 py-2" @(course.IsOpenForRegistration ? null : "disabled")>Đăng ký ngay</button>
-                                </form>
-                            </div>
+                        <div class="course-modern-card__schedule">
+                            <div><i class="fa fa-calendar-alt me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)</div>
+                            <div><i class="fa fa-circle-check me-2"></i>@(course.IsOpenForRegistration ? "Có thể đăng ký ngay" : "Tạm thời chưa nhận đăng ký mới")</div>
+                        </div>
+
+                        <div class="course-modern-card__footer">
+                            <a class="course-modern-card__button course-modern-card__button--outline text-decoration-none text-center" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">
+                                <i class="fa fa-circle-info me-2"></i>Xem chi tiết
+                            </a>
+                            <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="courseId" value="@course.CourseId" />
+                                <input type="hidden" name="ghiChu" value="Đăng ký từ danh sách khóa học" />
+                                <button type="submit" class="course-modern-card__button" @(course.IsOpenForRegistration ? null : "disabled")>
+                                    <i class="fa fa-paper-plane me-2"></i>Đăng ký ngay
+                                </button>
+                            </form>
                         </div>
                     </div>
-                </div>
+                </article>
             }
         </div>
         }
@@ -396,8 +401,327 @@
             font-size: .98rem;
         }
 
+        .course-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+        }
+
+        .course-modern-card {
+            --course-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --course-color: #2563eb;
+            --course-border: #3b82f6;
+            --course-shadow: rgba(59, 130, 246, .25);
+            --course-bg-light: #eff6ff;
+            position: relative;
+            overflow: hidden;
+            min-height: 100%;
+            border-radius: 1.35rem;
+            background: linear-gradient(135deg, var(--course-bg-light) 0%, #ffffff 100%);
+            border: 2px solid transparent;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+            display: flex;
+            flex-direction: column;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s ease, border-color .3s ease;
+        }
+
+        .course-modern-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--course-border);
+            box-shadow: 0 14px 34px var(--course-shadow);
+        }
+
+        .course-modern-card__glow {
+            position: absolute;
+            inset: 0;
+            background: var(--course-gradient);
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+        .course-modern-card:hover .course-modern-card__glow {
+            opacity: .08;
+        }
+
+        .course-modern-card > *:not(.course-modern-card__glow) {
+            position: relative;
+            z-index: 1;
+        }
+
+        .course-modern-card__body {
+            padding: 1.35rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .course-modern-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .course-modern-card__badges {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .course-modern-card__icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--course-gradient);
+            color: #ffffff;
+            font-size: 1.45rem;
+            box-shadow: 0 5px 14px var(--course-shadow);
+            flex-shrink: 0;
+        }
+
+        .course-modern-card__status {
+            padding: .45rem .8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .88);
+            color: var(--course-color);
+            border: 1px solid color-mix(in srgb, var(--course-border), transparent 70%);
+            font-weight: 800;
+            font-size: .82rem;
+            white-space: nowrap;
+        }
+
+        .course-modern-card__code {
+            color: var(--course-color);
+            font-size: .82rem;
+            font-weight: 850;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: .35rem;
+        }
+
+        .course-modern-card__title {
+            color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 850;
+            line-height: 1.35;
+            margin-bottom: .55rem;
+        }
+
+        .course-modern-card__desc {
+            color: #6b7280;
+            font-size: .92rem;
+            line-height: 1.55;
+            margin: 0;
+        }
+
+        .course-modern-card__price {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .9rem 1rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, .9);
+            border: 1px solid color-mix(in srgb, var(--course-border), transparent 78%);
+        }
+
+        .course-modern-card__price span,
+        .course-modern-card__price strong {
+            display: block;
+        }
+
+        .course-modern-card__price span {
+            color: #6b7280;
+            font-size: .82rem;
+            font-weight: 700;
+        }
+
+        .course-modern-card__price strong {
+            color: var(--course-color);
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+
+        .course-modern-card__metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .course-modern-metric {
+            padding: .85rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, .86);
+            border: 1px solid #edf2f7;
+        }
+
+        .course-modern-metric--wide {
+            grid-column: 1 / -1;
+        }
+
+        .course-modern-metric span,
+        .course-modern-metric strong {
+            display: block;
+        }
+
+        .course-modern-metric span {
+            color: #6b7280;
+            font-size: .82rem;
+            margin-bottom: .2rem;
+        }
+
+        .course-modern-metric strong {
+            color: #111827;
+            font-size: .98rem;
+        }
+
+        .course-modern-card__progress {
+            color: #6b7280;
+            font-size: .9rem;
+        }
+
+        .course-modern-card__progress strong {
+            color: var(--course-color);
+        }
+
+        .course-modern-card__progress .progress {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .08);
+        }
+
+        .course-modern-card__progress .progress-bar {
+            border-radius: 999px;
+            background: var(--course-gradient);
+        }
+
+        .course-modern-card__schedule {
+            color: #6b7280;
+            font-size: .88rem;
+            line-height: 1.55;
+            display: grid;
+            gap: .45rem;
+        }
+
+        .course-modern-card__schedule i {
+            color: var(--course-color);
+        }
+
+        .course-modern-card__footer {
+            display: grid;
+            gap: .7rem;
+            margin-top: auto;
+        }
+
+        .course-modern-card__button {
+            display: block;
+            width: 100%;
+            border: 0;
+            border-radius: 1rem;
+            padding: .9rem 1rem;
+            color: #ffffff;
+            background: var(--course-gradient);
+            font-weight: 850;
+            box-shadow: 0 6px 16px var(--course-shadow);
+            transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+        }
+
+        .course-modern-card__button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px var(--course-shadow);
+            color: #ffffff;
+        }
+
+        .course-modern-card__button:disabled {
+            cursor: not-allowed;
+            opacity: .55;
+        }
+
+        .course-modern-card__button--outline {
+            color: var(--course-color);
+            background: rgba(255, 255, 255, .9);
+            border: 1px solid color-mix(in srgb, var(--course-border), transparent 65%);
+            box-shadow: none;
+        }
+
+        .course-modern-card__button--outline:hover {
+            color: var(--course-color);
+            background: #ffffff;
+        }
+
+        .course-modern-card__button--outline:hover:not(:disabled),
+        .course-modern-card__button--outline:focus-visible {
+            color: var(--course-color);
+        }
+
+        .course-blue {
+            --course-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            --course-color: #2563eb;
+            --course-border: #3b82f6;
+            --course-shadow: rgba(59, 130, 246, .3);
+            --course-bg-light: #eff6ff;
+        }
+
+        .course-amber {
+            --course-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+            --course-color: #d97706;
+            --course-border: #f59e0b;
+            --course-shadow: rgba(245, 158, 11, .3);
+            --course-bg-light: #fffbeb;
+        }
+
+        .course-purple {
+            --course-gradient: linear-gradient(135deg, #a855f7, #9333ea);
+            --course-color: #9333ea;
+            --course-border: #a855f7;
+            --course-shadow: rgba(168, 85, 247, .3);
+            --course-bg-light: #faf5ff;
+        }
+
+        .course-cyan {
+            --course-gradient: linear-gradient(135deg, #06b6d4, #0891b2);
+            --course-color: #0891b2;
+            --course-border: #06b6d4;
+            --course-shadow: rgba(6, 182, 212, .3);
+            --course-bg-light: #ecfeff;
+        }
+
+        .course-red {
+            --course-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+            --course-color: #dc2626;
+            --course-border: #ef4444;
+            --course-shadow: rgba(239, 68, 68, .3);
+            --course-bg-light: #fef2f2;
+        }
+
+        .course-indigo {
+            --course-gradient: linear-gradient(135deg, #6366f1, #4f46e5);
+            --course-color: #4f46e5;
+            --course-border: #6366f1;
+            --course-shadow: rgba(99, 102, 241, .3);
+            --course-bg-light: #eef2ff;
+        }
+
+        @@media (max-width: 1199.98px) {
+            .course-cards-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         @@media (max-width: 991.98px) {
             .course-for-you-hero {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @@media (max-width: 767.98px) {
+            .course-cards-grid {
                 grid-template-columns: 1fr;
             }
         }

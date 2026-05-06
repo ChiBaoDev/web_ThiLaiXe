@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace webthibanglai.Models;
 
 public class LoginViewModel
@@ -80,7 +82,10 @@ public class CurrentUserInfo
     public string HoTen { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string SoDienThoai { get; set; } = string.Empty;
+
+    [JsonPropertyName("hocVienId")]
     public long HocVienId { get; set; }
+
     public DateOnly? NgaySinh { get; set; }
     public string GioiTinh { get; set; } = string.Empty;
     public string Cccd { get; set; } = string.Empty;

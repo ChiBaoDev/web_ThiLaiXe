@@ -25,29 +25,8 @@
         "TamDung" => "Tạm dừng",
         _ => "Sắp khai giảng"
     };
-    static string GetStatusClass(string status) => status switch
-    {
-        "DangMo" => "bg-success",
-        "DangMoDangKy" => "bg-success",
-        "DaDay" => "bg-warning text-dark",
-        "DaDuHocVien" => "bg-warning text-dark",
-        "TamDung" => "bg-secondary",
-        _ => "bg-primary"
-    };
 }
 
-<div class="container-fluid page-header py-6 my-6 mt-0 wow fadeIn" data-wow-delay="0.1s">
-    <div class="container text-center">
-        <h1 class="display-4 text-white animated slideInDown mb-4">Chi tiết khóa học</h1>
-        <nav aria-label="breadcrumb animated slideInDown">
-            <ol class="breadcrumb justify-content-center mb-0">
-                <li class="breadcrumb-item"><a class="text-white" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
-                <li class="breadcrumb-item"><a class="text-white" asp-controller="KhoaHoc" asp-action="Index">Khóa học</a></li>
-                <li class="breadcrumb-item text-primary active" aria-current="page">Chi tiết</li>
-            </ol>
-        </nav>
-    </div>
-</div>
 
 <div class="container-xxl py-6">
     <div class="container">
@@ -263,36 +242,62 @@
                 scheduleTable.WeekTables.Add(weekTable);
             }
 
+            <section class="course-detail-hero mb-5">
+                <div class="course-detail-hero__content">
+                    <div class="course-detail-hero__badges">
+                        <span class="course-detail-hero__badge course-detail-hero__badge--status">@GetStatusLabel(course.TrangThai)</span>
+                        <span class="course-detail-hero__badge">@course.MaKhoaHoc</span>
+                        <span class="course-detail-hero__badge">@course.LoaiBangLai</span>
+                    </div>
+                    <h1 class="course-detail-hero__title">@course.TenKhoaHoc</h1>
+                    <p class="course-detail-hero__text">@course.MoTa</p>
+                </div>
+                <div class="course-detail-hero__panel">
+                    <div class="course-detail-highlight">
+                        <span class="course-detail-highlight__icon"><i class="fa fa-motorcycle"></i></span>
+                        <div>
+                            <span class="course-detail-highlight__label">Khóa học GPLX</span>
+                            <strong>@course.LoaiBangLai</strong>
+                        </div>
+                    </div>
+                    <div class="course-detail-highlight">
+                        <span class="course-detail-highlight__icon"><i class="fa fa-calendar-check"></i></span>
+                        <div>
+                            <span class="course-detail-highlight__label">Khai giảng</span>
+                            <strong>@FormatDate(course.NgayBatDau)</strong>
+                        </div>
+                    </div>
+                    <div class="course-detail-highlight">
+                        <span class="course-detail-highlight__icon"><i class="fa fa-wallet"></i></span>
+                        <div>
+                            <span class="course-detail-highlight__label">Học phí</span>
+                            <strong>@FormatPrice(course.HocPhi)</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <div class="row g-5 align-items-start">
                 <div class="col-lg-8">
-                    <div class="bg-light rounded shadow-sm overflow-hidden mb-4">
-                        <img class="img-fluid w-100" src="@Url.Content(course.HinhAnh)" alt="@course.TenKhoaHoc" style="max-height: 420px; object-fit: cover;" />
-                    </div>
-
-                    <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                        <span class="badge @GetStatusClass(course.TrangThai) px-3 py-2">@GetStatusLabel(course.TrangThai)</span>
-                        <span class="badge bg-primary-subtle text-primary px-3 py-2">@course.MaKhoaHoc</span>
-                        <span class="badge bg-light text-dark border px-3 py-2">@course.LoaiBangLai</span>
-                    </div>
-
-                    <h2 class="mb-3">@course.TenKhoaHoc</h2>
-                    <p class="text-muted mb-4">@course.MoTa</p>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <div class="bg-light border rounded p-3 h-100">
+                            <div class="course-detail-metric h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-money-bill-wave"></i></span>
                                 <div class="text-muted small mb-1">Học phí</div>
                                 <div class="fw-bold fs-5 text-primary">@FormatPrice(course.HocPhi)</div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="bg-light border rounded p-3 h-100">
+                            <div class="course-detail-metric h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-calendar-plus"></i></span>
                                 <div class="text-muted small mb-1">Khai giảng</div>
                                 <div class="fw-bold">@FormatDate(course.NgayBatDau)</div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="bg-light border rounded p-3 h-100">
+                            <div class="course-detail-metric h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-calendar-check"></i></span>
                                 <div class="text-muted small mb-1">Kết thúc</div>
                                 <div class="fw-bold">@FormatDate(course.NgayKetThuc)</div>
                             </div>
@@ -301,26 +306,29 @@
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <div class="bg-white border rounded p-3 h-100">
+                            <div class="course-detail-metric course-detail-metric--white h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-chalkboard-teacher"></i></span>
                                 <div class="text-muted small mb-1">Số buổi học</div>
                                 <div class="fw-semibold">@course.SoBuoiHoc buổi</div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="bg-white border rounded p-3 h-100">
+                            <div class="course-detail-metric course-detail-metric--white h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-users"></i></span>
                                 <div class="text-muted small mb-1">Đã đăng ký</div>
                                 <div class="fw-semibold">@course.SoLuongHienTai / @course.SoLuongToiDa học viên</div>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="bg-white border rounded p-3 h-100">
+                            <div class="course-detail-metric course-detail-metric--white h-100">
+                                <span class="course-detail-metric__icon"><i class="fa fa-user-plus"></i></span>
                                 <div class="text-muted small mb-1">Còn lại</div>
                                 <div class="fw-semibold">@course.RemainingSlots chỗ</div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-5">
+                    <div class="course-detail-progress mb-5">
                         <div class="d-flex justify-content-between small mb-2">
                             <span class="text-muted">Tiến độ lấp đầy lớp</span>
                             <span class="fw-semibold">@course.OccupancyRate%</span>
@@ -330,7 +338,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-light rounded shadow-sm p-4">
+                    <div class="course-detail-section">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                             <h4 class="mb-0">Lịch học mẫu</h4>
                             <span class="text-muted small">Dữ liệu lấy từ API chi tiết khóa học</span>
@@ -360,10 +368,16 @@
                 </div>
 
                 <div class="col-lg-4">
-                    <div class="bg-white border rounded shadow-sm p-4 sticky-top" style="top: 110px;">
-                        <h4 class="mb-4">Đăng ký khóa học</h4>
+                    <div class="course-detail-register-card sticky-top" style="top: 110px;">
+                        <div class="course-detail-register-card__header">
+                            <span class="course-detail-register-card__icon"><i class="fa fa-paper-plane"></i></span>
+                            <div>
+                                <h4 class="mb-1">Đăng ký khóa học</h4>
+                                <p class="text-muted mb-0 small">Gửi yêu cầu đăng ký trực tiếp đến hệ thống</p>
+                            </div>
+                        </div>
 
-                        <div class="mb-3">
+                        <div class="course-detail-register-info mb-3">
                             <div class="text-muted small mb-1">Giảng viên chính</div>
                             <div class="fw-semibold">@(string.IsNullOrWhiteSpace(course.GiaoVienChinh) ? "Đang cập nhật" : course.GiaoVienChinh)</div>
                             @if (!string.IsNullOrWhiteSpace(course.SoDienThoaiGiaoVien))
@@ -372,7 +386,7 @@
                             }
                         </div>
 
-                        <div class="mb-3">
+                        <div class="course-detail-register-info mb-3">
                             <div class="text-muted small mb-1">Trạng thái nhận đăng ký</div>
                             <div class="fw-semibold @(course.IsOpenForRegistration ? "text-success" : "text-warning")">
                                 @(course.IsOpenForRegistration ? "Có thể đăng ký" : "Tạm thời chưa nhận đăng ký")
@@ -403,3 +417,229 @@
         }
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .course-detail-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: 2rem;
+            padding: clamp(1.5rem, 4vw, 3rem);
+            background: radial-gradient(circle at top left, rgba(247, 185, 0, .22), transparent 34%), linear-gradient(135deg, #ffffff 0%, #fff8df 52%, #f7b900 100%);
+            color: #0b2c4d;
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(280px, .75fr);
+            gap: 2rem;
+            border: 1px solid rgba(247, 185, 0, .28);
+            box-shadow: 0 22px 60px rgba(11, 44, 77, .12);
+        }
+
+        .course-detail-hero::after {
+            content: '';
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: -80px;
+            top: -80px;
+            border-radius: 50%;
+            background: rgba(11, 44, 77, .08);
+        }
+
+        .course-detail-hero__content,
+        .course-detail-hero__panel {
+            position: relative;
+            z-index: 1;
+        }
+
+        .course-detail-hero__badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .65rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .course-detail-hero__badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .78);
+            border: 1px solid rgba(247, 185, 0, .34);
+            color: #0b2c4d;
+            font-weight: 800;
+            font-size: .86rem;
+            box-shadow: 0 8px 20px rgba(11, 44, 77, .06);
+        }
+
+        .course-detail-hero__badge--status {
+            color: #15803d;
+            background: rgba(240, 253, 244, .88);
+            border-color: rgba(34, 197, 94, .3);
+        }
+
+        .course-detail-hero__title {
+            max-width: 760px;
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.08;
+            margin-bottom: 1rem;
+        }
+
+        .course-detail-hero__text {
+            max-width: 720px;
+            color: #526173;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .course-detail-hero__panel {
+            display: grid;
+            gap: 1rem;
+            align-content: center;
+        }
+
+        .course-detail-highlight {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1.25rem;
+            background: rgba(255, 255, 255, .76);
+            border: 1px solid rgba(255, 255, 255, .72);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 30px rgba(11, 44, 77, .08);
+        }
+
+        .course-detail-highlight__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f7b900, #ffc93c);
+            color: #0b2c4d;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .course-detail-highlight__label,
+        .course-detail-highlight strong {
+            display: block;
+        }
+
+        .course-detail-highlight__label {
+            color: #6b7280;
+            font-size: .85rem;
+            margin-bottom: .15rem;
+        }
+
+        .course-detail-highlight strong {
+            color: #111827;
+            font-size: 1.05rem;
+            font-weight: 900;
+        }
+
+        .course-detail-metric,
+        .course-detail-section,
+        .course-detail-register-card {
+            border-radius: 1.35rem;
+            border: 1px solid #edf2f7;
+            background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
+        }
+
+        .course-detail-metric {
+            padding: 1.15rem;
+        }
+
+        .course-detail-metric--white {
+            background: #ffffff;
+        }
+
+        .course-detail-metric__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: .9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: .85rem;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(245, 158, 11, .24);
+        }
+
+        .course-detail-progress {
+            padding: 1.25rem;
+            border-radius: 1.25rem;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+        }
+
+        .course-detail-progress .progress {
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, .08);
+        }
+
+        .course-detail-progress .progress-bar {
+            border-radius: 999px;
+        }
+
+        .course-detail-section {
+            padding: 1.5rem;
+            background: #ffffff;
+        }
+
+        .course-detail-register-card {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #fff8df 100%);
+        }
+
+        .course-detail-register-card__header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .course-detail-register-card__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #ffffff;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 18px rgba(59, 130, 246, .24);
+            flex-shrink: 0;
+        }
+
+        .course-detail-register-info {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, .82);
+            border: 1px solid #edf2f7;
+        }
+
+        .course-detail-register-card textarea.form-control {
+            border-radius: 1rem;
+        }
+
+        .course-detail-register-card .btn {
+            border-radius: 1rem;
+            font-weight: 800;
+        }
+
+        @@media (max-width: 991.98px) {
+            .course-detail-hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}

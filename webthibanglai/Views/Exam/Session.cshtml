@@ -9,6 +9,13 @@
     var progressPercent = Math.Min(100, Math.Max(0, (int)Math.Round((double)answered / total * 100)));
     var isReviewMode = session.IsReviewMode;
     var isEmbeddedMode = session.IsEmbeddedMode;
+    var apiBaseUrl = (Context.RequestServices.GetService<IConfiguration>()?["ApiSettings:BaseUrl"] ?? string.Empty).TrimEnd('/');
+    var rawImageUrl = question.ImageUrl;
+    var imageUrl = !string.IsNullOrWhiteSpace(rawImageUrl) && Uri.TryCreate(rawImageUrl, UriKind.Absolute, out _)
+        ? rawImageUrl
+        : (!string.IsNullOrWhiteSpace(rawImageUrl) && !string.IsNullOrWhiteSpace(apiBaseUrl)
+            ? $"{apiBaseUrl}/{rawImageUrl.TrimStart('/')}"
+            : rawImageUrl);
     var orderedAnswers = question.Answers
         .Where(x => !string.IsNullOrWhiteSpace(x.Content))
         .OrderBy(x => x.Order)
@@ -101,11 +108,12 @@
                         <h6 class="mb-0">Tổng quan</h6>
                         <span class="small text-muted">Câu @current / @total</span>
                     </div>
-                    <div class="question-palette read-only-palette">
+                     <div class="question-palette read-only-palette">
                         @for (var i = 1; i <= total; i++)
                         {
                             <a class="palette-btn @(i == current ? "active" : string.Empty)"
                                data-question-number="@i"
+                               data-ajax-question-url="@Url.Action("QuestionAjax", "Exam", new { sessionId = session.SessionId, number = i, embedded = isEmbeddedMode })"
                                asp-controller="Exam"
                                asp-action="Session"
                                asp-route-sessionId="@session.SessionId"
@@ -141,6 +149,10 @@
                         <div>
                             <span class="question-tag">Câu hỏi @question.Number/@total</span>
                             <div class="question-text">@question.Content</div>
+                            @if (!string.IsNullOrWhiteSpace(imageUrl))
+                            {
+                                <img src="@imageUrl" alt="Hình minh họa câu hỏi" class="question-image" />
+                            }
                             <div class="option-list">
                                 @foreach (var answer in orderedAnswers)
                                 {
@@ -175,12 +187,13 @@
                         <a asp-controller="Exam" asp-action="Result" asp-route-sessionId="@session.SessionId" class="btn btn-outline-primary px-4 py-2">Quay lại kết quả</a>
                     </div>
                 }
-                else
-                {
-                    <form asp-controller="Exam" asp-action="SaveAnswer" method="post" id="examAnswerForm"
-                          data-save-url="@Url.Action("SaveAnswerAjax", "Exam")"
-                          data-submit-url="@Url.Action("SubmitAjax", "Exam")"
-                          data-result-url="@Url.Action("Result", "Exam", new { sessionId = session.SessionId })">
+                 else
+                 {
+                     <form asp-controller="Exam" asp-action="SaveAnswer" method="post" id="examAnswerForm"
+                           data-save-url="@Url.Action("SaveAnswerAjax", "Exam")"
+                           data-question-url-template="@Url.Action("QuestionAjax", "Exam", new { sessionId = session.SessionId, number = "__number__", embedded = isEmbeddedMode })"
+                           data-submit-url="@Url.Action("SubmitAjax", "Exam")"
+                           data-result-url="@Url.Action("Result", "Exam", new { sessionId = session.SessionId })">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="sessionId" value="@session.SessionId" />
                         <input type="hidden" name="currentNumber" value="@current" />
@@ -190,6 +203,10 @@
                             <div>
                                 <span class="question-tag">Câu hỏi @question.Number/@total</span>
                                 <div class="question-text">@question.Content</div>
+                                @if (!string.IsNullOrWhiteSpace(imageUrl))
+                                {
+                                    <img src="@imageUrl" alt="Hình minh họa câu hỏi" class="question-image" />
+                                }
                                 <div class="option-list">
                                     @foreach (var answer in orderedAnswers)
                                     {
@@ -212,9 +229,10 @@
                                 {
                                     <button type="submit"
                                             name="actionType"
-                                            value="previous"
-                                            class="btn btn-outline-secondary px-4 exam-nav-button"
-                                            data-target-url="@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Max(current - 1, 1), review = false, embedded = isEmbeddedMode })">
+                                             value="previous"
+                                             class="btn btn-outline-secondary px-4 exam-nav-button"
+                                             data-target-number="@(current - 1)"
+                                             data-target-url="@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Max(current - 1, 1), review = false, embedded = isEmbeddedMode })">
                                         <i class="fas fa-arrow-left me-2"></i>Câu trước
                                     </button>
                                 }
@@ -222,9 +240,10 @@
                                 {
                                     <button type="submit"
                                             name="actionType"
-                                            value="next"
-                                            class="btn btn-primary px-4 exam-nav-button"
-                                            data-target-url="@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Min(current + 1, total), review = false, embedded = isEmbeddedMode })">
+                                             value="next"
+                                             class="btn btn-primary px-4 exam-nav-button"
+                                             data-target-number="@(current + 1)"
+                                             data-target-url="@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Min(current + 1, total), review = false, embedded = isEmbeddedMode })">
                                         Câu tiếp theo<i class="fas fa-arrow-right ms-2"></i>
                                     </button>
                                 }
@@ -464,6 +483,15 @@
             margin-bottom: 1.5rem;
         }
 
+        .question-image {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
+        }
+
         .option-list {
             display: grid;
             gap: 1rem;
@@ -596,17 +624,19 @@
             var saveStatusText = document.getElementById('examSaveStatusText');
             var progressText = document.getElementById('answeredProgressText');
             var progressBar = document.getElementById('answeredProgressBar');
-            var paletteButtons = document.querySelectorAll('.palette-btn[data-question-number]');
+            var paletteButtons = Array.from(document.querySelectorAll('.palette-btn[data-question-number]'));
             var answeredStorageKey = 'exam-answered-@session.SessionId';
             var totalQuestions = @total;
             var currentQuestionNumber = @current;
             var hasSelectedAnswer = @((question.SelectedAnswerId.HasValue ? "true" : "false"));
             var saveUrl = answerForm ? (answerForm.getAttribute('data-save-url') || '') : '';
+            var questionUrlTemplate = answerForm ? (answerForm.getAttribute('data-question-url-template') || '') : '';
             var submitAjaxUrl = answerForm ? (answerForm.getAttribute('data-submit-url') || '') : '';
             var resultUrl = answerForm ? (answerForm.getAttribute('data-result-url') || '') : '';
             var sessionId = @session.SessionId;
             var questionId = @question.QuestionId;
             var isSavingAnswer = false;
+            var isLoadingQuestion = false;
             var isSubmittingExam = false;
 
             function formatTime(totalSeconds) {
@@ -687,6 +717,235 @@
                 }
 
                 saveStatusText.textContent = message || saveStatus.getAttribute('data-default-message') || '';
+            }
+
+            function getQuestionUrl(number) {
+                if (!questionUrlTemplate) {
+                    return '';
+                }
+
+                return questionUrlTemplate.replace('__number__', encodeURIComponent(number));
+            }
+
+            function getQuestionTargetUrl(number) {
+                return '@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = "__number__", review = false, embedded = isEmbeddedMode })'
+                    .replace('__number__', encodeURIComponent(number));
+            }
+
+            function escapeHtml(value) {
+                return (value || '').toString()
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function answerLetter(order) {
+                var index = Math.max((parseInt(order, 10) || 1) - 1, 0);
+                return String.fromCharCode('A'.charCodeAt(0) + index);
+            }
+
+            function updateNavButtons() {
+                if (!answerForm) {
+                    return;
+                }
+
+                var navWrap = answerForm.querySelector('.exam-nav .d-flex');
+                if (!navWrap) {
+                    return;
+                }
+
+                navWrap.innerHTML = '';
+
+                if (currentQuestionNumber > 1) {
+                    var previousButton = document.createElement('button');
+                    previousButton.type = 'submit';
+                    previousButton.name = 'actionType';
+                    previousButton.value = 'previous';
+                    previousButton.className = 'btn btn-outline-secondary px-4 exam-nav-button';
+                    previousButton.setAttribute('data-target-number', (currentQuestionNumber - 1).toString());
+                    previousButton.setAttribute('data-target-url', getQuestionTargetUrl(currentQuestionNumber - 1));
+                    previousButton.innerHTML = '<i class="fas fa-arrow-left me-2"></i>Câu trước';
+                    navWrap.appendChild(previousButton);
+                }
+
+                if (currentQuestionNumber < totalQuestions) {
+                    var nextButton = document.createElement('button');
+                    nextButton.type = 'submit';
+                    nextButton.name = 'actionType';
+                    nextButton.value = 'next';
+                    nextButton.className = 'btn btn-primary px-4 exam-nav-button';
+                    nextButton.setAttribute('data-target-number', (currentQuestionNumber + 1).toString());
+                    nextButton.setAttribute('data-target-url', getQuestionTargetUrl(currentQuestionNumber + 1));
+                    nextButton.innerHTML = 'Câu tiếp theo<i class="fas fa-arrow-right ms-2"></i>';
+                    navWrap.appendChild(nextButton);
+                }
+            }
+
+            function bindAnswerInputs() {
+                if (!answerForm) {
+                    return;
+                }
+
+                answerForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
+                    input.addEventListener('change', function () {
+                        answerForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
+                            item.classList.remove('selected');
+                        });
+
+                        var optionItem = input.closest('.option-item.selectable');
+                        if (optionItem) {
+                            optionItem.classList.add('selected');
+                        }
+
+                        saveSelectedAnswer();
+                    });
+                });
+            }
+
+            function renderQuestion(payload) {
+                if (!payload || !payload.question || !answerForm) {
+                    return;
+                }
+
+                var question = payload.question;
+                currentQuestionNumber = payload.currentNumber || question.number || currentQuestionNumber;
+                totalQuestions = payload.totalQuestions || totalQuestions;
+                questionId = question.questionId;
+                remainSeconds = typeof payload.remainingSeconds === 'number' ? payload.remainingSeconds : remainSeconds;
+
+                var currentNumberInput = answerForm.querySelector('input[name="currentNumber"]');
+                var questionIdInput = answerForm.querySelector('input[name="questionId"]');
+                if (currentNumberInput) currentNumberInput.value = currentQuestionNumber;
+                if (questionIdInput) questionIdInput.value = questionId;
+
+                document.querySelectorAll('.question-progress-badge span').forEach(function (element) {
+                    element.textContent = 'Câu ' + currentQuestionNumber + ' / ' + totalQuestions;
+                });
+
+                var progressTitle = document.querySelector('.question-progress-title');
+                if (progressTitle) progressTitle.textContent = 'Bạn đang làm đến câu ' + currentQuestionNumber;
+
+                var progressSubtitle = document.querySelector('.question-progress-subtitle');
+                if (progressSubtitle) {
+                    progressSubtitle.textContent = question.isCritical
+                        ? 'Đây là câu điểm liệt, cần chú ý chọn đáp án chính xác.'
+                        : 'Đọc kỹ nội dung câu hỏi và chọn đáp án phù hợp nhất.';
+                }
+
+                var sidebarCurrent = document.querySelector('.sidebar-stat:nth-of-type(2) strong');
+                if (sidebarCurrent) sidebarCurrent.textContent = 'Câu ' + currentQuestionNumber;
+
+                var overviewText = document.querySelector('.question-palette').previousElementSibling?.querySelector('.small.text-muted');
+                if (overviewText) overviewText.textContent = 'Câu ' + currentQuestionNumber + ' / ' + totalQuestions;
+
+                var questionTag = answerForm.querySelector('.question-tag');
+                var questionText = answerForm.querySelector('.question-text');
+                var optionList = answerForm.querySelector('.option-list');
+                var codeBox = answerForm.querySelector('.exam-question-card > .text-muted');
+                var oldImage = answerForm.querySelector('.question-image');
+
+                if (questionTag) questionTag.textContent = 'Câu hỏi ' + currentQuestionNumber + '/' + totalQuestions;
+                if (questionText) questionText.textContent = question.content || '';
+
+                if (oldImage) {
+                    oldImage.remove();
+                }
+
+                if (question.imageUrl && questionText) {
+                    var image = document.createElement('img');
+                    image.src = question.imageUrl;
+                    image.alt = 'Hình minh họa câu hỏi';
+                    image.className = 'question-image';
+                    questionText.insertAdjacentElement('afterend', image);
+                }
+
+                if (optionList) {
+                    optionList.innerHTML = (question.answers || []).map(function (answer) {
+                        var checked = question.selectedAnswerId && question.selectedAnswerId.toString() === answer.answerId.toString();
+                        return '<div class="option-item selectable ' + (checked ? 'selected' : '') + '">' +
+                            '<input class="option-input" type="radio" name="answerId" id="answer-' + escapeHtml(answer.answerId) + '" value="' + escapeHtml(answer.answerId) + '" ' + (checked ? 'checked' : '') + ' />' +
+                            '<label class="option-label w-100" for="answer-' + escapeHtml(answer.answerId) + '">' +
+                                '<span class="option-marker">' + answerLetter(answer.order) + '</span>' +
+                                '<span class="option-copy">' + escapeHtml(answer.content) + '</span>' +
+                            '</label>' +
+                        '</div>';
+                    }).join('');
+                }
+
+                if (codeBox) {
+                    codeBox.textContent = 'Mã câu hỏi: ' + questionId;
+                }
+
+                paletteButtons.forEach(function (button) {
+                    var number = parseInt(button.getAttribute('data-question-number') || '', 10);
+                    button.classList.toggle('active', number === currentQuestionNumber);
+                    button.setAttribute('data-ajax-question-url', getQuestionUrl(number));
+                });
+
+                hasSelectedAnswer = !!question.selectedAnswerId;
+                if (hasSelectedAnswer) {
+                    markAnswered(currentQuestionNumber);
+                }
+
+                updateTimer();
+                renderAnsweredState();
+                updateNavButtons();
+                bindAnswerInputs();
+                window.history.replaceState(null, '', getQuestionTargetUrl(currentQuestionNumber));
+            }
+
+            async function loadQuestionAjax(number, fallbackUrl) {
+                if (!number || isLoadingQuestion || isSubmittingExam) {
+                    return;
+                }
+
+                var requestUrl = getQuestionUrl(number);
+                if (!requestUrl) {
+                    window.location.href = fallbackUrl || getQuestionTargetUrl(number);
+                    return;
+                }
+
+                isLoadingQuestion = true;
+                setFormBusy(true);
+                setSaveStatus('Đang chuyển câu...', 'status-saving');
+
+                try {
+                    var response = await fetch(requestUrl, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    var payload = {};
+                    try {
+                        payload = await response.json();
+                    } catch {
+                        payload = {};
+                    }
+
+                    if (!response.ok || payload.success !== true) {
+                        throw new Error(payload.message || 'Không thể tải câu hỏi.');
+                    }
+
+                    if (payload.finished && payload.redirectUrl) {
+                        window.location.href = payload.redirectUrl;
+                        return;
+                    }
+
+                    renderQuestion(payload);
+                    setSaveStatus('Đã chuyển sang câu ' + currentQuestionNumber + '.', 'status-success');
+                } catch (error) {
+                    setSaveStatus(error && error.message ? error.message : 'Không thể tải câu hỏi.', 'status-error');
+                    if (fallbackUrl) {
+                        window.location.href = fallbackUrl;
+                    }
+                } finally {
+                    isLoadingQuestion = false;
+                    setFormBusy(false);
+                }
             }
 
             function getSelectedAnswerInput() {
@@ -838,20 +1097,7 @@
             }
 
             if (answerForm) {
-                answerForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
-                    input.addEventListener('change', function () {
-                        answerForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
-                            item.classList.remove('selected');
-                        });
-
-                        var optionItem = input.closest('.option-item.selectable');
-                        if (optionItem) {
-                            optionItem.classList.add('selected');
-                        }
-
-                        saveSelectedAnswer();
-                    });
-                });
+                bindAnswerInputs();
 
                 answerForm.addEventListener('submit', async function (event) {
                     event.preventDefault();
@@ -876,8 +1122,15 @@
                     }
 
                     var targetUrl = submitter ? (submitter.getAttribute('data-target-url') || '') : '';
+                    var targetNumber = submitter ? parseInt(submitter.getAttribute('data-target-number') || '', 10) : NaN;
                     if (!targetUrl) {
                         targetUrl = '@Url.Action("Session", "Exam", new { sessionId = session.SessionId, number = Math.Min(current + 1, total), review = false, embedded = isEmbeddedMode })';
+                    }
+
+                    if (isNaN(targetNumber)) {
+                        targetNumber = actionType === 'previous'
+                            ? Math.max(currentQuestionNumber - 1, 1)
+                            : Math.min(currentQuestionNumber + 1, totalQuestions);
                     }
 
                     var savedBeforeNavigate = await saveSelectedAnswer();
@@ -885,7 +1138,28 @@
                         return;
                     }
 
-                    window.location.href = targetUrl;
+                    await loadQuestionAjax(targetNumber, targetUrl);
+                });
+            }
+
+            if (answerForm) {
+                paletteButtons.forEach(function (button) {
+                    button.addEventListener('click', async function (event) {
+                        event.preventDefault();
+
+                        var targetNumber = parseInt(button.getAttribute('data-question-number') || '', 10);
+                        var targetUrl = button.getAttribute('href') || getQuestionTargetUrl(targetNumber);
+                        if (!targetNumber || targetNumber === currentQuestionNumber) {
+                            return;
+                        }
+
+                        var savedBeforeNavigate = await saveSelectedAnswer();
+                        if (savedBeforeNavigate.success === false && savedBeforeNavigate.skipped !== true) {
+                            return;
+                        }
+
+                        await loadQuestionAjax(targetNumber, targetUrl);
+                    });
                 });
             }
 

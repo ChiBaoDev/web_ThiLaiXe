@@ -24,6 +24,7 @@
     var roleLabel = user?.Roles != null && user.Roles.Any() ? string.Join(", ", user.Roles) : "Học viên";
     var statusLabel = string.IsNullOrWhiteSpace(profileTrangThai) ? "Chưa cập nhật" : profileTrangThai;
     var profileName = !string.IsNullOrWhiteSpace(profileHoTen) ? profileHoTen : profileTenDangNhap;
+    var hasStudentProfile = user?.HocVienId > 0 || (user?.Roles?.Any(role => string.Equals(role, "HOC_VIEN", StringComparison.OrdinalIgnoreCase) || string.Equals(role, "Học viên", StringComparison.OrdinalIgnoreCase)) ?? false);
     if (string.IsNullOrWhiteSpace(profileName)) profileName = "Người dùng";
     var activeTab = TempData.Peek("ActiveProfileTab")?.ToString() ?? string.Empty;
 }
@@ -49,11 +50,11 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Tình trạng hồ sơ</span>
-                            <strong id="profileStudyCount">@(!string.IsNullOrWhiteSpace(profileHocVienId) && profileHocVienId != "0" ? "Đã kích hoạt" : "Chưa có hồ sơ")</strong>
+                            <strong id="profileStudyCount">@(hasStudentProfile ? "Đã kích hoạt" : "Chưa có hồ sơ")</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Mã học viên</span>
-                            <strong id="profileLastScore">@(!string.IsNullOrWhiteSpace(profileHocVienId) && profileHocVienId != "0" ? profileHocVienId : "Chưa cập nhật")</strong>
+                            <strong id="profileLastScore">@(user?.HocVienId > 0 ? user.HocVienId.ToString() : "Chưa cập nhật")</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-muted">Trạng thái tài khoản</span>

@@ -1,92 +1,88 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace webthibanglai.Services
 {
-    public class OpenAIService : IAIService
+    public class GeminiService : IAIService
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<OpenAIService> _logger;
+        private readonly ILogger<GeminiService> _logger;
         private readonly string _apiKey;
         private readonly string _apiUrl;
 
-        public OpenAIService(HttpClient httpClient, IConfiguration configuration, ILogger<OpenAIService> logger)
+        public GeminiService(HttpClient httpClient, IConfiguration configuration, ILogger<GeminiService> logger)
         {
             _httpClient = httpClient;
-            _configuration = configuration;
             _logger = logger;
-            
-            // Lấy API key từ configuration
-            _apiKey = _configuration["OpenAI:ApiKey"] ?? "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";
-            _apiUrl = _configuration["OpenAI:ApiUrl"] ?? "https://api.openai.com/v1/chat/completions";
+            _apiKey = configuration["Gemini:ApiKey"] ?? string.Empty;
+            _apiUrl = configuration["Gemini:ApiUrl"] ?? "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
         }
 
         public async Task<string> GetReplyAsync(string message, string context = "general")
         {
             try
             {
-                // Kiểm tra API key
-                if (string.IsNullOrEmpty(_apiKey))
+                if (string.IsNullOrWhiteSpace(_apiKey))
                 {
-                    _logger.LogWarning("OpenAI API key not configured");
+                    _logger.LogWarning("Gemini API key not configured");
                     return GetFallbackResponse(message, context);
                 }
 
-                // Tạo system prompt dựa trên context
-                var systemPrompt = GetSystemPrompt(context);
-
-                // Tạo request body
-                var requestBody = new
+                var prompt = $"{GetSystemPrompt(context)}\n\nCâu hỏi của học viên: {message}";
+                var requestBody = new GeminiRequest
                 {
-                    model = "gpt-3.5-turbo",
-                    messages = new[]
+                    Contents =
+                    [
+                        new GeminiContent
+                        {
+                            Parts =
+                            [
+                                new GeminiPart { Text = prompt }
+                            ]
+                        }
+                    ],
+                    GenerationConfig = new GeminiGenerationConfig
                     {
-                        new { role = "system", content = systemPrompt },
-                        new { role = "user", content = message }
-                    },
-                    max_tokens = 500,
-                    temperature = 0.7
+                        MaxOutputTokens = 500,
+                        Temperature = 0.7
+                    }
                 };
 
+                var requestUrl = $"{_apiUrl}?key={Uri.EscapeDataString(_apiKey)}";
                 var jsonContent = JsonSerializer.Serialize(requestBody);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                using var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // Thêm Authorization header
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-
-                // Gọi OpenAI API
-                var response = await _httpClient.PostAsync(_apiUrl, content);
+                var response = await _httpClient.PostAsync(requestUrl, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<OpenAIResponse>(responseContent);
-                    
-                    if (result?.Choices != null && result.Choices.Length > 0)
+                    var result = JsonSerializer.Deserialize<GeminiResponse>(responseContent);
+                    var reply = result?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+
+                    if (!string.IsNullOrWhiteSpace(reply))
                     {
-                        return result.Choices[0].Message.Content;
+                        return reply.Trim();
                     }
                 }
                 else
                 {
-                    _logger.LogError($"OpenAI API error: {response.StatusCode}");
+                    _logger.LogError("Gemini API error: {StatusCode}. Response: {ResponseContent}", response.StatusCode, responseContent);
                 }
 
-                // Fallback nếu API thất bại
                 return GetFallbackResponse(message, context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calling OpenAI API");
+                _logger.LogError(ex, "Error calling Gemini API");
                 return GetFallbackResponse(message, context);
             }
         }
 
         private string GetSystemPrompt(string context)
         {
-            var basePrompt = @"Bạn là trợ lý AI thông minh của hệ thống thi bằng lái xe tại Việt Nam. 
+            var basePrompt = @"Bạn là trợ lý AI thông minh của hệ thống thi bằng lái xe tại Việt Nam.
 Nhiệm vụ của bạn là hỗ trợ học viên với thông tin chính xác, hữu ích về:
 - Các loại bằng lái xe (A1, A2, B1, B2, C, D, E, F)
 - Quy trình đăng ký và thi bằng lái
@@ -94,24 +90,22 @@ Nhiệm vụ của bạn là hỗ trợ học viên với thông tin chính xác
 - Luật giao thông Việt Nam
 - Kỹ năng lái xe an toàn
 
-Hãy trả lời ngắn gọn, rõ ràng và thân thiện. Sử dụng tiếng Việt.";
+Hãy trả lời ngắn gọn, rõ ràng, thân thiện và sử dụng tiếng Việt.";
 
             return context switch
             {
-                "exam" => basePrompt + "\n\nHiện tại học viên đang ở trang thi thử. Hãy tập trung vào việc hướng dẫn cách làm bài thi, mẹo ghi nhớ câu hỏi, và chiến lược làm bài hiệu quả.",
+                "exam" => basePrompt + "\n\nHiện tại học viên đang ở trang thi thử. Hãy tập trung vào cách làm bài thi, mẹo ghi nhớ câu hỏi và chiến lược làm bài hiệu quả.",
                 "course" => basePrompt + "\n\nHọc viên đang xem thông tin khóa học. Hãy tư vấn về các loại khóa học, thời gian học, học phí và lợi ích của từng khóa.",
-                "schedule" => basePrompt + "\n\nHọc viên đang xem lịch học. Hãy giải đáp về lịch học, lịch thi, cách sắp xếp thời gian học tập hiệu quả.",
-                "login" => basePrompt + "\n\nHọc viên đang ở trang đăng nhập. Hãy hỗ trợ về tài khoản, đăng ký, quên mật khẩu.",
+                "schedule" => basePrompt + "\n\nHọc viên đang xem lịch học. Hãy giải đáp về lịch học, lịch thi và cách sắp xếp thời gian học tập hiệu quả.",
+                "login" => basePrompt + "\n\nHọc viên đang ở trang đăng nhập. Hãy hỗ trợ về tài khoản, đăng ký và quên mật khẩu.",
                 _ => basePrompt
             };
         }
 
         private string GetFallbackResponse(string message, string context)
         {
-            // Phản hồi mặc định khi không có API hoặc API lỗi
             var lowerMessage = message.ToLower();
 
-            // Câu hỏi về loại bằng lái
             if (lowerMessage.Contains("bằng") && (lowerMessage.Contains("loại") || lowerMessage.Contains("nào")))
             {
                 return @"Hiện tại có các loại bằng lái xe chính:
@@ -129,7 +123,6 @@ Hãy trả lời ngắn gọn, rõ ràng và thân thiện. Sử dụng tiếng 
 Bạn muốn tìm hiểu loại bằng nào?";
             }
 
-            // Câu hỏi về thi
             if (lowerMessage.Contains("thi") || lowerMessage.Contains("ôn"))
             {
                 return @"**Mẹo ôn thi hiệu quả:**
@@ -143,7 +136,6 @@ Bạn muốn tìm hiểu loại bằng nào?";
 Bạn cần hỗ trợ gì thêm về thi cử?";
             }
 
-            // Câu hỏi về khóa học
             if (lowerMessage.Contains("khóa học") || lowerMessage.Contains("học phí") || lowerMessage.Contains("đăng ký"))
             {
                 return @"**Thông tin khóa học:**
@@ -159,7 +151,6 @@ Bạn cần hỗ trợ gì thêm về thi cử?";
 Bạn muốn đăng ký khóa học nào?";
             }
 
-            // Câu hỏi về lịch
             if (lowerMessage.Contains("lịch") || lowerMessage.Contains("thời gian"))
             {
                 return @"**Về lịch học và lịch thi:**
@@ -172,7 +163,6 @@ Bạn có thể xem lịch chi tiết tại trang Lịch Học.
 Cần hỗ trợ gì thêm?";
             }
 
-            // Câu hỏi chung
             return @"Xin chào! Tôi có thể giúp bạn:
 
 💬 Tư vấn chọn loại bằng lái phù hợp
@@ -184,20 +174,46 @@ Cần hỗ trợ gì thêm?";
 Bạn cần hỗ trợ gì?";
         }
 
-        // Models cho OpenAI Response
-        private class OpenAIResponse
+        private class GeminiRequest
         {
-            public Choice[]? Choices { get; set; }
+            [JsonPropertyName("contents")]
+            public GeminiContent[] Contents { get; set; } = [];
+
+            [JsonPropertyName("generationConfig")]
+            public GeminiGenerationConfig GenerationConfig { get; set; } = new();
         }
 
-        private class Choice
+        private class GeminiContent
         {
-            public Message Message { get; set; } = new Message();
+            [JsonPropertyName("parts")]
+            public GeminiPart[] Parts { get; set; } = [];
         }
 
-        private class Message
+        private class GeminiPart
         {
-            public string Content { get; set; } = string.Empty;
+            [JsonPropertyName("text")]
+            public string Text { get; set; } = string.Empty;
+        }
+
+        private class GeminiGenerationConfig
+        {
+            [JsonPropertyName("maxOutputTokens")]
+            public int MaxOutputTokens { get; set; }
+
+            [JsonPropertyName("temperature")]
+            public double Temperature { get; set; }
+        }
+
+        private class GeminiResponse
+        {
+            [JsonPropertyName("candidates")]
+            public GeminiCandidate[]? Candidates { get; set; }
+        }
+
+        private class GeminiCandidate
+        {
+            [JsonPropertyName("content")]
+            public GeminiContent? Content { get; set; }
         }
     }
 }

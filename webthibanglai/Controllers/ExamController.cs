@@ -291,6 +291,78 @@ namespace webthibanglai.Controllers
             });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> QuestionAjax(long sessionId, int number, bool embedded = false, CancellationToken cancellationToken = default)
+        {
+            var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Json(new { success = false, message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." });
+            }
+
+            var session = await _examApiService.GetSessionAsync(sessionId, accessToken, cancellationToken);
+            if (session == null)
+            {
+                Response.StatusCode = IsUnauthorizedApiResponse()
+                    ? StatusCodes.Status401Unauthorized
+                    : StatusCodes.Status404NotFound;
+                return Json(new { success = false, message = "Không tìm thấy phiên thi." });
+            }
+
+            if (IsFinished(session))
+            {
+                return Json(new
+                {
+                    success = true,
+                    finished = true,
+                    redirectUrl = Url.Action(nameof(Result), new { sessionId })
+                });
+            }
+
+            var safeNumber = Math.Min(Math.Max(number, 1), Math.Max(session.TotalQuestions, 1));
+            var question = await _examApiService.GetQuestionAsync(sessionId, safeNumber, accessToken, cancellationToken);
+            if (question == null)
+            {
+                Response.StatusCode = IsUnauthorizedApiResponse()
+                    ? StatusCodes.Status401Unauthorized
+                    : StatusCodes.Status404NotFound;
+                return Json(new { success = false, message = "Không tải được câu hỏi của phiên thi." });
+            }
+
+            return Json(new
+            {
+                success = true,
+                sessionId,
+                currentNumber = safeNumber,
+                totalQuestions = Math.Max(session.TotalQuestions, 1),
+                remainingSeconds = session.RemainingSeconds,
+                status = session.Status,
+                question = new
+                {
+                    number = question.Number,
+                    questionId = question.QuestionId,
+                    content = question.Content,
+                    topicId = question.TopicId,
+                    isCritical = question.IsCritical,
+                    selectedAnswerId = question.SelectedAnswerId,
+                    imageUrl = BuildAbsoluteApiUrl(question.ImageUrl),
+                    answers = question.Answers
+                        .Where(answer => !string.IsNullOrWhiteSpace(answer.Content))
+                        .OrderBy(answer => answer.Order)
+                        .Select(answer => new
+                        {
+                            answerId = answer.AnswerId,
+                            content = answer.Content,
+                            order = answer.Order
+                        })
+                        .ToList()
+                },
+                previousUrl = Url.Action(nameof(Session), new { sessionId, number = Math.Max(safeNumber - 1, 1), review = false, embedded }),
+                nextUrl = Url.Action(nameof(Session), new { sessionId, number = Math.Min(safeNumber + 1, Math.Max(session.TotalQuestions, 1)), review = false, embedded })
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitAjax([FromBody] SubmitAjaxRequest request, CancellationToken cancellationToken = default)
@@ -396,6 +468,25 @@ namespace webthibanglai.Controllers
         private IActionResult RedirectToLogin(string returnAction)
         {
             return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(returnAction, "Exam") });
+        }
+
+        private string? BuildAbsoluteApiUrl(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return url;
+            }
+
+            if (Uri.TryCreate(url, UriKind.Absolute, out _))
+            {
+                return url;
+            }
+
+            var request = HttpContext.Request;
+            var apiBaseUrl = HttpContext.RequestServices.GetService<IConfiguration>()?["ApiSettings:BaseUrl"]?.TrimEnd('/');
+            return string.IsNullOrWhiteSpace(apiBaseUrl)
+                ? url
+                : $"{apiBaseUrl}/{url.TrimStart('/')}";
         }
 
         public class SaveAnswerAjaxRequest

@@ -160,57 +160,6 @@
 
         @if (Model.HasStudentProfile)
         {
-        <div class="row g-4 mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="portal-stat-card stat-primary h-100">
-                    <div class="portal-stat-card__glow"></div>
-                    <div class="portal-stat-card__topbar">
-                        <div class="portal-stat-card__icon"><i class="fas fa-trophy"></i></div>
-                        <span class="portal-stat-card__pill">Kết quả</span>
-                    </div>
-                    <div class="portal-stat-card__value">@stats.PassRate.ToString("0.##")%</div>
-                    <div class="portal-stat-card__label">Tỉ lệ thi đậu</div>
-                    <div class="portal-stat-card__sub">Đậu @stats.PassedExams / @stats.TotalExams bài thi</div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="portal-stat-card stat-success h-100">
-                    <div class="portal-stat-card__glow"></div>
-                    <div class="portal-stat-card__topbar">
-                        <div class="portal-stat-card__icon"><i class="fas fa-bullseye"></i></div>
-                        <span class="portal-stat-card__pill">Chính xác</span>
-                    </div>
-                    <div class="portal-stat-card__value">@stats.CorrectAnswers</div>
-                    <div class="portal-stat-card__label">Câu đúng</div>
-                    <div class="portal-stat-card__sub">Điểm trung bình @stats.AverageScore.ToString("0.##")</div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="portal-stat-card stat-warning h-100">
-                    <div class="portal-stat-card__glow"></div>
-                    <div class="portal-stat-card__topbar">
-                        <div class="portal-stat-card__icon"><i class="fas fa-redo-alt"></i></div>
-                        <span class="portal-stat-card__pill">Ôn lại</span>
-                    </div>
-                    <div class="portal-stat-card__value">@stats.WrongAnswers</div>
-                    <div class="portal-stat-card__label">Câu sai</div>
-                    <div class="portal-stat-card__sub">@stats.WrongQuestionCount câu đang cần ôn lại</div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-                <div class="portal-stat-card stat-danger h-100">
-                    <div class="portal-stat-card__glow"></div>
-                    <div class="portal-stat-card__topbar">
-                        <div class="portal-stat-card__icon"><i class="fas fa-exclamation-triangle"></i></div>
-                        <span class="portal-stat-card__pill">Cảnh báo</span>
-                    </div>
-                    <div class="portal-stat-card__value">@stats.CriticalWrongCount</div>
-                    <div class="portal-stat-card__label">Câu điểm liệt sai</div>
-                    <div class="portal-stat-card__sub">Tỷ lệ lỗi @stats.CriticalErrorRate.ToString("0.##")%</div>
-                </div>
-            </div>
-        </div>
-
         <div class="bg-white shadow-sm rounded-4 p-4 border mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
@@ -224,30 +173,7 @@
         </div>
 
         <div class="row g-4 mb-4">
-            <div class="col-lg-4">
-                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
-                    <h3 class="h5 mb-3">Tóm tắt ôn luyện</h3>
-                    <div class="d-grid gap-3">
-                        <div class="summary-item">
-                            <span class="summary-item__label">Số bài ôn đã làm</span>
-                            <strong class="summary-item__value">@stats.PracticeCount</strong>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-item__label">Bài thi chưa đạt</span>
-                            <strong class="summary-item__value">@stats.FailedExams</strong>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-item__label">Lượt làm câu điểm liệt</span>
-                            <strong class="summary-item__value">@stats.TotalCriticalAttempts</strong>
-                        </div>
-                        <div class="summary-item">
-                            <span class="summary-item__label">Trạng thái học tập</span>
-                            <strong class="summary-item__value text-success">Duy trì ôn luyện đều</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-8">
+            <div class="col-lg-12">
                 <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <div>

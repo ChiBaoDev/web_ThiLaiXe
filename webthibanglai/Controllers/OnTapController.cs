@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using webthibanglai.Services;
 
 namespace webthibanglai.Controllers;
@@ -181,6 +182,7 @@ public class OnTapController : Controller
             {
                 id = currentQuestion.Id,
                 content = currentQuestion.Content,
+                explanation = currentQuestion.Explanation,
                 imageUrl = currentQuestion.ImageUrl,
                 isCritical = currentQuestion.IsCritical,
                 topicName = currentQuestion.TopicName,
@@ -258,7 +260,8 @@ public class OnTapController : Controller
             success = true,
             isCorrect,
             selectedAnswerId = answerId,
-            correctAnswerId = correctAnswer.AnswerId
+            correctAnswerId = correctAnswer.AnswerId,
+            explanation = question.Explanation ?? string.Empty
         };
 
         // Debug log
@@ -271,5 +274,24 @@ public class OnTapController : Controller
         Console.WriteLine($"============================");
 
         return Json(response);
+    }
+
+    [HttpPost]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> CheckAnswer([FromBody] PracticeAnswerRequest request, CancellationToken cancellationToken)
+    {
+        if (request == null)
+        {
+            return Json(new { success = false, message = "Dữ liệu kiểm tra đáp án không hợp lệ." });
+        }
+
+        return await CheckAnswer(request.TopicCode, request.QuestionId, request.AnswerId, cancellationToken);
+    }
+
+    public class PracticeAnswerRequest
+    {
+        public string TopicCode { get; set; } = string.Empty;
+        public long QuestionId { get; set; }
+        public long AnswerId { get; set; }
     }
 }

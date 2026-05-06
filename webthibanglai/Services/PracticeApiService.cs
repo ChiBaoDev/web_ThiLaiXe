@@ -28,7 +28,7 @@ public class PracticeApiService : IPracticeApiService
             var client = _httpClientFactory.CreateClient("ApiClient");
             
             // Xây dựng URL với pagination và includeCorrectAnswer
-            var url = "/api/v1/questions/with-answers?page=1&pageSize=250&includeCorrectAnswer=true";
+            var url = "/api/v1/questions/with-answers?page=1&pageSize=250&includeCorrectAnswer=true&includeExplanation=true";
             
             // Thêm topicCode nếu có
             if (!string.IsNullOrWhiteSpace(topicCode))
@@ -138,6 +138,7 @@ public class PracticeQuestion
     public string Level { get; set; } = string.Empty;
     public bool IsCritical { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string? Explanation { get; set; }
     public string? ImageUrl { get; set; }
     public List<PracticeAnswer> Answers { get; set; } = new();
 }

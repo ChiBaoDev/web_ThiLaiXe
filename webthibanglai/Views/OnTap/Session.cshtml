@@ -28,6 +28,7 @@
         : (!string.IsNullOrWhiteSpace(rawImageUrl) && !string.IsNullOrWhiteSpace(apiBaseUrl)
             ? $"{apiBaseUrl}/{rawImageUrl.TrimStart('/')}"
             : rawImageUrl);
+    var explanation = currentQuestion.Explanation ?? string.Empty;
     var answers = currentQuestion.Answers;
     var orderedAnswers = answers.OrderBy(x => x.Order).ToList();
 }
@@ -160,6 +161,13 @@
                                         </label>
                                     </div>
                                 }
+                            </div>
+
+                            <div id="practiceExplanation" class="practice-explanation mt-4" style="display:none;">
+                                <div class="practice-explanation-title">
+                                    <i class="fas fa-lightbulb me-2"></i>Giải thích đáp án
+                                </div>
+                                <div id="practiceExplanationText" class="practice-explanation-text"></div>
                             </div>
                         </div>
                         <div class="text-muted mt-4">Mã câu hỏi: @questionId</div>
@@ -320,6 +328,27 @@
             background: #fef2f2;
             color: #b91c1c;
             border-color: #fecaca;
+        }
+
+        .practice-explanation {
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            background: #fffbea;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+
+        .practice-explanation-title {
+            font-weight: 700;
+            margin-bottom: .5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .practice-explanation-text {
+            color: #78350f;
+            line-height: 1.65;
+            white-space: pre-line;
         }
 
         .question-palette {
@@ -577,10 +606,13 @@
             var wrongCountBox = document.getElementById('wrongCountBox');
             var progressText = document.getElementById('answeredProgressText');
             var progressBar = document.getElementById('answeredProgressBar');
+            var explanationBox = document.getElementById('practiceExplanation');
+            var explanationText = document.getElementById('practiceExplanationText');
             var apiBaseUrl = '@apiBaseUrl';
             var totalQuestions = @total;
             var currentQuestionNumber = @current;
             var questionId = @questionId;
+            var currentExplanation = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(explanation ?? string.Empty));
             var answeredStorageKey = 'practice-answered-' + topicCode;
             var wrongStorageKey = 'practice-wrong-' + topicCode;
             var isCheckingAnswer = false;
@@ -598,6 +630,16 @@
                 }
 
                 feedbackText.textContent = message || 'Chọn đáp án để kiểm tra';
+            }
+
+            function setExplanation(text, visible) {
+                if (!explanationBox || !explanationText) {
+                    return;
+                }
+
+                var normalized = (text || '').toString().trim();
+                explanationText.textContent = normalized;
+                explanationBox.style.display = visible && normalized ? 'block' : 'none';
             }
 
             function normalizeImageUrl(imageUrl) {
@@ -778,41 +820,68 @@
 
                 markAnswered(currentQuestionNumber);
 
-                var isCorrect = selectedAnswer.isCorrect;
-
-                if (isCorrect) {
-                    console.log('✓ User selected CORRECT answer');
-                    setFeedback('✓ Chính xác! Đáp án đúng.', 'status-correct');
-                    highlightAnswers(selectedAnswer.id, correctAnswer.id, true);
-                } else {
-                    console.log('✗ User selected WRONG answer');
-                    setFeedback('✗ Sai rồi! Đáp án đúng đã được đánh dấu màu xanh.', 'status-wrong');
-                    markWrong(currentQuestionNumber);
-                    highlightAnswers(selectedAnswer.id, correctAnswer.id, false);
-                    
-                    // Gọi API để lưu câu sai (không chờ kết quả)
-                    if (checkUrl && tokenField) {
-                        fetch(checkUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': tokenField.value,
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: JSON.stringify({
-                                topicCode: topicCode,
-                                questionId: questionId,
-                                answerId: answerId
-                            })
-                        }).catch(function(err) {
-                            console.warn('Failed to save wrong answer:', err);
-                        });
+                function finalizeAnswerResult(isCorrectResult, selectedAnswerIdResult, correctAnswerIdResult, explanationTextResult) {
+                    if (isCorrectResult) {
+                        console.log('✓ User selected CORRECT answer');
+                        setFeedback('✓ Chính xác! Đáp án đúng.', 'status-correct');
+                    } else {
+                        console.log('✗ User selected WRONG answer');
+                        setFeedback('✗ Sai rồi! Đáp án đúng đã được đánh dấu màu xanh.', 'status-wrong');
+                        markWrong(currentQuestionNumber);
                     }
+
+                    highlightAnswers(selectedAnswerIdResult, correctAnswerIdResult, isCorrectResult);
+                    setExplanation(explanationTextResult || currentExplanation, true);
+                    disableAllOptions();
+                    renderAnsweredState();
+                    isCheckingAnswer = false;
                 }
 
-                disableAllOptions();
-                renderAnsweredState();
-                isCheckingAnswer = false;
+                if (checkUrl && tokenField) {
+                    fetch(checkUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': tokenField.value,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            topicCode: topicCode,
+                            questionId: questionId,
+                            answerId: answerId
+                        })
+                    })
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status);
+                        }
+
+                        return response.json();
+                    })
+                    .then(function(result) {
+                        if (!result || !result.success) {
+                            throw new Error(result && result.message ? result.message : 'Không thể kiểm tra đáp án.');
+                        }
+
+                        currentExplanation = result.explanation || currentExplanation || '';
+                        finalizeAnswerResult(
+                            result.isCorrect === true,
+                            parseInt(result.selectedAnswerId, 10),
+                            parseInt(result.correctAnswerId, 10),
+                            result.explanation || currentExplanation
+                        );
+                    })
+                    .catch(function(err) {
+                        console.warn('Fallback to client-side check because API check failed:', err);
+
+                        var localIsCorrect = selectedAnswer.isCorrect === true;
+                        finalizeAnswerResult(localIsCorrect, selectedAnswer.id, correctAnswer.id, currentExplanation);
+                    });
+
+                    return;
+                }
+
+                finalizeAnswerResult(selectedAnswer.isCorrect === true, selectedAnswer.id, correctAnswer.id, currentExplanation);
             }
 
             // AJAX Navigation
@@ -868,6 +937,7 @@
                 // Update global variables
                 currentQuestionNumber = question.number;
                 questionId = question.id;
+                currentExplanation = question.explanation || '';
 
                 // Update question content
                 var questionTag = document.querySelector('.question-tag');
@@ -879,6 +949,8 @@
                 if (questionText) {
                     questionText.textContent = question.content;
                 }
+
+                setExplanation('', false);
 
                 // Update image
                 var questionImage = document.querySelector('.question-image');
