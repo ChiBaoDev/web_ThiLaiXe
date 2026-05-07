@@ -31,6 +31,13 @@ namespace webthibanglai.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(int courseId, int classId, string? ghiChu, CancellationToken cancellationToken)
         {
+            var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                TempData["LoginSuccess"] = "Bạn cần đăng nhập để đăng ký khóa học.";
+                return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(nameof(Detail), "KhoaHoc", new { id = courseId }) });
+            }
+
             var model = await _courseApiService.GetCourseDetailAsync(courseId, cancellationToken);
             model.SelectedClassId = classId;
 
@@ -40,13 +47,12 @@ namespace webthibanglai.Controllers
                 return View("Detail", model);
             }
 
-            var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
             var result = await _courseApiService.RegisterCourseAsync(accessToken, courseId, classId, ghiChu, cancellationToken);
 
             if (result.RequiresLogin)
             {
                 TempData["LoginSuccess"] = result.Message;
-                return RedirectToAction("Index", "Login");
+                return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(nameof(Detail), "KhoaHoc", new { id = courseId }) });
             }
 
             if (result.RequiresStudentProfile)
@@ -74,7 +80,7 @@ namespace webthibanglai.Controllers
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 TempData["LoginSuccess"] = "Bạn cần đăng nhập để xem đăng ký khóa học của mình.";
-                return RedirectToAction("Index", "Login");
+                return RedirectToAction("Index", "Login", new { returnUrl = BuildCurrentReturnUrl() });
             }
 
             var model = await _courseApiService.GetMyCourseRegistrationsAsync(accessToken, receiptId, cancellationToken);
@@ -96,7 +102,7 @@ namespace webthibanglai.Controllers
             if (result.RequiresLogin)
             {
                 TempData["LoginSuccess"] = result.Message;
-                return RedirectToAction("Index", "Login");
+                return RedirectToAction("Index", "Login", new { returnUrl = BuildCurrentReturnUrl() });
             }
 
             if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.OrderUrl))
@@ -157,6 +163,11 @@ namespace webthibanglai.Controllers
             {
                 receiptId = confirmResult.ReceiptId?.ToString() ?? receiptId?.ToString() ?? TempData["LatestPaymentReceiptId"]?.ToString()
             });
+        }
+
+        private string BuildCurrentReturnUrl()
+        {
+            return Request.PathBase + Request.Path + Request.QueryString;
         }
     }
 }

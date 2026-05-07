@@ -18,11 +18,11 @@ public class OnTapController : Controller
 
     public IActionResult Index()
     {
-        // Kiểm tra xem người dùng đã đăng nhập chưa
-        var authUsername = TempData.Peek("AuthUsername")?.ToString();
-        if (string.IsNullOrWhiteSpace(authUsername))
+        var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
+        if (string.IsNullOrWhiteSpace(accessToken))
         {
-            return RedirectToAction("Index", "Login");
+            TempData["LoginSuccess"] = "Vui lòng đăng nhập để vào ôn tập.";
+            return RedirectToLoginWithReturnUrl();
         }
 
         return View();
@@ -35,7 +35,7 @@ public class OnTapController : Controller
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             TempData["PracticeError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-            return RedirectToAction("Index", "Login");
+            return RedirectToLoginWithReturnUrl();
         }
 
         var topicName = topicCode switch
@@ -62,7 +62,7 @@ public class OnTapController : Controller
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             TempData["PracticeError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-            return RedirectToAction("Index", "Login");
+            return RedirectToLoginWithReturnUrl();
         }
 
         var questions = await _practiceApiService.GetQuestionsByTopicAsync(topicCode, accessToken, cancellationToken);
@@ -84,6 +84,12 @@ public class OnTapController : Controller
         return RedirectToAction(nameof(Session), new { topicCode, number = 1, embedded });
     }
 
+    private IActionResult RedirectToLoginWithReturnUrl()
+    {
+        var returnUrl = Request.PathBase + Request.Path + Request.QueryString;
+        return RedirectToAction("Index", "Login", new { returnUrl });
+    }
+
     [HttpGet]
     public async Task<IActionResult> Session(string topicCode, int number = 1, bool embedded = false, CancellationToken cancellationToken = default)
     {
@@ -91,7 +97,7 @@ public class OnTapController : Controller
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             TempData["PracticeError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-            return RedirectToAction("Index", "Login");
+            return RedirectToLoginWithReturnUrl();
         }
 
         var questionsJson = HttpContext.Session.GetString($"Practice_{topicCode}");
@@ -145,7 +151,7 @@ public class OnTapController : Controller
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             TempData["PracticeError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-            return RedirectToAction("Index", "Login");
+            return RedirectToLoginWithReturnUrl();
         }
 
         var topicName = HttpContext.Session.GetString($"PracticeTopicName_{topicCode}") ?? "Ôn tập";

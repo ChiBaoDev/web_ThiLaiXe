@@ -21,6 +21,46 @@
         border-radius: 16px;
         overflow: hidden;
     }
+
+    .header-notification-trigger {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: 1px solid rgba(243, 189, 0, 0.35);
+        background: #fffaf0;
+        color: #0c2b4b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        transition: all .2s ease;
+    }
+
+    .header-notification-trigger:hover {
+        color: #0c2b4b;
+        background: #fff3cd;
+        transform: translateY(-1px);
+    }
+
+    .header-notification-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: .72rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 16px rgba(239, 68, 68, .25);
+    }
+
 </style>
 
 <div class="container-fluid bg-dark text-light p-0">
@@ -61,8 +101,9 @@
 }
 
 <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
-    <a asp-controller="Home" asp-action="Index" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5">
-        <h2 class="m-0"><i class="fa fa-motorcycle text-primary me-2"></i>ThiXeMay</h2>
+    <a asp-controller="Home" asp-action="Index" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5 gap-2">
+        <img src="~/img/banners/4.png" alt="ThiXeMay" style="height: 52px; width: auto; object-fit: contain;" />
+        <h2 class="m-0">ThiXeMay</h2>
     </a>
     <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
         <span class="navbar-toggler-icon"></span>
@@ -72,16 +113,24 @@
             <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(currentController == "Home" ? "active" : "")">Trang chủ</a>
             <a asp-controller="About" asp-action="Index" class="nav-item nav-link @(currentController == "About" ? "active" : "")">Giới thiệu</a>
             <a asp-controller="KhoaHoc" asp-action="Index" class="nav-item nav-link @(currentController == "KhoaHoc" ? "active" : "")">Khóa học</a>
+            <a asp-controller="OnTap" asp-action="Index" class="nav-item nav-link @(currentController == "OnTap" ? "active" : "")">Ôn tập</a>
+            <a asp-controller="Exam" asp-action="Index" class="nav-item nav-link @(currentController == "Exam" ? "active" : "")">Thi thử</a>
             @if (isLoggedIn)
             {
                 <a asp-controller="LichHoc" asp-action="Index" class="nav-item nav-link @(currentController == "LichHoc" ? "active" : "")">Học viên</a>
-                <a asp-controller="OnTap" asp-action="Index" class="nav-item nav-link @(currentController == "OnTap" ? "active" : "")">Ôn tập</a>
             }
             <a asp-controller="Contact" asp-action="Index" class="nav-item nav-link @(currentController == "Contact" ? "active" : "")">Liên hệ</a>
         </div>
         <div id="headerAuthArea" class="d-flex align-items-center ms-lg-3">
             @if (isLoggedIn)
             {
+                <div class="nav-item ms-lg-2">
+                    <a asp-controller="ThongBao" asp-action="Index" class="header-notification-trigger text-decoration-none" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                        <span class="header-notification-badge">5</span>
+                    </a>
+                </div>
+
                 <div class="nav-item dropdown ms-lg-3">
                     <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2 px-4 px-lg-3 user-nav-trigger" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="user-avatar-badge">@avatarText</span>
@@ -106,3 +155,4 @@
         </div>
     </div>
 </nav>
+

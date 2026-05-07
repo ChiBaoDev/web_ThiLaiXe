@@ -1,0 +1,405 @@
+@{
+    ViewData["Title"] = "Thông báo";
+}
+
+<section class="notification-page py-5">
+    <div class="container">
+        <div class="notification-hero mb-4 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="notification-hero__content">
+                <span class="notification-hero__eyebrow"><i class="fas fa-bell me-2"></i>Trung tâm thông báo</span>
+                <h1 class="notification-hero__title mb-2">Bảng tin thông minh cho học viên</h1>
+                <p class="notification-hero__text mb-0">Xem nhanh cập nhật cá nhân, thông báo hệ thống và các hoạt động mới nhất trong hành trình ôn thi bằng lái xe máy.</p>
+                <div class="notification-hero__quickstats">
+                    <div class="notification-quickstat">
+                        <span class="notification-quickstat__value">05</span>
+                        <span class="notification-quickstat__label">Tin mới</span>
+                    </div>
+                    <div class="notification-quickstat">
+                        <span class="notification-quickstat__value">02</span>
+                        <span class="notification-quickstat__label">Cá nhân</span>
+                    </div>
+                    <div class="notification-quickstat">
+                        <span class="notification-quickstat__value">03</span>
+                        <span class="notification-quickstat__label">Hệ thống</span>
+                    </div>
+                </div>
+            </div>
+            <div class="notification-hero__badge">
+                <div class="notification-hero__badge-icon"><i class="fas fa-bell"></i></div>
+                <span class="notification-hero__count">5</span>
+                <span class="notification-hero__label">Thông báo chưa đọc</span>
+                <small class="notification-hero__subtext">Cập nhật liên tục theo thời gian thực</small>
+            </div>
+        </div>
+
+        <div class="notification-shell wow fadeInUp" data-wow-delay="0.15s">
+            <div class="notification-tabs" id="notificationTabs">
+                <button type="button" class="notification-tab active" data-target="personal">
+                    <i class="fas fa-user-circle me-2"></i>Thông báo cá nhân
+                </button>
+                <button type="button" class="notification-tab" data-target="system">
+                    <i class="fas fa-server me-2"></i>Thông báo hệ thống
+                </button>
+            </div>
+
+            <div class="notification-panel active" data-panel="personal">
+                <div class="notification-card-list">
+                    <article class="notification-card notification-card--personal unread">
+                        <span class="notification-card__icon"><i class="fas fa-user-check"></i></span>
+                        <div>
+                            <h3 class="notification-card__title">Hồ sơ học viên đã được cập nhật</h3>
+                            <p class="notification-card__text">Thông tin cá nhân của bạn đã được lưu thành công và đồng bộ vào hệ thống.</p>
+                            <span class="notification-card__time">2 phút trước</span>
+                        </div>
+                    </article>
+
+                    <article class="notification-card notification-card--personal">
+                        <span class="notification-card__icon"><i class="fas fa-book-reader"></i></span>
+                        <div>
+                            <h3 class="notification-card__title">Có khóa học phù hợp với bạn</h3>
+                            <p class="notification-card__text">Khóa A1 tháng 06/2026 đang mở đăng ký, bạn có thể xem chi tiết để đăng ký ngay.</p>
+                            <span class="notification-card__time">15 phút trước</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="notification-panel" data-panel="system">
+                <div class="notification-card-list">
+                    <article class="notification-card notification-card--system unread">
+                        <span class="notification-card__icon"><i class="fas fa-bullhorn"></i></span>
+                        <div>
+                            <h3 class="notification-card__title">Hệ thống cập nhật bộ đề mới</h3>
+                            <p class="notification-card__text">Bộ 250 câu hỏi mới nhất đã được đồng bộ, bạn có thể bắt đầu ôn tập ngay.</p>
+                            <span class="notification-card__time">Hôm nay</span>
+                        </div>
+                    </article>
+
+                    <article class="notification-card notification-card--system">
+                        <span class="notification-card__icon"><i class="fas fa-tools"></i></span>
+                        <div>
+                            <h3 class="notification-card__title">Bảo trì hệ thống định kỳ</h3>
+                            <p class="notification-card__text">Hệ thống sẽ bảo trì ngắn vào 23:00 Chủ nhật để nâng cấp trải nghiệm người dùng.</p>
+                            <span class="notification-card__time">1 ngày trước</span>
+                        </div>
+                    </article>
+
+                    <article class="notification-card notification-card--system">
+                        <span class="notification-card__icon"><i class="fas fa-shield-alt"></i></span>
+                        <div>
+                            <h3 class="notification-card__title">Khuyến nghị bảo mật tài khoản</h3>
+                            <p class="notification-card__text">Vui lòng đổi mật khẩu định kỳ để tăng cường an toàn cho tài khoản học viên của bạn.</p>
+                            <span class="notification-card__time">3 ngày trước</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Styles {
+    <style>
+        .notification-page {
+            background:
+                radial-gradient(circle at top right, rgba(243, 189, 0, .10), transparent 28%),
+                linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+            min-height: calc(100vh - 160px);
+        }
+
+        .notification-hero {
+            display: flex;
+            justify-content: space-between;
+            gap: 1.5rem;
+            align-items: stretch;
+            padding: 1.75rem 1.9rem;
+            border-radius: 1.75rem;
+            background: linear-gradient(135deg, #0c2b4b 0%, #123d68 52%, #1f5c93 100%);
+            border: 1px solid rgba(255, 255, 255, .08);
+            box-shadow: 0 20px 48px rgba(12, 43, 75, .18);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .notification-hero::after {
+            content: '';
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            top: -90px;
+            right: -60px;
+            background: rgba(243, 189, 0, .18);
+            filter: blur(6px);
+        }
+
+        .notification-hero__content,
+        .notification-hero__badge {
+            position: relative;
+            z-index: 1;
+        }
+
+        .notification-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: .55rem 1rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .18);
+            color: #fef3c7;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            font-size: .8rem;
+            margin-bottom: 1rem;
+        }
+
+        .notification-hero__title {
+            color: #ffffff;
+            font-weight: 900;
+            font-size: clamp(1.85rem, 3vw, 2.7rem);
+        }
+
+        .notification-hero__text {
+            color: rgba(255, 255, 255, .82);
+            max-width: 680px;
+            font-size: 1rem;
+        }
+
+        .notification-hero__quickstats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .9rem;
+            margin-top: 1.25rem;
+        }
+
+        .notification-quickstat {
+            min-width: 110px;
+            padding: .9rem 1rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, .10);
+            border: 1px solid rgba(255, 255, 255, .14);
+            backdrop-filter: blur(8px);
+        }
+
+        .notification-quickstat__value,
+        .notification-quickstat__label {
+            display: block;
+        }
+
+        .notification-quickstat__value {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .notification-quickstat__label {
+            color: rgba(255, 255, 255, .72);
+            font-size: .82rem;
+            margin-top: .15rem;
+        }
+
+        .notification-hero__badge {
+            min-width: 150px;
+            padding: 1.2rem 1.35rem;
+            border-radius: 1.35rem;
+            background: rgba(255, 255, 255, .12);
+            text-align: center;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+            border: 1px solid rgba(255, 255, 255, .15);
+            backdrop-filter: blur(10px);
+            align-self: center;
+        }
+
+        .notification-hero__badge-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f3bd00, #ffda6a);
+            color: #0c2b4b;
+            font-size: 1.35rem;
+            margin-bottom: .85rem;
+        }
+
+        .notification-hero__count,
+        .notification-hero__label,
+        .notification-hero__subtext {
+            display: block;
+        }
+
+        .notification-hero__count {
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .notification-hero__label {
+            color: #f8fafc;
+            margin-top: .35rem;
+            font-weight: 700;
+        }
+
+        .notification-hero__subtext {
+            color: rgba(255, 255, 255, .65);
+            margin-top: .3rem;
+            font-size: .8rem;
+        }
+
+        .notification-shell {
+            border-radius: 1.65rem;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 20px 48px rgba(12, 43, 75, .08);
+            overflow: hidden;
+        }
+
+        .notification-tabs {
+            display: flex;
+            gap: .75rem;
+            padding: 1rem 1rem .25rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 100%);
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .notification-tab {
+            border: 1px solid transparent;
+            background: #f8fafc;
+            padding: .9rem 1.15rem;
+            color: #64748b;
+            font-weight: 800;
+            border-radius: 999px;
+            transition: all .2s ease;
+        }
+
+        .notification-tab.active {
+            background: linear-gradient(135deg, #fff7d7, #ffffff);
+            color: #0c2b4b;
+            border-color: rgba(243, 189, 0, .28);
+            box-shadow: 0 8px 20px rgba(243, 189, 0, .12);
+        }
+
+        .notification-panel {
+            display: none;
+        }
+
+        .notification-panel.active {
+            display: block;
+        }
+
+        .notification-card-list {
+            display: grid;
+            gap: 1rem;
+            padding: 1.25rem;
+        }
+
+        .notification-card {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 1.1rem;
+            border-radius: 1.25rem;
+            background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
+            border: 1px solid #eef2f7;
+            box-shadow: 0 10px 26px rgba(12, 43, 75, .05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification-card.unread::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 0 6px rgba(239, 68, 68, .08);
+        }
+
+        .notification-card__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff7d7;
+            color: #b47f00;
+            flex-shrink: 0;
+            box-shadow: 0 8px 18px rgba(243, 189, 0, .12);
+        }
+
+        .notification-card--personal .notification-card__icon {
+            background: linear-gradient(135deg, #fff7d7, #ffefb3);
+            color: #b47f00;
+        }
+
+        .notification-card--system .notification-card__icon {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            color: #2563eb;
+        }
+
+        .notification-card__title {
+            color: #0c2b4b;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: .35rem;
+        }
+
+        .notification-card__text {
+            color: #64748b;
+            margin-bottom: .35rem;
+        }
+
+        .notification-card__time {
+            color: #94a3b8;
+            font-size: .82rem;
+        }
+
+        @@media (max-width: 767.98px) {
+            .notification-hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .notification-hero__badge {
+                width: 100%;
+            }
+
+            .notification-tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            document.addEventListener('click', function (event) {
+                var tab = event.target.closest('.notification-tab');
+                if (!tab) {
+                    return;
+                }
+
+                var shell = tab.closest('.notification-shell');
+                if (!shell) {
+                    return;
+                }
+
+                shell.querySelectorAll('.notification-tab').forEach(function (item) {
+                    item.classList.toggle('active', item === tab);
+                });
+
+                var target = tab.getAttribute('data-target');
+                shell.querySelectorAll('.notification-panel').forEach(function (panel) {
+                    panel.classList.toggle('active', panel.getAttribute('data-panel') === target);
+                });
+            });
+        })();
+    </script>
+}

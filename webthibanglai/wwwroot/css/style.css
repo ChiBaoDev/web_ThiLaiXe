@@ -299,6 +299,24 @@ html {
 
 .team-item {
     padding: .75rem;
+    height: 100%;
+}
+
+.team-item > .position-relative {
+    height: 320px;
+    overflow: hidden;
+}
+
+.team-item > .position-relative > img,
+.team-teacher-img {
+    width: 100%;
+    height: 320px !important;
+    object-fit: cover;
+    object-position: top center;
+}
+
+.team-item > .bg-light {
+    min-height: 112px;
 }
 
 .team-item::after {

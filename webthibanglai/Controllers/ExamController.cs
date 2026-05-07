@@ -21,6 +21,11 @@ namespace webthibanglai.Controllers
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
             var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                return RedirectToAction("Index", "Login", new { returnUrl = BuildCurrentReturnUrl() });
+            }
+
             var model = await _examApiService.GetSampleExamsAsync(accessToken, cancellationToken);
             return View(model);
         }
@@ -468,6 +473,11 @@ namespace webthibanglai.Controllers
         private IActionResult RedirectToLogin(string returnAction)
         {
             return RedirectToAction("Index", "Login", new { returnUrl = Url.Action(returnAction, "Exam") });
+        }
+
+        private string BuildCurrentReturnUrl()
+        {
+            return Request.PathBase + Request.Path + Request.QueryString;
         }
 
         private string? BuildAbsoluteApiUrl(string? url)

@@ -27,7 +27,7 @@
     <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img class="w-100" src="~/img/carousel-1.jpg" alt="Luyện thi bằng lái xe máy" />
+                <img class="w-100" src="~/img/banners/banner1.jpg" alt="Học viên luyện lái xe máy an toàn" />
                 <div class="carousel-caption">
                     <div class="container">
                         <div class="row justify-content-center">
@@ -41,7 +41,7 @@
                 </div>
             </div>
             <div class="carousel-item">
-                <img class="w-100" src="~/img/carousel-2.jpg" alt="Ôn tập an toàn giao thông" />
+                <img class="w-100" src="~/img/banners/banner2.jpg" alt="Luyện thi bằng lái xe máy A1 A2" />
                 <div class="carousel-caption">
                     <div class="container">
                         <div class="row justify-content-center">
@@ -49,6 +49,20 @@
                                 <h1 class="display-2 text-light mb-5 animated slideInDown">Ôn tập an toàn giao thông là ưu tiên hàng đầu</h1>
                                 <a href="~/feature.html" class="btn btn-primary py-sm-3 px-sm-5">Xem chi tiết</a>
                                 <a href="~/exam.html" class="btn btn-light py-sm-3 px-sm-5 ms-3">Bộ đề thi</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img class="w-100" src="~/img/banners/banner3.jpg" alt="Ôn tập thi bằng lái xe máy với bộ đề A1 A2" />
+                <div class="carousel-caption">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-7">
+                                <h1 class="display-2 text-light mb-5 animated slideInDown">Sẵn sàng thi thử và chinh phục bằng lái</h1>
+                                <a asp-controller="OnTap" asp-action="Index" class="btn btn-primary py-sm-3 px-sm-5">Ôn tập ngay</a>
+                                <a asp-controller="Exam" asp-action="Index" class="btn btn-light py-sm-3 px-sm-5 ms-3">Thi thử</a>
                             </div>
                         </div>
                     </div>
@@ -117,7 +131,7 @@
         <div class="row g-5">
             <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="position-relative overflow-hidden ps-5 pt-5 h-100" style="min-height: 400px;">
-                    <img class="position-absolute w-100 h-100" src="~/img/about-1.jpg" alt="Về chúng tôi" style="object-fit: cover;" />
+                    <img class="position-absolute w-100 h-100" src="~/img/banners/anh1.jpg" alt="Về chúng tôi" style="object-fit: cover;" />
                     <img class="position-absolute top-0 start-0 bg-white pe-3 pb-3" src="~/img/about-2.jpg" alt="Hỗ trợ học viên" style="width: 200px; height: 200px;" />
                 </div>
             </div>
@@ -397,7 +411,7 @@
             </div>
             <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
                 <div class="position-relative overflow-hidden pe-5 pt-5 h-100" style="min-height: 400px;">
-                    <img class="position-absolute w-100 h-100" src="~/img/about-1.jpg" alt="Nền tảng học tập" style="object-fit: cover;" />
+                    <img class="position-absolute w-100 h-100" src="~/img/banners/anh1.jpg" alt="Nền tảng học tập" style="object-fit: cover;" />
                     <img class="position-absolute top-0 end-0 bg-white ps-3 pb-3" src="~/img/about-2.jpg" alt="Lớp học thực tế" style="width: 200px; height: 200px" />
                 </div>
             </div>
@@ -415,7 +429,7 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
                 <div class="team-item position-relative">
                     <div class="position-relative">
-                        <img class="img-fluid" src="~/img/team-1.jpg" alt="Giảng viên 1" />
+                        <img class="img-fluid team-teacher-img" src="~/img/teachers/teacher bảo.png" alt="Giảng viên Bảo" />
                         <div class="team-social text-center">
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-facebook-f"></i></a>
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -423,7 +437,7 @@
                         </div>
                     </div>
                     <div class="bg-light text-center p-4">
-                        <h5 class="mt-2">Họ và tên</h5>
+                        <h5 class="mt-2">Bảo</h5>
                         <span>Giảng viên</span>
                     </div>
                 </div>
@@ -431,7 +445,7 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
                 <div class="team-item position-relative">
                     <div class="position-relative">
-                        <img class="img-fluid" src="~/img/team-2.jpg" alt="Giảng viên 2" />
+                        <img class="img-fluid team-teacher-img" src="~/img/teachers/teacher doanh.jpg" alt="Giảng viên Doanh" />
                         <div class="team-social text-center">
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-facebook-f"></i></a>
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -439,7 +453,7 @@
                         </div>
                     </div>
                     <div class="bg-light text-center p-4">
-                        <h5 class="mt-2">Họ và tên</h5>
+                        <h5 class="mt-2">Doanh</h5>
                         <span>Giảng viên</span>
                     </div>
                 </div>
@@ -447,7 +461,7 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
                 <div class="team-item position-relative">
                     <div class="position-relative">
-                        <img class="img-fluid" src="~/img/team-3.jpg" alt="Giảng viên 3" />
+                        <img class="img-fluid team-teacher-img" src="~/img/teachers/teacher hào.png" alt="Giảng viên Hào" />
                         <div class="team-social text-center">
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-facebook-f"></i></a>
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -455,7 +469,7 @@
                         </div>
                     </div>
                     <div class="bg-light text-center p-4">
-                        <h5 class="mt-2">Họ và tên</h5>
+                        <h5 class="mt-2">Hào</h5>
                         <span>Giảng viên</span>
                     </div>
                 </div>
@@ -463,7 +477,7 @@
             <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
                 <div class="team-item position-relative">
                     <div class="position-relative">
-                        <img class="img-fluid" src="~/img/team-4.jpg" alt="Giảng viên 4" />
+                        <img class="img-fluid team-teacher-img" src="~/img/teachers/teacher khang.png" alt="Giảng viên Khang" />
                         <div class="team-social text-center">
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-facebook-f"></i></a>
                             <a class="btn btn-square btn-outline-primary border-2 m-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -471,7 +485,7 @@
                         </div>
                     </div>
                     <div class="bg-light text-center p-4">
-                        <h5 class="mt-2">Họ và tên</h5>
+                        <h5 class="mt-2">Khang</h5>
                         <span>Giảng viên</span>
                     </div>
                 </div>

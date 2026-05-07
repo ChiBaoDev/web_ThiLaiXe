@@ -25,8 +25,8 @@ builder.Services.AddScoped<IStudentDashboardApiService, StudentDashboardApiServi
 builder.Services.AddScoped<IPracticeApiService, PracticeApiService>();
 builder.Services.AddScoped<ICourseApiService, CourseApiService>();
 
-// Đăng ký AI Service
-builder.Services.AddHttpClient<IAIService, GeminiService>();
+// Đăng ký AI Service theo chuẩn OpenAI Compatible
+builder.Services.AddHttpClient<IAIService, OpenAIService>();
 
 var app = builder.Build();
 

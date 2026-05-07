@@ -44,7 +44,6 @@ C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\qdbg2mclpr-oqlm1wyp08.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\0z6qtl7wtb-rjgkoomseo.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\ddsye0im40-yy3zov9cew.gz
-C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\dqc1sq4201-d85jthvbaq.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\azbnev3z8a-rhowg2ba6k.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\4eil0qbu65-61n19gt1b8.gz
 C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\agw9ixfk2o-btgs6gvu5i.gz
@@ -98,3 +97,4 @@ c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\verif
 c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\verify-build\webthibanglai.runtimeconfig.json
 c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\verify-build\webthibanglai.dll
 c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\verify-build\webthibanglai.pdb
+C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\obj\Debug\net9.0\compressed\dqc1sq4201-5g8dz1murs.gz

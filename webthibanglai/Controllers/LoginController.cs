@@ -21,9 +21,10 @@ namespace webthibanglai.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string? returnUrl = null)
         {
             var model = BuildLoginViewModel();
+            ViewBag.ReturnUrl = GetSafeReturnUrl(returnUrl);
 
             if (TempData.TryGetValue("RegisterSuccess", out var registerSuccessMessage))
             {
@@ -34,8 +35,10 @@ namespace webthibanglai.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(LoginViewModel model)
+        public async Task<IActionResult> Index(LoginViewModel model, string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = GetSafeReturnUrl(returnUrl);
+
             if (string.IsNullOrWhiteSpace(model.LoginRequest.TenDangNhapHoacEmail) || string.IsNullOrWhiteSpace(model.LoginRequest.MatKhau))
             {
                 ModelState.AddModelError(string.Empty, "Vui lòng nhập tên đăng nhập/email và mật khẩu.");
@@ -50,8 +53,19 @@ namespace webthibanglai.Controllers
             };
 
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("/api/v1/auth/login", content);
-            var responseBody = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response;
+            string responseBody;
+            try
+            {
+                response = await client.PostAsync("/api/v1/auth/login", content);
+                responseBody = await response.Content.ReadAsStringAsync();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Cannot connect to API while logging in. BaseAddress={BaseAddress}", client.BaseAddress);
+                ModelState.AddModelError(string.Empty, "Không thể kết nối tới API đăng nhập. Vui lòng kiểm tra backend API đang chạy tại cấu hình ApiSettings:BaseUrl.");
+                return View(model);
+            }
             _logger.LogInformation("Login API raw response: {ResponseBody}", responseBody);
 
             if (!response.IsSuccessStatusCode)
@@ -117,12 +131,13 @@ namespace webthibanglai.Controllers
             }
 
             TempData["LoginSuccess"] = $"Đăng nhập thành công: {auth.TenDangNhap}";
-            return RedirectToAction("Index", "Home");
+            return RedirectAfterAuth(returnUrl);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(LoginViewModel model)
+        public async Task<IActionResult> Register(LoginViewModel model, string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = GetSafeReturnUrl(returnUrl);
             var request = model.RegisterRequest;
 
             // Validate các trường bắt buộc
@@ -250,7 +265,7 @@ namespace webthibanglai.Controllers
                         }
 
                         TempData["LoginSuccess"] = $"Đăng ký và đăng nhập thành công! Chào mừng {registeredUser.TenDangNhap}";
-                        return RedirectToAction("Index", "Onboarding");
+                        return RedirectAfterAuth(returnUrl, defaultAction: "Index", defaultController: "Onboarding");
                     }
                 }
             }
@@ -695,6 +710,27 @@ namespace webthibanglai.Controllers
                     ConfirmPassword = TempData.Peek("ResetPasswordConfirmPassword")?.ToString() ?? string.Empty
                 }
             };
+        }
+
+        private string? GetSafeReturnUrl(string? returnUrl)
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl) || !Url.IsLocalUrl(returnUrl))
+            {
+                return null;
+            }
+
+            return returnUrl;
+        }
+
+        private IActionResult RedirectAfterAuth(string? returnUrl, string defaultAction = "Index", string defaultController = "Home")
+        {
+            var safeReturnUrl = GetSafeReturnUrl(returnUrl);
+            if (!string.IsNullOrWhiteSpace(safeReturnUrl))
+            {
+                return LocalRedirect(safeReturnUrl);
+            }
+
+            return RedirectToAction(defaultAction, defaultController);
         }
 
         private void PopulateProfileTempData(CurrentUserInfo currentUser)

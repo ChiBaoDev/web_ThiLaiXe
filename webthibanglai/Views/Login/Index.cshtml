@@ -1,6 +1,7 @@
 @model webthibanglai.Models.LoginViewModel
 @{
     ViewData["Title"] = "Đăng nhập";
+    var returnUrl = ViewBag.ReturnUrl as string ?? string.Empty;
 }
 
 <div class="login-page py-5">
@@ -59,6 +60,7 @@
                                     }
 
                                     <form method="post" action="/Login/Index">
+                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
                                         <div class="mb-3">
                                             <label asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-label fw-semibold">Tên đăng nhập hoặc email</label>
                                             <input asp-for="LoginRequest.TenDangNhapHoacEmail" class="form-control login-input" placeholder="Nhập tên đăng nhập hoặc email" />
@@ -89,6 +91,7 @@
                                     }
 
                                     <form method="post" action="/Login/Register" class="row g-3" novalidate>
+                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
                                         <div class="col-12">
                                             <label asp-for="RegisterRequest.TenDangNhap" class="form-label fw-semibold">Tên đăng nhập <span class="text-danger">*</span></label>
                                             <input asp-for="RegisterRequest.TenDangNhap" class="form-control login-input" placeholder="vd: nguyenvana" required />

@@ -18,7 +18,8 @@ namespace webthibanglai.Controllers
             var username = TempData.Peek("AuthUsername")?.ToString();
             if (string.IsNullOrEmpty(username))
             {
-                return RedirectToAction("Index", "Login");
+                var returnUrl = Request.PathBase + Request.Path + Request.QueryString;
+                return RedirectToAction("Index", "Login", new { returnUrl });
             }
 
             return View();

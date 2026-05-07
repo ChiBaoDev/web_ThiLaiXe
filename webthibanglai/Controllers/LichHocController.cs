@@ -23,7 +23,7 @@ namespace webthibanglai.Controllers
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 TempData["LoginSuccess"] = "Vui lòng đăng nhập để xem trang học viên.";
-                return RedirectToAction("Index", "Login");
+                return RedirectToAction("Index", "Login", new { returnUrl = BuildCurrentReturnUrl() });
             }
 
             var model = await _studentDashboardApiService.GetDashboardAsync(accessToken, cancellationToken);
@@ -48,7 +48,7 @@ namespace webthibanglai.Controllers
             if (string.IsNullOrWhiteSpace(accessToken))
             {
                 TempData["LoginSuccess"] = "Vui lòng đăng nhập để đăng ký học viên.";
-                return RedirectToAction("Index", "Login");
+                return RedirectToAction("Index", "Login", new { returnUrl = BuildCurrentReturnUrl() });
             }
 
             var model = await _studentDashboardApiService.GetDashboardAsync(accessToken, cancellationToken);
@@ -75,6 +75,11 @@ namespace webthibanglai.Controllers
 
             result.Dashboard.RegistrationSuccessMessage = "Đăng ký học viên thành công.";
             return View("Index", result.Dashboard);
+        }
+
+        private string BuildCurrentReturnUrl()
+        {
+            return Request.PathBase + Request.Path + Request.QueryString;
         }
     }
 }
