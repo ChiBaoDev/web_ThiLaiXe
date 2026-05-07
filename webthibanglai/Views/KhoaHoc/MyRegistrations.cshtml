@@ -12,17 +12,39 @@
         _ => "alert-info"
     };
 
+    static bool ContainsAny(string? value, params string[] keywords)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        return keywords.Any(keyword => value.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
+    var totalRegistrations = Model.Registrations.Count;
+    var paidCount = Model.Registrations.Count(x => !x.CanPayWithZaloPay && ContainsAny(x.PaymentStatus, "đã thanh toán", "thanh toán", "đã xác nhận", "xác nhận", "da_thanh_toan", "dathanhtoan", "da_xac_nhan", "daxacnhan", "paid", "success", "completed"));
+    var pendingCount = Model.Registrations.Count(x => x.CanPayWithZaloPay || ContainsAny(x.PaymentStatus, "chờ", "cho_", "pending", "chưa thanh toán", "unpaid"));
+    var approvedCount = Model.Registrations.Count(x => x.CanPayWithZaloPay || ContainsAny(x.TrangThai, "đã duyệt", "duyệt", "da_duyet", "daduyet", "approved", "accept"));
+
 }
 
 <div class="container-xxl py-6">
     <div class="container">
         <div class="my-registration-hero mb-4">
             <div>
-                <span class="badge rounded-pill bg-light text-primary px-3 py-2 mb-3">Khóa học của tôi</span>
+                <span class="my-registration-hero__eyebrow"><i class="fa fa-layer-group me-2"></i>Khóa học của tôi</span>
                 <h1 class="mb-2">Đăng ký của tôi</h1>
-                <p class="text-muted mb-0">Theo dõi trạng thái duyệt đăng ký và thanh toán VNPAY cho từng lớp học.</p>
+                <p class="mb-0">Theo dõi trạng thái duyệt đăng ký và thanh toán VNPAY cho từng lớp học.</p>
             </div>
-            <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">Xem thêm khóa học</a>
+            <a asp-controller="KhoaHoc" asp-action="Index" class="my-registration-hero__cta text-decoration-none"><i class="fa fa-compass me-2"></i>Xem thêm khóa học</a>
+        </div>
+
+        <div class="registration-stats mb-4">
+            <article class="registration-stat-card"><span>Tổng đăng ký</span><strong>@totalRegistrations</strong></article>
+            <article class="registration-stat-card registration-stat-card--approved"><span>Đã duyệt</span><strong>@approvedCount</strong></article>
+            <article class="registration-stat-card registration-stat-card--paid"><span>Đã thanh toán</span><strong>@paidCount</strong></article>
+            <article class="registration-stat-card registration-stat-card--pending"><span>Chờ thanh toán</span><strong>@pendingCount</strong></article>
         </div>
 
         @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
@@ -61,6 +83,7 @@
                 {
                     <div class="col-12">
                         <div class="registration-card">
+                            <div class="registration-card__glow"></div>
                             <div class="registration-card__header">
                                 <div>
                                     <div class="small text-muted mb-1">Khóa học</div>
@@ -69,7 +92,7 @@
                                 </div>
                                 <div class="registration-card__badges">
                                     <span class="badge rounded-pill bg-light text-dark border">@registration.TrangThai</span>
-                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">@registration.PaymentStatus</span>
+                                   
                                 </div>
                             </div>
 
@@ -138,25 +161,104 @@
 @section Styles {
     <style>
         .my-registration-hero {
+            position: relative;
+            overflow: hidden;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
             padding: 2rem;
-            border-radius: 1.5rem;
-            background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
-            border: 1px solid #dbeafe;
+            border-radius: 1.75rem;
+            background: radial-gradient(circle at top right, rgba(247, 185, 0, .26), transparent 42%), linear-gradient(130deg, #ffffff 0%, #f8fbff 55%, #fff6db 100%);
+            border: 1px solid rgba(12, 43, 75, .1);
+            box-shadow: 0 20px 44px rgba(12, 43, 75, .11);
+            color: #0c2b4b;
         }
 
-        .registration-card {
-            padding: 1.5rem;
-            border-radius: 1.35rem;
+        .my-registration-hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .5rem .95rem;
+            background: rgba(247, 185, 0, .16);
+            border: 1px solid rgba(247, 185, 0, .36);
+            color: #935f00;
+            font-weight: 700;
+            margin-bottom: .8rem;
+        }
+
+        .my-registration-hero__cta {
+            border-radius: 999px;
+            padding: .8rem 1.2rem;
+            font-weight: 700;
+            color: #0c2b4b;
+            background: linear-gradient(90deg, #f3bd00 0%, #ffd447 100%);
+            box-shadow: 0 10px 24px rgba(243, 189, 0, .34);
+            transition: transform .2s ease, box-shadow .2s ease;
+            white-space: nowrap;
+        }
+
+        .my-registration-hero__cta:hover {
+            color: #0c2b4b;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(243, 189, 0, .42);
+        }
+
+        .registration-stats {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .registration-stat-card {
+            border-radius: 1rem;
+            border: 1px solid rgba(12, 43, 75, .08);
+            padding: 1rem 1.1rem;
             background: #fff;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+            box-shadow: 0 8px 22px rgba(12, 43, 75, .08);
+        }
+
+        .registration-stat-card span {
+            display: block;
+            font-size: .83rem;
+            color: #64748b;
+            margin-bottom: .25rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .registration-stat-card strong {
+            font-size: 1.5rem;
+            color: #0c2b4b;
+        }
+
+        .registration-stat-card--approved strong { color: #1d4ed8; }
+        .registration-stat-card--paid strong { color: #0f766e; }
+        .registration-stat-card--pending strong { color: #c2410c; }
+
+        .registration-card {
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(150deg, #ffffff 0%, #f9fbff 60%, #fff9e8 100%);
+            border: 1px solid rgba(12, 43, 75, .08);
+            box-shadow: 0 14px 34px rgba(12, 43, 75, .1);
+        }
+
+        .registration-card__glow {
+            position: absolute;
+            right: -60px;
+            top: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(243, 189, 0, .2);
         }
 
         .registration-card__header {
+            position: relative;
+            z-index: 1;
             display: flex;
             justify-content: space-between;
             gap: 1rem;
@@ -172,10 +274,19 @@
         }
 
         .registration-card__grid {
+            position: relative;
+            z-index: 1;
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 1rem;
             margin-bottom: 1.25rem;
+        }
+
+        .registration-card__grid > div {
+            padding: .85rem;
+            border-radius: .85rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
         }
 
         .registration-card__label {
@@ -188,6 +299,8 @@
         }
 
         .registration-card__actions {
+            position: relative;
+            z-index: 1;
             display: flex;
             gap: .75rem;
             flex-wrap: wrap;
@@ -208,12 +321,20 @@
                 align-items: stretch;
             }
 
+            .registration-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .registration-card__grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @@media (max-width: 575.98px) {
+            .registration-stats {
+                grid-template-columns: 1fr;
+            }
+
             .registration-card__grid {
                 grid-template-columns: 1fr;
             }

@@ -171,6 +171,8 @@ public class WeeklyScheduleCell
 public class WeeklyScheduleOccurrenceItem
 {
     public DateOnly? NgayHoc { get; set; }
+    public string CourseName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
     public string GioBatDau { get; set; } = string.Empty;
     public string GioKetThuc { get; set; } = string.Empty;
     public string DiaDiem { get; set; } = string.Empty;

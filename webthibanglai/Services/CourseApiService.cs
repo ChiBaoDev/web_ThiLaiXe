@@ -12,6 +12,7 @@ public interface ICourseApiService
 {
     Task<KhoaHocViewModel> GetCoursesAsync(CancellationToken cancellationToken = default);
     Task<KhoaHocDetailViewModel> GetCourseDetailAsync(int courseId, CancellationToken cancellationToken = default);
+    Task<List<KhoaHocClassItem>> GetCourseClassesByCourseIdAsync(int courseId, CancellationToken cancellationToken = default);
     Task<CourseRegistrationResult> RegisterCourseAsync(string? accessToken, int courseId, int classId, string? ghiChu, CancellationToken cancellationToken = default);
     Task<MyCourseRegistrationsViewModel> GetMyCourseRegistrationsAsync(string? accessToken, string? paymentReceiptId = null, CancellationToken cancellationToken = default);
     Task<VnPayOrderResult> CreateVnPayOrderAsync(string? accessToken, int registrationId, CancellationToken cancellationToken = default);
@@ -385,6 +386,11 @@ public sealed class CourseApiService : ICourseApiService
         }
 
         return classes;
+    }
+
+    public Task<List<KhoaHocClassItem>> GetCourseClassesByCourseIdAsync(int courseId, CancellationToken cancellationToken = default)
+    {
+        return GetCourseClassesAsync(courseId, cancellationToken);
     }
 
     private async Task<(string? Message, string? State)> GetPaymentReceiptStatusAsync(HttpClient client, string receiptId, CancellationToken cancellationToken)

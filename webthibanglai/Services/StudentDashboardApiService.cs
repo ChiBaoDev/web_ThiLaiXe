@@ -352,6 +352,10 @@ public class StudentDashboardApiService : IStudentDashboardApiService
             CourseName = item.TenKhoaHoc ?? "Khóa học",
             ClassName = item.TenLop ?? "Chưa phân lớp",
             ScheduleText = BuildScheduleText(item.NgayBatDau, item.NgayKetThuc),
+            StartDate = item.NgayBatDau,
+            EndDate = item.NgayKetThuc,
+            RawStatus = item.TrangThai ?? string.Empty,
+            RawPaymentStatus = item.PaymentStatus ?? string.Empty,
             Status = NormalizeRegistrationStatus(item.TrangThai),
             PaymentStatus = NormalizePaymentStatus(item.PaymentStatus),
             ScheduleDetails = item.LichHoc
@@ -385,7 +389,217 @@ public class StudentDashboardApiService : IStudentDashboardApiService
                 StudyTimeText = item.ScheduleText,
                 ScheduleDetails = item.ScheduleDetails
             }).ToList();
+
+            model.PaidCourseSchedules = model.CourseRegistrations
+                .Where(item => IsApprovedRegistrationStatus(item.Status) && IsPaymentSuccessStatus(item.PaymentStatus))
+                .Select(item =>
+                {
+                    var scheduleTable = BuildWeeklyScheduleTable(item.ScheduleDetails, item.StartDate, item.EndDate);
+                    var totalSessions = scheduleTable.WeekTables
+                        .SelectMany(week => week.Rows)
+                        .SelectMany(row => row.Cells)
+                        .Sum(cell => cell.Items.Count);
+
+                    return new StudentPaidCourseScheduleViewModel
+                    {
+                        RegistrationId = item.RegistrationId,
+                        CourseName = item.CourseName,
+                        ClassName = item.ClassName,
+                        TeacherName = item.TeacherName,
+                        StudyTimeText = item.ScheduleText,
+                        Status = item.Status,
+                        PaymentStatus = item.PaymentStatus,
+                        ScheduleDetails = item.ScheduleDetails,
+                        ScheduleTable = scheduleTable,
+                        TotalSessions = totalSessions
+                    };
+                })
+                .ToList();
         }
+    }
+
+    private static WeeklyScheduleTableViewModel BuildWeeklyScheduleTable(List<StudentCourseScheduleItem> schedules, DateOnly? startDate, DateOnly? endDate)
+    {
+        var expandedSchedule = new List<(int DayOfWeek, string SessionKey, WeeklyScheduleOccurrenceItem Item)>();
+
+        if (startDate.HasValue && endDate.HasValue && startDate <= endDate)
+        {
+            for (var currentDate = startDate.Value; currentDate <= endDate.Value; currentDate = currentDate.AddDays(1))
+            {
+                var normalizedDay = NormalizeDayOfWeek(currentDate.DayOfWeek);
+                var matchedItems = schedules
+                    .Where(item => item.DayOfWeek == normalizedDay)
+                    .ToList();
+
+                foreach (var matchedItem in matchedItems)
+                {
+                    expandedSchedule.Add((
+                        normalizedDay,
+                        DetectSession(matchedItem.StartTime),
+                        new WeeklyScheduleOccurrenceItem
+                        {
+                            NgayHoc = currentDate,
+                            GioBatDau = matchedItem.StartTime,
+                            GioKetThuc = matchedItem.EndTime,
+                            DiaDiem = matchedItem.Location
+                        }));
+                }
+            }
+        }
+        else
+        {
+            expandedSchedule = schedules
+                .Select(item => (
+                    item.DayOfWeek,
+                    DetectSession(item.StartTime),
+                    new WeeklyScheduleOccurrenceItem
+                    {
+                        NgayHoc = (DateOnly?)null,
+                        GioBatDau = item.StartTime,
+                        GioKetThuc = item.EndTime,
+                        DiaDiem = item.Location
+                    }))
+                .ToList();
+        }
+
+        var effectiveStartDate = startDate ?? expandedSchedule
+            .Where(item => item.Item.NgayHoc.HasValue)
+            .Select(item => item.Item.NgayHoc!.Value)
+            .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
+            .Min();
+
+        var effectiveEndDate = endDate ?? expandedSchedule
+            .Where(item => item.Item.NgayHoc.HasValue)
+            .Select(item => item.Item.NgayHoc!.Value)
+            .DefaultIfEmpty(effectiveStartDate)
+            .Max();
+
+        var firstWeekStart = GetStartOfWeek(effectiveStartDate);
+        var lastWeekStart = GetStartOfWeek(effectiveEndDate);
+        var weekOptions = new List<WeeklyScheduleWeekOption>();
+
+        for (var weekStart = firstWeekStart; weekStart <= lastWeekStart; weekStart = weekStart.AddDays(7))
+        {
+            var weekEnd = weekStart.AddDays(6);
+            weekOptions.Add(new WeeklyScheduleWeekOption
+            {
+                Index = weekOptions.Count,
+                StartDate = weekStart,
+                EndDate = weekEnd,
+                Label = $"Tuần {weekOptions.Count + 1}: {weekStart:dd/MM} - {weekEnd:dd/MM}"
+            });
+        }
+
+        if (weekOptions.Count == 0)
+        {
+            weekOptions.Add(new WeeklyScheduleWeekOption
+            {
+                Index = 0,
+                StartDate = firstWeekStart,
+                EndDate = firstWeekStart.AddDays(6),
+                Label = $"Tuần 1: {firstWeekStart:dd/MM} - {firstWeekStart.AddDays(6):dd/MM}"
+            });
+        }
+
+        var scheduleTable = new WeeklyScheduleTableViewModel
+        {
+            Weeks = weekOptions,
+            SelectedWeekIndex = 0,
+            WeekTables = new List<WeeklyScheduleWeekTable>()
+        };
+
+        var sessionDefinitions = new[]
+        {
+            new { Key = "Sang", Label = "Sáng" },
+            new { Key = "Chieu", Label = "Chiều" },
+            new { Key = "Toi", Label = "Tối" }
+        };
+
+        foreach (var week in weekOptions)
+        {
+            var weekTable = new WeeklyScheduleWeekTable
+            {
+                WeekIndex = week.Index,
+                Label = week.Label,
+                Days = Enumerable.Range(0, 7)
+                    .Select(offset => week.StartDate.AddDays(offset))
+                    .Select(date => new WeeklyScheduleDayColumn
+                    {
+                        DayOfWeek = NormalizeDayOfWeek(date.DayOfWeek),
+                        Label = FormatDayOfWeek(NormalizeDayOfWeek(date.DayOfWeek)),
+                        Date = date
+                    })
+                    .ToList(),
+                Rows = new List<WeeklyScheduleRow>()
+            };
+
+            foreach (var session in sessionDefinitions)
+            {
+                var row = new WeeklyScheduleRow
+                {
+                    SessionKey = session.Key,
+                    SessionLabel = session.Label,
+                    Cells = weekTable.Days.Select(day => new WeeklyScheduleCell
+                    {
+                        DayOfWeek = day.DayOfWeek,
+                        SessionKey = session.Key,
+                        Items = expandedSchedule
+                            .Where(item => item.DayOfWeek == day.DayOfWeek
+                                && item.SessionKey == session.Key
+                                && item.Item.NgayHoc == day.Date)
+                            .Select(item => item.Item)
+                            .OrderBy(item => item.NgayHoc)
+                            .ThenBy(item => item.GioBatDau)
+                            .ToList()
+                    }).ToList()
+                };
+
+                weekTable.Rows.Add(row);
+            }
+
+            scheduleTable.WeekTables.Add(weekTable);
+        }
+
+        return scheduleTable;
+    }
+
+    private static int NormalizeDayOfWeek(DayOfWeek dayOfWeek) => dayOfWeek switch
+    {
+        DayOfWeek.Monday => 2,
+        DayOfWeek.Tuesday => 3,
+        DayOfWeek.Wednesday => 4,
+        DayOfWeek.Thursday => 5,
+        DayOfWeek.Friday => 6,
+        DayOfWeek.Saturday => 7,
+        DayOfWeek.Sunday => 8,
+        _ => 0
+    };
+
+    private static string DetectSession(string startTime)
+    {
+        if (!TimeOnly.TryParse(startTime, out var time))
+        {
+            return "Khac";
+        }
+
+        if (time < new TimeOnly(12, 0))
+        {
+            return "Sang";
+        }
+
+        if (time < new TimeOnly(18, 0))
+        {
+            return "Chieu";
+        }
+
+        return "Toi";
+    }
+
+    private static DateOnly GetStartOfWeek(DateOnly date)
+    {
+        var normalizedDay = NormalizeDayOfWeek(date.DayOfWeek);
+        var offset = normalizedDay - 2;
+        return date.AddDays(-offset);
     }
 
     private static string? BuildPaymentDisabledReason(string? registrationStatus, string? paymentStatus)

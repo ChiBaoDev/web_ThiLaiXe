@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
     <div>
         <div class="fw-semibold weekly-schedule-title">@selectedWeekTable?.Label</div>
-        <div class="small text-muted">Hiển thị lịch học của một tuần</div>
+      
     </div>
 
     @if (Model.Weeks.Count > 1)
@@ -67,11 +67,19 @@
                                 <div class="d-grid gap-2">
                                     @foreach (var item in cell.Items)
                                     {
-                                        <div class="border rounded-3 p-2 bg-light h-100">
-                                            <div class="fw-semibold text-primary small mb-1">@(item.NgayHoc?.ToString("dd/MM") ?? "Chưa rõ ngày")</div>
-                                            <div class="small mb-1">@item.GioBatDau - @item.GioKetThuc</div>
-                                            <div class="small text-muted">@(string.IsNullOrWhiteSpace(item.DiaDiem) ? "Địa điểm đang cập nhật" : item.DiaDiem)</div>
-                                        </div>
+                                         <div class="border rounded-3 p-2 bg-light h-100">
+                                             <div class="fw-semibold text-primary small mb-1">@(item.NgayHoc?.ToString("dd/MM") ?? "Chưa rõ ngày")</div>
+                                             @if (!string.IsNullOrWhiteSpace(item.CourseName))
+                                             {
+                                                 <div class="fw-semibold small mb-1">@item.CourseName</div>
+                                             }
+                                             @if (!string.IsNullOrWhiteSpace(item.ClassName))
+                                             {
+                                                 <div class="small text-muted mb-1">@item.ClassName</div>
+                                             }
+                                             <div class="small mb-1">@item.GioBatDau - @item.GioKetThuc</div>
+                                             <div class="small text-muted">@(string.IsNullOrWhiteSpace(item.DiaDiem) ? "Địa điểm đang cập nhật" : item.DiaDiem)</div>
+                                         </div>
                                     }
                                 </div>
                             }

@@ -1,5 +1,26 @@
+@model webthibanglai.Models.KhoaHocViewModel
+
 @{
     ViewData["Title"] = "Trang chủ";
+
+    static string FormatPrice(long price) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", price);
+    static string FormatDate(DateOnly? date) => date?.ToString("dd/MM/yyyy") ?? "Đang cập nhật";
+    static string GetStatusLabel(string status) => status switch
+    {
+        "DangMo" => "Đang mở đăng ký",
+        "DangMoDangKy" => "Đang mở đăng ký",
+        "DaDay" => "Đã đủ học viên",
+        "DaDuHocVien" => "Đã đủ học viên",
+        "TamDung" => "Tạm dừng",
+        _ => "Sắp khai giảng"
+    };
+
+    var featuredCourses = Model.Courses
+        .OrderByDescending(course => course.IsOpenForRegistration)
+        .ThenBy(course => course.ThoiGianBatDau ?? DateOnly.MaxValue)
+        .ThenBy(course => course.HocPhi)
+        .Take(3)
+        .ToList();
 }
 
 <div class="container-fluid p-0 wow fadeIn" data-wow-delay="0.1s">
@@ -134,112 +155,199 @@
 <div class="container-xxl courses my-6 py-6 pb-0">
     <div class="container">
         <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 500px;">
-            <h6 class="text-primary text-uppercase mb-2">Bộ đề nổi bật</h6>
-            <h1 class="display-6 mb-4">Bộ đề thi mô phỏng sát hạch GPLX xe máy</h1>
+            <h6 class="text-primary text-uppercase mb-2">Khóa học nổi bật</h6>
+            <h1 class="display-6 mb-4">Các khóa học đang được học viên quan tâm</h1>
         </div>
         <div class="row g-4 justify-content-center">
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="courses-item d-flex flex-column bg-white overflow-hidden h-100">
-                    <div class="text-center p-4 pt-0">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">$99</div>
-                        <h5 class="mb-3">Đề thi thử hạng A1</h5>
-                        <p>Bộ đề bám sát cấu trúc đề thật, có giải thích đáp án rõ ràng giúp bạn nhớ lâu và làm bài tự tin hơn.</p>
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item small"><i class="fa fa-signal text-primary me-2"></i>Cơ bản</li>
-                            <li class="breadcrumb-item small"><i class="fa fa-calendar-alt text-primary me-2"></i>3 tuần</li>
-                        </ol>
-                    </div>
-                    <div class="position-relative mt-auto">
-                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Đề thi thử hạng A1" />
-                        <div class="courses-overlay">
-                            <a class="btn btn-outline-primary border-2" href="~/exam.html">Xem thêm</a>
-                        </div>
+            @if (featuredCourses.Count == 0)
+            {
+                <div class="col-12 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="bg-white text-center rounded shadow-sm p-5">
+                        <i class="fa fa-layer-group text-primary mb-3" style="font-size: 2.5rem;"></i>
+                        <h5 class="mb-2">Chưa có khóa học nổi bật</h5>
+                        <p class="text-muted mb-0">Danh sách khóa học sẽ được cập nhật khi API có dữ liệu.</p>
                     </div>
                 </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="courses-item d-flex flex-column bg-white overflow-hidden h-100">
-                    <div class="text-center p-4 pt-0">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">$99</div>
-                        <h5 class="mb-3">Đề thi thử hạng A</h5>
-                        <p>Bộ đề bám sát cấu trúc đề thật, có giải thích đáp án rõ ràng giúp bạn nhớ lâu và làm bài tự tin hơn.</p>
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item small"><i class="fa fa-signal text-primary me-2"></i>Cơ bản</li>
-                            <li class="breadcrumb-item small"><i class="fa fa-calendar-alt text-primary me-2"></i>3 tuần</li>
-                        </ol>
+            }
+            else
+            {
+                @for (var index = 0; index < featuredCourses.Count; index++)
+                {
+                    var course = featuredCourses[index];
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.@(index * 2 + 1)s">
+                        <article class="home-featured-course-card h-100">
+                            <div class="home-featured-course-card__glow"></div>
+                            <div class="home-featured-course-card__top">
+                                <span class="home-featured-course-card__icon"><i class="fa fa-motorcycle"></i></span>
+                                <span class="home-featured-course-card__status">@GetStatusLabel(course.TrangThai)</span>
+                            </div>
+                            <div class="home-featured-course-card__code">@course.MaKhoaHoc</div>
+                            <h5 class="home-featured-course-card__title">@course.TenKhoaHoc</h5>
+                            <p class="home-featured-course-card__desc">@(string.IsNullOrWhiteSpace(course.MoTaNgan) ? "Khóa học đang được cập nhật mô tả chi tiết." : course.MoTaNgan)</p>
+
+                            <div class="home-featured-course-card__price">
+                                <span>Học phí</span>
+                                <strong>@FormatPrice(course.HocPhi)</strong>
+                            </div>
+
+                            <div class="home-featured-course-card__meta">
+                                <div><span>Số buổi</span><strong>@course.SoBuoiHoc buổi</strong></div>
+                                <div><span>Khai giảng</span><strong>@FormatDate(course.ThoiGianBatDau)</strong></div>
+                            </div>
+
+                            <div class="home-featured-course-card__schedule">
+                                <i class="fa fa-calendar-alt me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)
+                            </div>
+
+                            <a class="home-featured-course-card__button text-decoration-none" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">
+                                <i class="fa fa-circle-info me-2"></i>Xem chi tiết
+                            </a>
+                        </article>
                     </div>
-                    <div class="position-relative mt-auto">
-                        <img class="img-fluid" src="~/img/courses-1.jpg" alt="Đề thi thử hạng A" />
-                        <div class="courses-overlay">
-                            <a class="btn btn-outline-primary border-2" href="~/exam.html">Xem thêm</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                <div class="courses-item d-flex flex-column bg-white overflow-hidden h-100">
-                    <div class="text-center p-4 pt-0">
-                        <div class="d-inline-block bg-primary text-white fs-5 py-1 px-4 mb-4">$99</div>
-                        <h5 class="mb-3">Mẹo làm bài lý thuyết</h5>
-                        <p>Bộ đề bám sát cấu trúc đề thật, có giải thích đáp án rõ ràng giúp bạn nhớ lâu và làm bài tự tin hơn.</p>
-                        <ol class="breadcrumb justify-content-center mb-0">
-                            <li class="breadcrumb-item small"><i class="fa fa-signal text-primary me-2"></i>Cơ bản</li>
-                            <li class="breadcrumb-item small"><i class="fa fa-calendar-alt text-primary me-2"></i>3 tuần</li>
-                        </ol>
-                    </div>
-                    <div class="position-relative mt-auto">
-                        <img class="img-fluid" src="~/img/courses-3.jpg" alt="Mẹo làm bài lý thuyết" />
-                        <div class="courses-overlay">
-                            <a class="btn btn-outline-primary border-2" href="~/courses.html">Xem thêm</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                }
+            }
             <div class="col-lg-8 my-6 mb-0 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="bg-primary text-center p-5">
-                    <h1 class="mb-4">Đăng ký tư vấn</h1>
-                    <form>
-                        <div class="row g-3">
-                            <div class="col-sm-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control border-0" id="gname" placeholder="Họ và tên" />
-                                    <label for="gname">Họ và tên</label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-floating">
-                                    <input type="email" class="form-control border-0" id="gmail" placeholder="Email" />
-                                    <label for="gmail">Email</label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control border-0" id="cname" placeholder="Hạng bằng quan tâm" />
-                                    <label for="cname">Hạng bằng quan tâm</label>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control border-0" id="cage" placeholder="Hình thức học" />
-                                    <label for="cage">Hình thức học</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-floating">
-                                    <textarea class="form-control border-0" placeholder="Nhập lời nhắn" id="message" style="height: 100px"></textarea>
-                                    <label for="message">Lời nhắn</label>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <button class="btn btn-dark w-100 py-3" type="submit">Gửi thông tin</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+              
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .home-featured-course-card {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, .08);
+            isolation: isolate;
+        }
+
+        .home-featured-course-card__glow {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            right: -70px;
+            top: -70px;
+            border-radius: 999px;
+            background: rgba(243, 189, 0, .18);
+            z-index: -1;
+        }
+
+        .home-featured-course-card__top,
+        .home-featured-course-card__meta {
+            display: flex;
+            justify-content: space-between;
+            gap: .75rem;
+            align-items: center;
+        }
+
+        .home-featured-course-card__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff8df;
+            color: #b7791f;
+            border: 1px solid #fde68a;
+            font-size: 1.2rem;
+        }
+
+        .home-featured-course-card__status {
+            border-radius: 999px;
+            padding: .45rem .8rem;
+            background: #ecfdf3;
+            color: #15803d;
+            font-weight: 700;
+            font-size: .78rem;
+        }
+
+        .home-featured-course-card__code {
+            color: #f3bd00;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            font-size: .8rem;
+        }
+
+        .home-featured-course-card__title {
+            color: #0c2b4b;
+            font-weight: 800;
+            line-height: 1.35;
+            margin: 0;
+        }
+
+        .home-featured-course-card__desc {
+            color: #6b7280;
+            margin: 0;
+            min-height: 4.5rem;
+        }
+
+        .home-featured-course-card__price {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: #0c2b4b;
+            color: #fff;
+        }
+
+        .home-featured-course-card__price span,
+        .home-featured-course-card__meta span {
+            display: block;
+            font-size: .78rem;
+            opacity: .78;
+            margin-bottom: .25rem;
+        }
+
+        .home-featured-course-card__price strong {
+            font-size: 1.35rem;
+        }
+
+        .home-featured-course-card__meta > div {
+            flex: 1;
+            padding: .85rem;
+            border-radius: .9rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+        }
+
+        .home-featured-course-card__meta strong {
+            color: #0c2b4b;
+        }
+
+        .home-featured-course-card__schedule {
+            color: #64748b;
+            font-size: .92rem;
+            padding-top: .25rem;
+        }
+
+        .home-featured-course-card__button {
+            margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .85rem 1rem;
+            border-radius: 999px;
+            background: #f3bd00;
+            color: #0c2b4b;
+            font-weight: 800;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .home-featured-course-card__button:hover {
+            color: #0c2b4b;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(243, 189, 0, .25);
+        }
+    </style>
+}
 
 <div class="container-xxl py-6">
     <div class="container">

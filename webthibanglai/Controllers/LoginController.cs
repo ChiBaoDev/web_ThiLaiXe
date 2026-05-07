@@ -292,6 +292,8 @@ namespace webthibanglai.Controllers
                     return RedirectToAction("Index", "Home");
                 }
 
+                await PopulateStudentProfileForCurrentUserAsync(client, apiResponse.Data);
+
                 var model = new LoginViewModel
                 {
                     CurrentUser = apiResponse.Data,
@@ -716,6 +718,44 @@ namespace webthibanglai.Controllers
             TempData["ProfileAnhChanDung"] = currentUser.AnhChanDung;
         }
 
+        private async Task PopulateStudentProfileForCurrentUserAsync(HttpClient client, CurrentUserInfo currentUser)
+        {
+            try
+            {
+                var response = await client.GetAsync("/api/v1/auth/me/student-profile");
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Get student-profile for profile page failed. Status: {StatusCode}, Body: {Body}", response.StatusCode, responseBody);
+                    return;
+                }
+
+                var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<StudentProfileForProfilePage>>(responseBody, JsonOptions());
+                var studentProfile = apiResponse?.Data;
+                if (studentProfile is null || studentProfile.HocVienId <= 0)
+                {
+                    return;
+                }
+
+                currentUser.HocVienId = studentProfile.HocVienId;
+                if (!string.IsNullOrWhiteSpace(studentProfile.HoTen))
+                {
+                    currentUser.HoTen = studentProfile.HoTen;
+                }
+
+                currentUser.NgaySinh = studentProfile.NgaySinh ?? currentUser.NgaySinh;
+                currentUser.GioiTinh = studentProfile.GioiTinh ?? currentUser.GioiTinh;
+                currentUser.Cccd = studentProfile.Cccd ?? currentUser.Cccd;
+                currentUser.DiaChi = studentProfile.DiaChi ?? currentUser.DiaChi;
+                currentUser.AnhChanDung = studentProfile.AnhChanDung ?? currentUser.AnhChanDung;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Không thể tải hồ sơ học viên từ /api/v1/auth/me/student-profile cho trang profile.");
+            }
+        }
+
         private void PreserveProfileTempDataFromRequest(UpdateProfileRequestModel request, LoginViewModel model)
         {
             TempData["ProfileHoTen"] = request.HoTen;
@@ -857,6 +897,18 @@ namespace webthibanglai.Controllers
                 PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
+        }
+
+        private sealed class StudentProfileForProfilePage
+        {
+            public long HocVienId { get; set; }
+            public long UserId { get; set; }
+            public string? HoTen { get; set; }
+            public DateOnly? NgaySinh { get; set; }
+            public string? GioiTinh { get; set; }
+            public string? Cccd { get; set; }
+            public string? DiaChi { get; set; }
+            public string? AnhChanDung { get; set; }
         }
 
         private static AuthTokenResponse NormalizeAuthToken(AuthTokenResponse auth, string responseBody)

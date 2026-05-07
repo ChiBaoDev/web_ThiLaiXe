@@ -16,11 +16,9 @@ namespace webthibanglai.Services
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
-
-            // Lấy API key từ cấu hình an toàn: appsettings, environment variables hoặc user-secrets
-            _apiKey = _configuration["OpenAI:ApiKey"]
-                ?? _configuration["OPENAI_API_KEY"]
-                ?? string.Empty;
+            
+            // Lấy API key từ configuration
+            _apiKey = _configuration["OpenAI:ApiKey"] ?? "";
             _apiUrl = _configuration["OpenAI:ApiUrl"] ?? "https://api.openai.com/v1/chat/completions";
         }
 

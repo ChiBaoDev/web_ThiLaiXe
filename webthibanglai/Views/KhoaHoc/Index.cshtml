@@ -32,6 +32,32 @@
         4 => "course-red",
         _ => "course-indigo"
     };
+    static string GetCourseIconClass(KhoaHocCourseItem course)
+    {
+        var raw = string.Join(" ",
+            course.TenKhoaHoc ?? string.Empty,
+            course.MoTaNgan ?? string.Empty,
+            course.LoaiBangLai ?? string.Empty,
+            course.MaKhoaHoc ?? string.Empty).ToLowerInvariant();
+
+        // Ưu tiên mô tô/xe máy trước để tránh match nhầm "oto" nằm trong "moto".
+        if (raw.Contains("mô tô") || raw.Contains("moto") || raw.Contains("motor") || raw.Contains("xe máy") || raw.Contains("xemay") || raw.Contains("a1") || raw.Contains("a2"))
+        {
+            return "fa fa-motorcycle";
+        }
+
+        if (raw.Contains("xe tải") || raw.Contains("xetai") || raw.Contains("truck") || raw.Contains("hạng c") || raw.Contains("hang c"))
+        {
+            return "fa fa-truck";
+        }
+
+        if (raw.Contains("xe ô tô") || raw.Contains("xe oto") || raw.Contains("xeto") || raw.Contains("ô tô") || raw.Contains("car") || raw.Contains("hạng b") || raw.Contains("hang b"))
+        {
+            return "fa fa-car";
+        }
+
+        return "fa fa-motorcycle";
+    }
 
     var featuredCourse = Model.Courses
         .Where(course => course.IsOpenForRegistration)
@@ -51,7 +77,7 @@
                 <div class="course-for-you-hero__content">
                     <span class="course-for-you-hero__eyebrow"><i class="fa fa-wand-magic-sparkles me-2"></i>Khóa học cho bạn</span>
                     <h1 class="course-for-you-hero__title" id="recommendedCourseTitle">@featuredCourse.TenKhoaHoc</h1>
-                    <p class="course-for-you-hero__text" id="recommendedCourseReason">Dựa trên thông tin khảo sát ban đầu và danh sách khóa học đang mở, đây là lựa chọn phù hợp để bạn bắt đầu lộ trình học bằng lái xe máy.</p>
+                    <p class="course-for-you-hero__text" id="recommendedCourseReason">Dựa trên kết quả khảo sát ban đầu và danh sách các khóa học đang mở, đây là lựa chọn phù hợp để bạn bắt đầu hành trình học lái xe máy một cách thuận tiện và hiệu quả.</p>
                     <div class="course-for-you-hero__actions">
                         <a class="btn btn-light course-for-you-hero__btn" id="recommendedCourseDetailLink" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@featuredCourse.CourseId">
                             <i class="fa fa-circle-info me-2"></i>Xem khóa học phù hợp
@@ -70,7 +96,7 @@
                 <div class="course-for-you-hero__panel">
                     <div class="course-for-you-card">
                         <div class="course-for-you-card__top">
-                            <span class="course-for-you-card__icon"><i class="fa fa-motorcycle"></i></span>
+                            <span class="course-for-you-card__icon"><i class="@GetCourseIconClass(featuredCourse)"></i></span>
                             <span class="badge @GetStatusClass(featuredCourse.TrangThai)" id="recommendedCourseStatus">@GetStatusLabel(featuredCourse.TrangThai)</span>
                         </div>
                         <div class="course-for-you-card__name" id="recommendedCourseName">@featuredCourse.TenKhoaHoc</div>
@@ -101,31 +127,10 @@
         <div class="text-center mx-auto mb-5 wow fadeInUp" data-wow-delay="0.1s" style="max-width: 650px;">
             <h6 class="text-primary text-uppercase mb-2">Lộ trình đào tạo</h6>
             <h1 class="display-6 mb-4">Khóa học thực tế từ hệ thống để học viên dễ chọn và đăng ký</h1>
-            <p>
-                Danh sách dưới đây lấy trực tiếp từ API khóa học, ưu tiên hiển thị rõ học phí, lịch khai giảng, số chỗ còn lại và trạng thái đăng ký.
-            </p>
+          
         </div>
 
-        <div class="row g-4 mb-5">
-            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.1s">
-                <div class="bg-light rounded p-4 h-100 border-start border-4 border-primary shadow-sm">
-                    <p class="text-uppercase text-primary mb-2 small">Tổng khóa học</p>
-                    <h3 class="mb-0">@Model.TotalCourses</h3>
-                </div>
-            </div>
-            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.2s">
-                <div class="bg-light rounded p-4 h-100 border-start border-4 border-success shadow-sm">
-                    <p class="text-uppercase text-success mb-2 small">Đang mở đăng ký</p>
-                    <h3 class="mb-0">@Model.OpenCourses</h3>
-                </div>
-            </div>
-            <div class="col-md-4 wow fadeInUp" data-wow-delay="0.3s">
-                <div class="bg-light rounded p-4 h-100 border-start border-4 border-warning shadow-sm">
-                    <p class="text-uppercase text-warning mb-2 small">Học phí từ</p>
-                    <h3 class="mb-0">@(Model.LowestPrice > 0 ? FormatPrice(Model.LowestPrice) : "Đang cập nhật")</h3>
-                </div>
-            </div>
-        </div>
+       
 
         @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
         {
@@ -152,13 +157,11 @@
             @for (var index = 0; index < Model.Courses.Count; index++)
             {
                 var course = Model.Courses[index];
-                var theme = GetCourseTheme(index);
-                var occupancyRate = Math.Clamp(course.OccupancyRate, 0, 100);
 
-                <article class="course-modern-card @theme wow fadeInUp course-result-item"
-                      data-wow-delay="0.1s"
-                      data-course-id="@course.CourseId"
-                      data-course-name="@course.TenKhoaHoc"
+                <article class="home-featured-course-card h-100 wow fadeInUp course-result-item"
+                       data-wow-delay="0.1s"
+                       data-course-id="@course.CourseId"
+                       data-course-name="@course.TenKhoaHoc"
                      data-course-code="@course.MaKhoaHoc"
                      data-course-license="@course.LoaiBangLai"
                      data-course-desc="@course.MoTaNgan"
@@ -166,72 +169,35 @@
                      data-course-price-text="@FormatPrice(course.HocPhi)"
                      data-course-lessons="@course.SoBuoiHoc"
                      data-course-start="@FormatDate(course.ThoiGianBatDau)"
-                      data-course-status="@GetStatusLabel(course.TrangThai)"
-                      data-course-open="@(course.IsOpenForRegistration ? "true" : "false")"
-                      data-course-slots="@Math.Max(course.SoLuongToiDa - course.SoLuongHienTai, 0)">
-                    <div class="course-modern-card__glow"></div>
-
-                    <div class="course-modern-card__body">
-                        <div class="course-modern-card__header">
-                            <span class="course-modern-card__icon"><i class="fa fa-motorcycle"></i></span>
-                            <span class="course-modern-card__status">@GetStatusLabel(course.TrangThai)</span>
-                        </div>
-
-                        <div class="course-modern-card__content">
-                            <div class="course-modern-card__code">@course.MaKhoaHoc</div>
-                            <h3 class="course-modern-card__title">@course.TenKhoaHoc</h3>
-                            <p class="course-modern-card__desc">@course.MoTaNgan</p>
-                        </div>
-
-                        <div class="course-modern-card__price">
-                            <span>Học phí</span>
-                            <strong>@FormatPrice(course.HocPhi)</strong>
-                        </div>
-
-                        <div class="course-modern-card__metrics">
-                            <div class="course-modern-metric">
-                                <span>Số buổi</span>
-                                <strong>@course.SoBuoiHoc buổi</strong>
-                            </div>
-                            <div class="course-modern-metric">
-                                <span>Khai giảng</span>
-                                <strong>@FormatDate(course.ThoiGianBatDau)</strong>
-                            </div>
-                            <div class="course-modern-metric course-modern-metric--wide">
-                                <span>Kết thúc</span>
-                                <strong>@FormatDate(course.ThoiGianKetThuc)</strong>
-                            </div>
-                        </div>
-
-                        <div class="course-modern-card__progress">
-                            <div class="d-flex justify-content-between small mb-2">
-                                <span>Số lượng học viên</span>
-                                <strong>@course.SoLuongHienTai/@course.SoLuongToiDa</strong>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: @occupancyRate%;" aria-valuenow="@occupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-
-                        <div class="course-modern-card__schedule">
-                            <div><i class="fa fa-calendar-alt me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)</div>
-                            <div><i class="fa fa-circle-check me-2"></i>@(course.IsOpenForRegistration ? "Có thể đăng ký ngay" : "Tạm thời chưa nhận đăng ký mới")</div>
-                        </div>
-
-                        <div class="course-modern-card__footer">
-                            <a class="course-modern-card__button course-modern-card__button--outline text-decoration-none text-center" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">
-                                <i class="fa fa-circle-info me-2"></i>Xem chi tiết
-                            </a>
-                            <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="courseId" value="@course.CourseId" />
-                                <input type="hidden" name="ghiChu" value="Đăng ký từ danh sách khóa học" />
-                                <button type="submit" class="course-modern-card__button" @(course.IsOpenForRegistration ? null : "disabled")>
-                                    <i class="fa fa-paper-plane me-2"></i>Đăng ký ngay
-                                </button>
-                            </form>
-                        </div>
+                       data-course-status="@GetStatusLabel(course.TrangThai)"
+                        data-course-open="@(course.IsOpenForRegistration ? "true" : "false")"
+                        data-course-slots="@Math.Max(course.SoLuongToiDa - course.SoLuongHienTai, 0)">
+                    <div class="home-featured-course-card__glow"></div>
+                    <div class="home-featured-course-card__top">
+                        <span class="home-featured-course-card__icon"><i class="@GetCourseIconClass(course)"></i></span>
+                        <span class="home-featured-course-card__status">@GetStatusLabel(course.TrangThai)</span>
                     </div>
+                    <div class="home-featured-course-card__code">@course.MaKhoaHoc</div>
+                    <h5 class="home-featured-course-card__title">@course.TenKhoaHoc</h5>
+                    <p class="home-featured-course-card__desc">@(string.IsNullOrWhiteSpace(course.MoTaNgan) ? "Khóa học đang được cập nhật mô tả chi tiết." : course.MoTaNgan)</p>
+
+                    <div class="home-featured-course-card__price">
+                        <span>Học phí</span>
+                        <strong>@FormatPrice(course.HocPhi)</strong>
+                    </div>
+
+                    <div class="home-featured-course-card__meta">
+                        <div><span>Số buổi</span><strong>@course.SoBuoiHoc buổi</strong></div>
+                        <div><span>Khai giảng</span><strong>@FormatDate(course.ThoiGianBatDau)</strong></div>
+                    </div>
+
+                    <div class="home-featured-course-card__schedule">
+                        <i class="fa fa-calendar-alt me-2"></i>@(string.IsNullOrWhiteSpace(course.LichHocTomTat) ? "Lịch học đang cập nhật" : course.LichHocTomTat)
+                    </div>
+
+                    <a class="home-featured-course-card__button text-decoration-none" asp-controller="KhoaHoc" asp-action="Detail" asp-route-id="@course.CourseId">
+                        <i class="fa fa-circle-info me-2"></i>Xem chi tiết
+                    </a>
                 </article>
             }
         </div>
@@ -264,6 +230,135 @@
             top: -90px;
             border-radius: 50%;
             background: rgba(11, 44, 77, .08);
+        }
+
+        .home-featured-course-card {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(150deg, #ffffff 0%, #f8fbff 58%, #fff4cc 100%);
+            border: 1px solid rgba(12, 43, 75, .08);
+            box-shadow: 0 18px 35px rgba(12, 43, 75, .12);
+        }
+
+        .home-featured-course-card__glow {
+            position: absolute;
+            top: -64px;
+            right: -64px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(243, 189, 0, .2);
+        }
+
+        .home-featured-course-card__top,
+        .home-featured-course-card__meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+        }
+
+        .home-featured-course-card__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(243, 189, 0, .12);
+            color: #bc7c00;
+            border: 1px solid rgba(243, 189, 0, .55);
+            font-size: 1.2rem;
+        }
+
+        .home-featured-course-card__status {
+            border-radius: 999px;
+            background: #d5f3df;
+            color: #067647;
+            padding: .35rem .8rem;
+            font-size: .84rem;
+            font-weight: 700;
+        }
+
+        .home-featured-course-card__code {
+            color: #f3bd00;
+            font-size: 1.05rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .home-featured-course-card__title {
+            color: #0c2b4b;
+            font-size: 1.95rem;
+            margin: 0;
+        }
+
+        .home-featured-course-card__desc {
+            color: #64748b;
+            margin: 0;
+        }
+
+        .home-featured-course-card__price {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: #0f345c;
+            color: #fff;
+        }
+
+        .home-featured-course-card__price span,
+        .home-featured-course-card__meta span {
+            display: block;
+            font-size: .86rem;
+            color: #98a2b3;
+            margin-bottom: .2rem;
+        }
+
+        .home-featured-course-card__price strong {
+            font-size: 1.35rem;
+        }
+
+        .home-featured-course-card__meta > div {
+            flex: 1;
+            border-radius: 1rem;
+            background: #f7f9fc;
+            border: 1px solid rgba(12, 43, 75, .08);
+            padding: .95rem;
+        }
+
+        .home-featured-course-card__meta strong {
+            color: #0c2b4b;
+            font-size: 1.05rem;
+        }
+
+        .home-featured-course-card__schedule {
+            color: #64748b;
+            font-size: .95rem;
+        }
+
+        .home-featured-course-card__button {
+            margin-top: auto;
+            border: none;
+            border-radius: 999px;
+            padding: .75rem 1rem;
+            font-weight: 700;
+            color: #0c2b4b;
+            background: linear-gradient(90deg, #f3bd00 0%, #ffd447 100%);
+            box-shadow: 0 10px 24px rgba(243, 189, 0, .35);
+            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+            text-align: center;
+        }
+
+        .home-featured-course-card__button:hover {
+            color: #0c2b4b;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 26px rgba(243, 189, 0, .42);
         }
 
         .course-for-you-hero__content,
@@ -863,7 +958,7 @@
             var registerButton = document.getElementById('recommendedCourseRegisterButton');
 
             document.getElementById('recommendedCourseTitle').textContent = recommended.name;
-            document.getElementById('recommendedCourseReason').textContent = buildReason(recommended, onboarding);
+            // Giữ nội dung tĩnh trong HTML cho #recommendedCourseReason, không ghi đè bằng JS.
             document.getElementById('recommendedCourseStatus').textContent = recommended.status;
             document.getElementById('recommendedCourseName').textContent = recommended.name;
             document.getElementById('recommendedCourseDesc').textContent = recommended.desc || 'Khóa học đang được cập nhật mô tả chi tiết.';

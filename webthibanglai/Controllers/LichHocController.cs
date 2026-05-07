@@ -9,10 +9,12 @@ namespace webthibanglai.Controllers
     {
         private const string AccessTokenSessionKey = "AccessToken";
         private readonly IStudentDashboardApiService _studentDashboardApiService;
+        private readonly ICourseApiService _courseApiService;
 
-        public LichHocController(IStudentDashboardApiService studentDashboardApiService)
+        public LichHocController(IStudentDashboardApiService studentDashboardApiService, ICourseApiService courseApiService)
         {
             _studentDashboardApiService = studentDashboardApiService;
+            _courseApiService = courseApiService;
         }
 
         public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -25,6 +27,14 @@ namespace webthibanglai.Controllers
             }
 
             var model = await _studentDashboardApiService.GetDashboardAsync(accessToken, cancellationToken);
+            var myRegistrations = await _courseApiService.GetMyCourseRegistrationsAsync(accessToken, null, cancellationToken);
+            var courseClassesByCourseId = new Dictionary<int, List<KhoaHocClassItem>>();
+            foreach (var courseId in myRegistrations.Registrations.Select(item => item.CourseId).Distinct())
+            {
+                courseClassesByCourseId[courseId] = await _courseApiService.GetCourseClassesByCourseIdAsync(courseId, cancellationToken);
+            }
+
+            model.ApplyPaidCourseSchedules(myRegistrations.Registrations, courseClassesByCourseId);
             model.CourseRegistrationStatusMessage = TempData["CourseRegistrationStatusMessage"]?.ToString();
             model.CourseRegistrationStatusState = TempData["CourseRegistrationStatusState"]?.ToString();
             return View(model);

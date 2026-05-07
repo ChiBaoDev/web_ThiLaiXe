@@ -1,21 +1,25 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using webthibanglai.Models;
+using webthibanglai.Services;
 
 namespace webthibanglai.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ICourseApiService _courseApiService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ICourseApiService courseApiService)
         {
             _logger = logger;
+            _courseApiService = courseApiService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
-            return View();
+            var model = await _courseApiService.GetCoursesAsync(cancellationToken);
+            return View(model);
         }
 
         public IActionResult Privacy()

@@ -118,32 +118,46 @@
                 return date.AddDays(-offset);
             }
 
+            static DateOnly FindNextDateByDayOfWeek(DateOnly fromDate, int targetDayOfWeek)
+            {
+                var normalizedCurrentDay = NormalizeDayOfWeek(fromDate.DayOfWeek);
+                var offset = targetDayOfWeek - normalizedCurrentDay;
+                if (offset < 0)
+                {
+                    offset += 7;
+                }
+
+                return fromDate.AddDays(offset);
+            }
+
             WeeklyScheduleTableViewModel BuildScheduleTable(List<KhoaHocScheduleItem> schedules, DateOnly? startDate, DateOnly? endDate)
             {
                 var expandedSchedule = new List<(int DayOfWeek, string SessionKey, WeeklyScheduleOccurrenceItem Item)>();
 
                 if (startDate.HasValue && endDate.HasValue && startDate <= endDate)
                 {
-                    for (var currentDate = startDate.Value; currentDate <= endDate.Value; currentDate = currentDate.AddDays(1))
-                    {
-                        var normalizedDay = NormalizeDayOfWeek(currentDate.DayOfWeek);
-                        var matchedItems = schedules
-                            .Where(item => item.ThuTrongTuan == normalizedDay)
-                            .ToList();
+                    var nextSearchDate = startDate.Value;
 
-                        foreach (var matchedItem in matchedItems)
+                    foreach (var schedule in schedules)
+                    {
+                        var occurrenceDate = FindNextDateByDayOfWeek(nextSearchDate, schedule.ThuTrongTuan);
+                        if (occurrenceDate > endDate.Value)
                         {
-                            expandedSchedule.Add((
-                                normalizedDay,
-                                DetectSession(matchedItem.GioBatDau),
-                                new WeeklyScheduleOccurrenceItem
-                                {
-                                    NgayHoc = currentDate,
-                                    GioBatDau = matchedItem.GioBatDau,
-                                    GioKetThuc = matchedItem.GioKetThuc,
-                                    DiaDiem = matchedItem.DiaDiem
-                                }));
+                            break;
                         }
+
+                        expandedSchedule.Add((
+                            schedule.ThuTrongTuan,
+                            DetectSession(schedule.GioBatDau),
+                            new WeeklyScheduleOccurrenceItem
+                            {
+                                NgayHoc = occurrenceDate,
+                                GioBatDau = schedule.GioBatDau,
+                                GioKetThuc = schedule.GioKetThuc,
+                                DiaDiem = schedule.DiaDiem
+                            }));
+
+                        nextSearchDate = occurrenceDate.AddDays(1);
                     }
                 }
                 else
@@ -402,7 +416,7 @@
                                         <div class="class-card__schedule">
                                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                                                 <div class="fw-semibold">Lịch học mẫu</div>
-                                                <span class="small text-muted">Giữ nguyên logic bảng lịch cũ</span>
+                                              
                                             </div>
                                             @if (classItem.LichHoc.Count == 0)
                                             {
@@ -465,9 +479,7 @@
                             </div>
                         </div>
 
-                        <div class="alert alert-info small">
-                            Khi bấm đăng ký, hệ thống sẽ kiểm tra hồ sơ học viên của bạn và gửi yêu cầu đăng ký khóa học trực tiếp đến API.
-                        </div>
+                       
 
                         @if (!string.IsNullOrWhiteSpace(Model.PaymentStatusMessage))
                         {
