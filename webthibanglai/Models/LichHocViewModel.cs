@@ -8,10 +8,13 @@ public class LichHocViewModel
     public StudentProfileRegistrationModel Registration { get; set; } = new();
     public StudentDashboardStats Stats { get; set; } = new();
     public List<StudentRegisteredCourseItem> RegisteredCourses { get; set; } = new();
+    public List<StudentCourseRegistrationItem> CourseRegistrations { get; set; } = new();
     public List<StudentScheduleItem> Schedule { get; set; } = new();
     public bool HasStudentProfile { get; set; }
     public string? RegistrationErrorMessage { get; set; }
     public string? RegistrationSuccessMessage { get; set; }
+    public string? CourseRegistrationStatusMessage { get; set; }
+    public string? CourseRegistrationStatusState { get; set; }
 }
 
 public class StudentDashboardProfile
@@ -65,6 +68,34 @@ public class StudentRegisteredCourseItem
     public string ScheduleText { get; set; } = string.Empty;
     public string TeacherName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+    public string StudyTimeText { get; set; } = string.Empty;
+    public List<StudentCourseScheduleItem> ScheduleDetails { get; set; } = new();
+}
+
+public class StudentCourseRegistrationItem
+{
+    public int RegistrationId { get; set; }
+    public string CourseName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+    public string ScheduleText { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string PaymentStatus { get; set; } = string.Empty;
+    public List<StudentCourseScheduleItem> ScheduleDetails { get; set; } = new();
+    public bool CanPayWithZaloPay { get; set; }
+    public string? PaymentDisabledReason { get; set; }
+    public string? ReceiptId { get; set; }
+    public long TuitionFee { get; set; }
+    public string TeacherName { get; set; } = string.Empty;
+}
+
+public class StudentCourseScheduleItem
+{
+    public int DayOfWeek { get; set; }
+    public string DayLabel { get; set; } = string.Empty;
+    public string StartTime { get; set; } = string.Empty;
+    public string EndTime { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
 }
 
 public class StudentScheduleItem

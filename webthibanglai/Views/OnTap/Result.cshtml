@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Kết quả ôn tập";
+    var topicCode = ViewBag.TopicCode as string ?? string.Empty;
+    var topicName = ViewBag.TopicName as string ?? "Ôn tập";
+    var isEmbedded = ViewBag.IsEmbedded as bool? ?? false;
+}
+
+<div class="container py-5 practice-result-page @(isEmbedded ? "embedded-mode" : string.Empty)">
+    <div class="practice-result-card">
+        <div class="practice-result-card__header">
+            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Đã kết thúc bài</span>
+            <h1 class="mt-3 mb-2">Kết quả ôn tập: @topicName</h1>
+            <p class="text-muted mb-0">Xem nhanh số câu đã làm, số câu sai và chọn hành động tiếp theo.</p>
+        </div>
+
+        <div class="row g-3 mt-1">
+            <div class="col-md-4">
+                <div class="practice-result-stat">
+                    <div class="practice-result-stat__label">Tổng số câu</div>
+                    <div id="practiceResultTotal" class="practice-result-stat__value">0</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="practice-result-stat">
+                    <div class="practice-result-stat__label">Đã trả lời</div>
+                    <div id="practiceResultAnswered" class="practice-result-stat__value text-primary">0</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="practice-result-stat">
+                    <div class="practice-result-stat__label">Câu sai</div>
+                    <div id="practiceResultWrong" class="practice-result-stat__value text-danger">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="practice-result-progress mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted">Mức độ hoàn thành</span>
+                <strong id="practiceResultProgressText">0%</strong>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div id="practiceResultProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="practiceResultSummary" class="alert alert-light border mt-4 mb-0"></div>
+
+        <div class="practice-result-actions mt-4">
+            <a asp-controller="OnTap" asp-action="Session" asp-route-topicCode="@topicCode" asp-route-number="1" asp-route-embedded="@isEmbedded" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-rotate-right me-2"></i>Làm lại từ đầu
+            </a>
+            @if (!isEmbedded)
+            {
+                <a asp-controller="OnTap" asp-action="Index" class="btn btn-outline-secondary px-4 py-2">
+                    <i class="fas fa-list me-2"></i>Về danh sách ôn tập
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .practice-result-page {
+            max-width: 960px;
+        }
+
+        .practice-result-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 28px;
+            padding: 2rem;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+        }
+
+        .practice-result-stat {
+            height: 100%;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            padding: 1.25rem;
+        }
+
+        .practice-result-stat__label {
+            color: #6b7280;
+            font-size: .9rem;
+            margin-bottom: .45rem;
+        }
+
+        .practice-result-stat__value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .practice-result-actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            function readArrayFromQuery(paramName) {
+                try {
+                    var raw = new URLSearchParams(window.location.search).get(paramName);
+                    if (!raw) {
+                        return [];
+                    }
+
+                    var parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+
+            var answered = readArrayFromQuery('answered');
+            var wrong = readArrayFromQuery('wrong');
+            var total = Math.max(answered.length, wrong.length, 0);
+            var queryTotal = new URLSearchParams(window.location.search).get('total');
+            if (queryTotal) {
+                total = Math.max(total, parseInt(queryTotal, 10) || 0);
+            }
+
+            var answeredCount = answered.length;
+            var wrongCount = wrong.length;
+            var correctCount = Math.max(0, answeredCount - wrongCount);
+            var progressPercent = total > 0 ? Math.round(answeredCount / total * 100) : 0;
+
+            var totalElement = document.getElementById('practiceResultTotal');
+            var answeredElement = document.getElementById('practiceResultAnswered');
+            var wrongElement = document.getElementById('practiceResultWrong');
+            var progressText = document.getElementById('practiceResultProgressText');
+            var progressBar = document.getElementById('practiceResultProgressBar');
+            var summary = document.getElementById('practiceResultSummary');
+
+            if (totalElement) totalElement.textContent = total.toString();
+            if (answeredElement) answeredElement.textContent = answeredCount.toString();
+            if (wrongElement) wrongElement.textContent = wrongCount.toString();
+            if (progressText) progressText.textContent = progressPercent + '%';
+            if (progressBar) {
+                progressBar.style.width = progressPercent + '%';
+                progressBar.setAttribute('aria-valuenow', progressPercent.toString());
+            }
+
+            if (summary) {
+                if (answeredCount === 0) {
+                    summary.textContent = 'Bạn chưa trả lời câu nào trong phiên ôn tập này.';
+                } else {
+                    summary.textContent = 'Bạn đã trả lời đúng ' + correctCount + '/' + answeredCount + ' câu, sai ' + wrongCount + ' câu.';
+                }
+            }
+        })();
+    </script>
+}

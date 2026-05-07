@@ -4,6 +4,22 @@
     var profile = Model.Profile;
     var stats = Model.Stats;
     var registration = Model.Registration;
+
+    static string FormatPrice(long price) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", price);
+    static string GetAlertClass(string? state) => state switch
+    {
+        "success" => "alert-success",
+        "warning" => "alert-warning",
+        "danger" => "alert-danger",
+        _ => "alert-info"
+    };
+
+    var paymentMethodOptions = new[]
+    {
+        new { Value = "ZALOPAYAPP", Title = "Ví ZaloPay / QR", Description = "Mở ví ZaloPay hoặc quét mã QR để thanh toán nhanh." },
+        new { Value = "ATM", Title = "ATM / Napas / ngân hàng nội địa", Description = "Thanh toán qua thẻ ATM, Napas hoặc Internet Banking nội địa." },
+        new { Value = "CC", Title = "Thẻ quốc tế Visa / Mastercard", Description = "Thanh toán bằng thẻ quốc tế trên trang ZaloPay." }
+    };
 }
 
 <div id="studentPortalPage" class="container-xxl py-5 student-portal-page">
@@ -17,6 +33,13 @@
         {
             <div class="alert alert-warning rounded-4 border-0 shadow-sm mb-4">
                 <i class="fas fa-circle-info me-2"></i>@TempData["StudentProfileNotice"]
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.CourseRegistrationStatusMessage))
+        {
+            <div class="alert @GetAlertClass(Model.CourseRegistrationStatusState) rounded-4 border-0 shadow-sm mb-4">
+                <i class="fas fa-circle-info me-2"></i>@Model.CourseRegistrationStatusMessage
             </div>
         }
 
@@ -143,7 +166,12 @@
             </div>
             <div class="col-lg-4">
                 <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
-                    <h3 class="h5 mb-3">Thông tin học viên</h3>
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3 flex-wrap">
+                        <h3 class="h5 mb-0">Thông tin học viên</h3>
+                        <a asp-controller="KhoaHoc" asp-action="MyRegistrations" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-signature me-2"></i>Xem khóa học đã đăng ký
+                        </a>
+                    </div>
                     <div class="student-info-list d-grid gap-3">
                         <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Tên đăng nhập</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.TenDangNhap) ? "Chưa cập nhật" : profile.TenDangNhap)</strong></div>
                         <div class="d-flex justify-content-between gap-3 align-items-start"><span class="text-muted">Email</span><strong class="text-end">@(string.IsNullOrWhiteSpace(profile.Email) ? "Chưa cập nhật" : profile.Email)</strong></div>
@@ -169,40 +197,6 @@
                 <a asp-controller="OnTap" asp-action="Index" class="btn btn-warning">
                     <i class="fas fa-book-open me-2"></i>Xem tất cả
                 </a>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-4">
-            <div class="col-lg-12">
-                <div class="bg-white shadow-sm rounded-4 p-4 border h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <div>
-                            <h3 class="h5 mb-1">Các khóa học đã đăng ký</h3>
-                            <p class="text-muted mb-0">Hiển thị tĩnh để mô phỏng lộ trình học hiện tại của học viên.</p>
-                        </div>
-                        <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">
-                            <i class="fas fa-layer-group me-2"></i>Xem khóa học
-                        </a>
-                    </div>
-                    <div class="row g-3">
-                        @foreach (var course in Model.RegisteredCourses)
-                        {
-                            <div class="col-md-6">
-                                <div class="course-card h-100">
-                                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                                        <h4 class="h6 mb-0">@course.Name</h4>
-                                        <span class="badge rounded-pill bg-light text-primary border">@course.Status</span>
-                                    </div>
-                                    <p class="text-muted small mb-3">@course.Description</p>
-                                    <div class="small text-muted d-grid gap-2">
-                                        <div><i class="far fa-clock me-2 text-primary"></i>@course.ScheduleText</div>
-                                        <div><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>@course.TeacherName</div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -503,19 +497,6 @@
             font-weight: 700;
         }
 
-        .course-card {
-            background: #f8fbff;
-            border: 1px solid #e9eef5;
-            border-radius: 1.25rem;
-            padding: 1.25rem;
-            transition: transform .2s ease, box-shadow .2s ease;
-        }
-
-        .course-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 14px 30px rgba(15, 23, 42, .08);
-        }
-
         .schedule-list {
             grid-template-columns: 1fr;
         }
@@ -592,4 +573,9 @@
             }
         }
     </style>
+}
+
+@section Scripts {
+    <script>
+    </script>
 }

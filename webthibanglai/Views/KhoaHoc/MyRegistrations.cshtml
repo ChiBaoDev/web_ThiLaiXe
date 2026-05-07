@@ -1,0 +1,252 @@
+@model webthibanglai.Models.MyCourseRegistrationsViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký của tôi";
+
+    static string FormatPrice(long price) => string.Format(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), "{0:N0}đ", price);
+    static string GetAlertClass(string? state) => state switch
+    {
+        "success" => "alert-success",
+        "warning" => "alert-warning",
+        "danger" => "alert-danger",
+        _ => "alert-info"
+    };
+
+}
+
+<div class="container-xxl py-6">
+    <div class="container">
+        <div class="my-registration-hero mb-4">
+            <div>
+                <span class="badge rounded-pill bg-light text-primary px-3 py-2 mb-3">Khóa học của tôi</span>
+                <h1 class="mb-2">Đăng ký của tôi</h1>
+                <p class="text-muted mb-0">Theo dõi trạng thái duyệt đăng ký và thanh toán VNPAY cho từng lớp học.</p>
+            </div>
+            <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-outline-primary">Xem thêm khóa học</a>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+        {
+            <div class="alert @GetAlertClass(Model.StatusState) mb-4">
+                <i class="fa fa-circle-info me-2"></i>@Model.StatusMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger mb-4">
+                <i class="fa fa-triangle-exclamation me-2"></i>@Model.ErrorMessage
+            </div>
+        }
+
+        @if (Model.IsLoading)
+        {
+            <div class="registration-loading-state">
+                <i class="fa fa-spinner fa-spin me-2"></i>Đang tải danh sách đăng ký...
+            </div>
+        }
+        else if (Model.Registrations.Count == 0)
+        {
+            <div class="registration-empty-state text-center">
+                <i class="fa fa-folder-open text-primary mb-3"></i>
+                <h4 class="mb-2">Bạn chưa có đăng ký nào</h4>
+                <p class="text-muted mb-4">Hãy chọn một khóa học và lớp phù hợp để bắt đầu đăng ký học.</p>
+                <a asp-controller="KhoaHoc" asp-action="Index" class="btn btn-primary">Khám phá khóa học</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var registration in Model.Registrations)
+                {
+                    <div class="col-12">
+                        <div class="registration-card">
+                            <div class="registration-card__header">
+                                <div>
+                                    <div class="small text-muted mb-1">Khóa học</div>
+                                    <h4 class="mb-1">@registration.TenKhoaHoc</h4>
+                                    <div class="text-muted">Lớp: <strong>@registration.TenLop</strong></div>
+                                </div>
+                                <div class="registration-card__badges">
+                                    <span class="badge rounded-pill bg-light text-dark border">@registration.TrangThai</span>
+                                    <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">@registration.PaymentStatus</span>
+                                </div>
+                            </div>
+
+                            <div class="registration-card__grid">
+                                <div>
+                                    <span class="registration-card__label">Ngày học</span>
+                                    <strong>@registration.NgayHocText</strong>
+                                </div>
+                                <div>
+                                    <span class="registration-card__label">Học phí</span>
+                                    <strong>@FormatPrice(registration.HocPhi)</strong>
+                                </div>
+                                <div>
+                                    <span class="registration-card__label">Trạng thái đăng ký</span>
+                                    <strong>@registration.TrangThai</strong>
+                                </div>
+                                <div>
+                                    <span class="registration-card__label">Trạng thái thanh toán</span>
+                                    <strong>@registration.PaymentStatus</strong>
+                                </div>
+                            </div>
+
+                            <div class="registration-card__actions">
+                                @if (registration.CanPayWithZaloPay)
+                                {
+                                    <form asp-controller="KhoaHoc" asp-action="PayWithZaloPay" method="post" class="js-vnpay-form-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="registrationId" value="@registration.RegistrationId" />
+                                        <input type="hidden" name="returnAction" value="MyRegistrations" />
+                                        <button type="submit" class="btn btn-success js-vnpay-submit-inline" data-loading-text="Đang tạo thanh toán...">
+                                            <span class="js-submit-default-inline"><i class="fa fa-wallet me-2"></i>Thanh toán VNPAY</span>
+                                            <span class="js-submit-loading-inline d-none"><i class="fa fa-spinner fa-spin me-2"></i>Đang chuyển sang VNPAY...</span>
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-outline-secondary" disabled>
+                                            @(string.IsNullOrWhiteSpace(registration.PaymentStatus)
+                                                ? "Chưa thể thanh toán"
+                                                : $"Thanh toán: {registration.PaymentStatus}")
+                                        </button>
+                                        @if (!string.IsNullOrWhiteSpace(registration.PaymentDisabledReason))
+                                        {
+                                            <div class="small text-muted">@registration.PaymentDisabledReason</div>
+                                        }
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(registration.ReceiptId))
+                                {
+                                    <a asp-controller="KhoaHoc" asp-action="MyRegistrations" asp-route-receiptId="@registration.ReceiptId" class="btn btn-outline-primary">
+                                        Kiểm tra thanh toán
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .my-registration-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+            border: 1px solid #dbeafe;
+        }
+
+        .registration-card {
+            padding: 1.5rem;
+            border-radius: 1.35rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, .06);
+        }
+
+        .registration-card__header {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .registration-card__badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        .registration-card__grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .registration-card__label {
+            display: block;
+            font-size: .82rem;
+            color: #6b7280;
+            margin-bottom: .35rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .registration-card__actions {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .registration-empty-state,
+        .registration-loading-state {
+            padding: 3rem 1.5rem;
+            border-radius: 1.25rem;
+            background: #fff;
+            border: 1px dashed #cbd5e1;
+        }
+
+        @@media (max-width: 991.98px) {
+            .my-registration-hero,
+            .registration-card__header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .registration-card__grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @@media (max-width: 575.98px) {
+            .registration-card__grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            function setLoadingState(form, isLoading) {
+                var button = form.querySelector('.js-vnpay-submit-inline');
+                var defaultText = form.querySelector('.js-submit-default-inline');
+                var loadingText = form.querySelector('.js-submit-loading-inline');
+
+                if (button) {
+                    button.disabled = isLoading;
+                }
+
+                if (defaultText) {
+                    defaultText.classList.toggle('d-none', isLoading);
+                }
+
+                if (loadingText) {
+                    loadingText.classList.toggle('d-none', !isLoading);
+                }
+            }
+
+            document.querySelectorAll('.js-vnpay-form-inline').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    setLoadingState(form, true);
+                });
+            });
+        })();
+    </script>
+}

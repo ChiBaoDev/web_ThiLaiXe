@@ -12,10 +12,15 @@ public interface ICourseApiService
 {
     Task<KhoaHocViewModel> GetCoursesAsync(CancellationToken cancellationToken = default);
     Task<KhoaHocDetailViewModel> GetCourseDetailAsync(int courseId, CancellationToken cancellationToken = default);
-    Task<CourseRegistrationResult> RegisterCourseAsync(string? accessToken, int courseId, string? ghiChu, CancellationToken cancellationToken = default);
+    Task<CourseRegistrationResult> RegisterCourseAsync(string? accessToken, int courseId, int classId, string? ghiChu, CancellationToken cancellationToken = default);
+    Task<MyCourseRegistrationsViewModel> GetMyCourseRegistrationsAsync(string? accessToken, string? paymentReceiptId = null, CancellationToken cancellationToken = default);
+    Task<VnPayOrderResult> CreateVnPayOrderAsync(string? accessToken, int registrationId, CancellationToken cancellationToken = default);
+    Task<VnPayReturnResult> ConfirmVnPayReturnAsync(IQueryCollection query, CancellationToken cancellationToken = default);
 }
 
 public record CourseRegistrationResult(bool IsSuccess, bool RequiresLogin, bool RequiresStudentProfile, string Message);
+public record VnPayOrderResult(bool IsSuccess, bool RequiresLogin, string Message, string? OrderUrl, long? ReceiptId);
+public record VnPayReturnResult(bool IsSuccess, string Message, long? ReceiptId, string PaymentStatus);
 
 public sealed class CourseApiService : ICourseApiService
 {
@@ -99,6 +104,7 @@ public sealed class CourseApiService : ICourseApiService
             }
 
             model.Course = MapCourseDetail(apiResponse.Data);
+            model.Classes = await GetCourseClassesAsync(courseId, cancellationToken);
             return model;
         }
         catch (Exception ex)
@@ -109,7 +115,7 @@ public sealed class CourseApiService : ICourseApiService
         }
     }
 
-    public async Task<CourseRegistrationResult> RegisterCourseAsync(string? accessToken, int courseId, string? ghiChu, CancellationToken cancellationToken = default)
+    public async Task<CourseRegistrationResult> RegisterCourseAsync(string? accessToken, int courseId, int classId, string? ghiChu, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
@@ -119,6 +125,11 @@ public sealed class CourseApiService : ICourseApiService
         if (courseId <= 0)
         {
             return new CourseRegistrationResult(false, false, false, "Mã khóa học không hợp lệ.");
+        }
+
+        if (classId <= 0)
+        {
+            return new CourseRegistrationResult(false, false, false, "Vui lòng chọn lớp học muốn đăng ký.");
         }
 
         var client = CreateAuthorizedClient(accessToken);
@@ -159,6 +170,7 @@ public sealed class CourseApiService : ICourseApiService
             var payload = new CourseRegistrationRequest
             {
                 CourseId = courseId,
+                ClassId = classId,
                 GhiChu = string.IsNullOrWhiteSpace(ghiChu) ? null : ghiChu.Trim()
             };
 
@@ -198,6 +210,214 @@ public sealed class CourseApiService : ICourseApiService
             _logger.LogError(ex, "Unexpected error while registering course. CourseId={CourseId}", courseId);
             return new CourseRegistrationResult(false, false, false, "Đã xảy ra lỗi khi đăng ký khóa học.");
         }
+    }
+
+    public async Task<MyCourseRegistrationsViewModel> GetMyCourseRegistrationsAsync(string? accessToken, string? paymentReceiptId = null, CancellationToken cancellationToken = default)
+    {
+        var model = new MyCourseRegistrationsViewModel { IsLoading = true };
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            model.ErrorMessage = "Bạn cần đăng nhập để xem danh sách đăng ký.";
+            model.IsLoading = false;
+            return model;
+        }
+
+        try
+        {
+            var client = CreateAuthorizedClient(accessToken);
+            var response = await client.GetAsync("/api/v1/my/course-registrations?page=1&pageSize=10", cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                model.ErrorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+                model.IsLoading = false;
+                return model;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Get my course registrations failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
+                model.ErrorMessage = ExtractErrorMessage(responseBody) ?? "Không tải được danh sách đăng ký của bạn.";
+                model.IsLoading = false;
+                return model;
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<PagedResult<MyCourseRegistrationApiItem>>>(responseBody, JsonOptions());
+            var registrations = apiResponse?.Data?.Items ?? new List<MyCourseRegistrationApiItem>();
+            model.Registrations = registrations.Select(MapMyCourseRegistration).ToList();
+
+            if (!string.IsNullOrWhiteSpace(paymentReceiptId))
+            {
+                var paymentStatus = await GetPaymentReceiptStatusAsync(client, paymentReceiptId, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(paymentStatus.Message))
+                {
+                    model.StatusMessage = paymentStatus.Message;
+                    model.StatusState = paymentStatus.State;
+                }
+            }
+
+            model.IsLoading = false;
+            return model;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while getting my course registrations.");
+            model.ErrorMessage = "Đã xảy ra lỗi khi tải danh sách đăng ký của bạn.";
+            model.IsLoading = false;
+            return model;
+        }
+    }
+
+    public async Task<VnPayOrderResult> CreateVnPayOrderAsync(string? accessToken, int registrationId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return new VnPayOrderResult(false, true, "Bạn cần đăng nhập để thanh toán VNPAY.", null, null);
+        }
+
+        if (registrationId <= 0)
+        {
+            return new VnPayOrderResult(false, false, "Mã đăng ký không hợp lệ.", null, null);
+        }
+
+        try
+        {
+            var client = CreateAuthorizedClient(accessToken);
+            var payload = new { registrationId };
+            var content = new StringContent(JsonSerializer.Serialize(payload, JsonOptions()), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/api/v1/payments/vnpay/create-order", content, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                return new VnPayOrderResult(false, true, "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.", null, null);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Create VnPay order failed. RegistrationId={RegistrationId}, StatusCode={StatusCode}, Response={Response}", registrationId, response.StatusCode, responseBody);
+                var apiErrorMessage = ExtractErrorMessage(responseBody) ?? "Không thể tạo đơn thanh toán VNPAY.";
+                if (apiErrorMessage.Contains("Chưa cấu hình loại khoản thu học phí", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiErrorMessage = "Hệ thống backend chưa cấu hình khoản thu học phí cho đăng ký này, nên hiện chưa thể tạo đơn VNPAY.";
+                }
+
+                return new VnPayOrderResult(false, false, apiErrorMessage, null, null);
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<VnPayOrderApiItem>>(responseBody, JsonOptions());
+            var data = apiResponse?.Data;
+            if (data == null || string.IsNullOrWhiteSpace(data.OrderUrl))
+            {
+                return new VnPayOrderResult(false, false, "API không trả về liên kết thanh toán hợp lệ.", null, null);
+            }
+
+            return new VnPayOrderResult(true, false, apiResponse?.Message ?? "Tạo đơn thanh toán thành công.", data.OrderUrl, data.ReceiptId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while creating VnPay order. RegistrationId={RegistrationId}", registrationId);
+            return new VnPayOrderResult(false, false, "Đã xảy ra lỗi khi tạo đơn thanh toán VNPAY.", null, null);
+        }
+    }
+
+    public async Task<VnPayReturnResult> ConfirmVnPayReturnAsync(IQueryCollection query, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var queryString = QueryString.Create(query.SelectMany(item =>
+                item.Value.Select(value => new KeyValuePair<string, string?>(item.Key, value))));
+            var response = await client.GetAsync($"/api/v1/payments/vnpay/return{queryString}", cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Confirm VnPay return failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
+                return new VnPayReturnResult(false, "Không xác nhận được trạng thái thanh toán VNPAY.", null, string.Empty);
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<VnPayReturnApiItem>>(responseBody, JsonOptions());
+            var data = apiResponse?.Data;
+            if (data is null)
+            {
+                return new VnPayReturnResult(false, "API không trả về kết quả xác nhận thanh toán hợp lệ.", null, string.Empty);
+            }
+
+            var success = IsPaymentSuccessStatus(data.PaymentStatus ?? string.Empty);
+            return new VnPayReturnResult(
+                success,
+                success ? "Thanh toán VNPAY thành công." : "Thanh toán VNPAY chưa hoàn tất hoặc đã bị hủy.",
+                data.ReceiptId,
+                data.PaymentStatus ?? string.Empty);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while confirming VnPay return.");
+            return new VnPayReturnResult(false, "Không xác nhận được trạng thái thanh toán VNPAY.", null, string.Empty);
+        }
+    }
+
+    private async Task<List<KhoaHocClassItem>> GetCourseClassesAsync(int courseId, CancellationToken cancellationToken)
+    {
+        var classes = new List<KhoaHocClassItem>();
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("ApiClient");
+            var response = await client.GetAsync($"/api/v1/courses/{courseId}/classes", cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Get course classes failed. CourseId={CourseId}, StatusCode={StatusCode}, Response={Response}", courseId, response.StatusCode, responseBody);
+                return classes;
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<List<CourseClassApiItem>>>(responseBody, JsonOptions());
+            classes = apiResponse?.Data?.Select(MapCourseClass).ToList() ?? new List<KhoaHocClassItem>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while getting course classes. CourseId={CourseId}", courseId);
+        }
+
+        return classes;
+    }
+
+    private async Task<(string? Message, string? State)> GetPaymentReceiptStatusAsync(HttpClient client, string receiptId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var response = await client.GetAsync($"/api/v1/payments/vnpay/receipts/{Uri.EscapeDataString(receiptId)}/status", cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Get payment receipt status failed. ReceiptId={ReceiptId}, StatusCode={StatusCode}, Response={Response}", receiptId, response.StatusCode, responseBody);
+                return (null, null);
+            }
+
+            var apiResponse = JsonSerializer.Deserialize<ApiEnvelope<PaymentReceiptStatusApiItem>>(responseBody, JsonOptions());
+            var paymentStatus = apiResponse?.Data?.PaymentStatus ?? string.Empty;
+            if (IsPaymentSuccessStatus(paymentStatus))
+            {
+                return ("Thanh toán thành công.", "success");
+            }
+
+            if (IsPaymentPendingStatus(paymentStatus))
+            {
+                return ("Đang chờ xác nhận thanh toán.", "warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while checking payment receipt status. ReceiptId={ReceiptId}", receiptId);
+        }
+
+        return (null, null);
     }
 
     private HttpClient CreateAuthorizedClient(string accessToken)
@@ -267,6 +487,109 @@ public sealed class CourseApiService : ICourseApiService
             IsOpenForRegistration = IsOpenForRegistration(course.TrangThai, course.SoLuongHienTai, course.SoLuongToiDa),
             OccupancyRate = Math.Clamp(occupancyRate, 0, 100)
         };
+    }
+
+    private static KhoaHocClassItem MapCourseClass(CourseClassApiItem item)
+    {
+        return new KhoaHocClassItem
+        {
+            ClassId = item.ClassId,
+            TenLop = item.TenLop ?? $"Lớp {item.ClassId}",
+            SiSoHienTai = item.SiSoHienTai,
+            SiSoToiDa = item.SiSoToiDa,
+            NgayBatDau = item.NgayBatDau,
+            NgayKetThuc = item.NgayKetThuc,
+            GiaoVien = item.GiaoVien?.HoTen,
+            TrangThai = item.TrangThai ?? string.Empty,
+            IsOpenForRegistration = item.IsOpenForRegistration,
+            LichHoc = item.LichHoc.Select(schedule => new KhoaHocScheduleItem
+            {
+                ThuTrongTuan = schedule.ThuTrongTuan,
+                GioBatDau = schedule.GioBatDau ?? string.Empty,
+                GioKetThuc = schedule.GioKetThuc ?? string.Empty,
+                DiaDiem = schedule.DiaDiem ?? string.Empty
+            }).ToList()
+        };
+    }
+
+    private static MyCourseRegistrationItem MapMyCourseRegistration(MyCourseRegistrationApiItem item)
+    {
+        var paymentStatus = item.PaymentStatus ?? string.Empty;
+        var registrationStatus = item.TrangThai ?? string.Empty;
+
+        var disabledReason = string.Empty;
+        if (IsApprovedRegistrationStatus(registrationStatus) && !IsPaymentSuccessStatus(paymentStatus))
+        {
+            disabledReason = "Có thể thanh toán qua VNPAY khi backend đã cấu hình khoản thu học phí đầy đủ.";
+        }
+
+        return new MyCourseRegistrationItem
+        {
+            RegistrationId = item.RegistrationId,
+            CourseId = item.CourseId,
+            ClassId = item.ClassId,
+            MaKhoaHoc = item.MaKhoaHoc ?? string.Empty,
+            TenKhoaHoc = item.TenKhoaHoc ?? string.Empty,
+            LoaiBangLai = item.LoaiBangLai ?? string.Empty,
+            TenLop = item.TenLop ?? "Chưa phân lớp",
+            NgayHocText = BuildStudyDateText(item.NgayBatDau, item.NgayKetThuc),
+            NgayBatDau = item.NgayBatDau,
+            NgayKetThuc = item.NgayKetThuc,
+            HocPhi = item.HocPhi,
+            SoBuoiHoc = item.SoBuoiHoc,
+            SiSoHienTai = item.SiSoHienTai,
+            SiSoToiDa = item.SiSoToiDa,
+            GiaoVien = item.GiaoVien ?? string.Empty,
+            SoDienThoaiGiaoVien = item.SoDienThoaiGiaoVien ?? string.Empty,
+            MoTa = item.MoTa ?? string.Empty,
+            LichHoc = item.LichHoc.Select(schedule => new KhoaHocScheduleItem
+            {
+                ThuTrongTuan = schedule.ThuTrongTuan,
+                GioBatDau = schedule.GioBatDau ?? string.Empty,
+                GioKetThuc = schedule.GioKetThuc ?? string.Empty,
+                DiaDiem = schedule.DiaDiem ?? string.Empty
+            }).ToList(),
+            TrangThai = registrationStatus,
+            PaymentStatus = paymentStatus,
+            ReceiptId = item.ReceiptId?.ToString(),
+            CanPayWithZaloPay = IsApprovedRegistrationStatus(registrationStatus) && !IsPaymentSuccessStatus(paymentStatus),
+            PaymentDisabledReason = disabledReason
+        };
+    }
+
+    private static string BuildStudyDateText(DateOnly? startDate, DateOnly? endDate)
+    {
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            return $"{startDate:dd/MM/yyyy} - {endDate:dd/MM/yyyy}";
+        }
+
+        if (startDate.HasValue)
+        {
+            return startDate.Value.ToString("dd/MM/yyyy");
+        }
+
+        return "Đang cập nhật";
+    }
+
+    private static bool IsApprovedRegistrationStatus(string? status)
+    {
+        return string.Equals(status, "da_duyet", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaDuyet", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPaymentSuccessStatus(string? status)
+    {
+        return string.Equals(status, "da_xac_nhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaXacNhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "da_thanh_toan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaThanhToan", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPaymentPendingStatus(string? status)
+    {
+        return string.Equals(status, "cho_xac_nhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChoXacNhan", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsOpenForRegistration(string? status, int soLuongHienTai, int soLuongToiDa)
@@ -434,6 +757,7 @@ public sealed class CourseApiService : ICourseApiService
     private sealed class CourseRegistrationRequest
     {
         public int CourseId { get; set; }
+        public int ClassId { get; set; }
         public string? GhiChu { get; set; }
     }
 
@@ -446,6 +770,52 @@ public sealed class CourseApiService : ICourseApiService
         public DateTime? NgayDangKy { get; set; }
         public string? TrangThai { get; set; }
         public string? GhiChu { get; set; }
+    }
+
+    private sealed class MyCourseRegistrationApiItem
+    {
+        public int RegistrationId { get; set; }
+        public int CourseId { get; set; }
+        public int? ClassId { get; set; }
+        public string? MaKhoaHoc { get; set; }
+        public string? TenKhoaHoc { get; set; }
+        public string? LoaiBangLai { get; set; }
+        public string? TenLop { get; set; }
+        public DateOnly? NgayBatDau { get; set; }
+        public DateOnly? NgayKetThuc { get; set; }
+        public long HocPhi { get; set; }
+        public int SoBuoiHoc { get; set; }
+        public int SiSoHienTai { get; set; }
+        public int SiSoToiDa { get; set; }
+        public string? GiaoVien { get; set; }
+        public string? SoDienThoaiGiaoVien { get; set; }
+        public string? MoTa { get; set; }
+        public List<CourseScheduleApiItem> LichHoc { get; set; } = new();
+        public string? TrangThai { get; set; }
+        public string? PaymentStatus { get; set; }
+        public long? ReceiptId { get; set; }
+    }
+
+    private sealed class VnPayOrderApiItem
+    {
+        public string? OrderUrl { get; set; }
+        public long? ReceiptId { get; set; }
+        public string? TransactionRef { get; set; }
+        public long Amount { get; set; }
+        public string? PaymentStatus { get; set; }
+    }
+
+    private sealed class VnPayReturnApiItem
+    {
+        public long ReceiptId { get; set; }
+        public string? TransactionRef { get; set; }
+        public long RegistrationId { get; set; }
+        public string? PaymentStatus { get; set; }
+    }
+
+    private sealed class PaymentReceiptStatusApiItem
+    {
+        public string? PaymentStatus { get; set; }
     }
 
     private sealed class StudentProfileApiItem
@@ -494,6 +864,20 @@ public sealed class CourseApiService : ICourseApiService
         public CourseTeacherApiItem? GiaoVienChinh { get; set; }
         public List<CourseScheduleApiItem> LichHocMau { get; set; } = new();
         public string? HinhAnh { get; set; }
+    }
+
+    private sealed class CourseClassApiItem
+    {
+        public int ClassId { get; set; }
+        public string? TenLop { get; set; }
+        public int SiSoHienTai { get; set; }
+        public int SiSoToiDa { get; set; }
+        public DateOnly? NgayBatDau { get; set; }
+        public DateOnly? NgayKetThuc { get; set; }
+        public string? TrangThai { get; set; }
+        public bool IsOpenForRegistration { get; set; }
+        public CourseTeacherApiItem? GiaoVien { get; set; }
+        public List<CourseScheduleApiItem> LichHoc { get; set; } = new();
     }
 
     private sealed class CourseTeacherApiItem

@@ -25,6 +25,14 @@
         "TamDung" => "Tạm dừng",
         _ => "Sắp khai giảng"
     };
+
+    static string GetRegistrationStateClass(string? state) => state switch
+    {
+        "success" => "alert-success",
+        "warning" => "alert-warning",
+        "danger" => "alert-danger",
+        _ => "alert-info"
+    };
 }
 
 
@@ -63,6 +71,7 @@
         else
         {
             var course = Model.Course;
+            var availableClasses = Model.Classes;
             var sessionDefinitions = new[]
             {
                 new { Key = "Sang", Label = "Sáng" },
@@ -102,48 +111,6 @@
                 return "Toi";
             }
 
-            var expandedSchedule = new List<(int DayOfWeek, string SessionKey, WeeklyScheduleOccurrenceItem Item)>();
-
-            if (course.NgayBatDau.HasValue && course.NgayKetThuc.HasValue && course.NgayBatDau <= course.NgayKetThuc)
-            {
-                for (var currentDate = course.NgayBatDau.Value; currentDate <= course.NgayKetThuc.Value; currentDate = currentDate.AddDays(1))
-                {
-                    var normalizedDay = NormalizeDayOfWeek(currentDate.DayOfWeek);
-                    var matchedItems = course.LichHocMau
-                        .Where(item => item.ThuTrongTuan == normalizedDay)
-                        .ToList();
-
-                    foreach (var matchedItem in matchedItems)
-                    {
-                        expandedSchedule.Add((
-                            normalizedDay,
-                            DetectSession(matchedItem.GioBatDau),
-                            new WeeklyScheduleOccurrenceItem
-                            {
-                                NgayHoc = currentDate,
-                                GioBatDau = matchedItem.GioBatDau,
-                                GioKetThuc = matchedItem.GioKetThuc,
-                                DiaDiem = matchedItem.DiaDiem
-                            }));
-                    }
-                }
-            }
-            else
-            {
-                expandedSchedule = course.LichHocMau
-                    .Select(item => (
-                        item.ThuTrongTuan,
-                        DetectSession(item.GioBatDau),
-                        new WeeklyScheduleOccurrenceItem
-                        {
-                            NgayHoc = null,
-                            GioBatDau = item.GioBatDau,
-                            GioKetThuc = item.GioKetThuc,
-                            DiaDiem = item.DiaDiem
-                        }))
-                    .ToList();
-            }
-
             static DateOnly GetStartOfWeek(DateOnly date)
             {
                 var normalizedDay = NormalizeDayOfWeek(date.DayOfWeek);
@@ -151,95 +118,142 @@
                 return date.AddDays(-offset);
             }
 
-            var effectiveStartDate = course.NgayBatDau ?? expandedSchedule
-                .Where(item => item.Item.NgayHoc.HasValue)
-                .Select(item => item.Item.NgayHoc!.Value)
-                .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
-                .Min();
-
-            var effectiveEndDate = course.NgayKetThuc ?? expandedSchedule
-                .Where(item => item.Item.NgayHoc.HasValue)
-                .Select(item => item.Item.NgayHoc!.Value)
-                .DefaultIfEmpty(effectiveStartDate)
-                .Max();
-
-            var firstWeekStart = GetStartOfWeek(effectiveStartDate);
-            var lastWeekStart = GetStartOfWeek(effectiveEndDate);
-            var weekOptions = new List<WeeklyScheduleWeekOption>();
-
-            for (var weekStart = firstWeekStart; weekStart <= lastWeekStart; weekStart = weekStart.AddDays(7))
+            WeeklyScheduleTableViewModel BuildScheduleTable(List<KhoaHocScheduleItem> schedules, DateOnly? startDate, DateOnly? endDate)
             {
-                var weekEnd = weekStart.AddDays(6);
-                weekOptions.Add(new WeeklyScheduleWeekOption
-                {
-                    Index = weekOptions.Count,
-                    StartDate = weekStart,
-                    EndDate = weekEnd,
-                    Label = $"Tuần {weekOptions.Count + 1}: {weekStart:dd/MM} - {weekEnd:dd/MM}"
-                });
-            }
+                var expandedSchedule = new List<(int DayOfWeek, string SessionKey, WeeklyScheduleOccurrenceItem Item)>();
 
-            if (weekOptions.Count == 0)
-            {
-                weekOptions.Add(new WeeklyScheduleWeekOption
+                if (startDate.HasValue && endDate.HasValue && startDate <= endDate)
                 {
-                    Index = 0,
-                    StartDate = firstWeekStart,
-                    EndDate = firstWeekStart.AddDays(6),
-                    Label = $"Tuần 1: {firstWeekStart:dd/MM} - {firstWeekStart.AddDays(6):dd/MM}"
-                });
-            }
-
-            var scheduleTable = new WeeklyScheduleTableViewModel
-            {
-                Weeks = weekOptions,
-                SelectedWeekIndex = 0,
-                WeekTables = new List<WeeklyScheduleWeekTable>()
-            };
-
-            foreach (var week in weekOptions)
-            {
-                var weekTable = new WeeklyScheduleWeekTable
-                {
-                    WeekIndex = week.Index,
-                    Label = week.Label,
-                    Days = Enumerable.Range(0, 7)
-                        .Select(offset => week.StartDate.AddDays(offset))
-                        .Select(date => new WeeklyScheduleDayColumn
-                        {
-                            DayOfWeek = NormalizeDayOfWeek(date.DayOfWeek),
-                            Label = FormatDayOfWeek(NormalizeDayOfWeek(date.DayOfWeek)),
-                            Date = date
-                        })
-                        .ToList(),
-                    Rows = new List<WeeklyScheduleRow>()
-                };
-
-                foreach (var session in sessionDefinitions)
-                {
-                    var row = new WeeklyScheduleRow
+                    for (var currentDate = startDate.Value; currentDate <= endDate.Value; currentDate = currentDate.AddDays(1))
                     {
-                        SessionKey = session.Key,
-                        SessionLabel = session.Label,
-                        Cells = weekTable.Days.Select(day => new WeeklyScheduleCell
-                        {
-                            DayOfWeek = day.DayOfWeek,
-                            SessionKey = session.Key,
-                            Items = expandedSchedule
-                                .Where(item => item.DayOfWeek == day.DayOfWeek
-                                    && item.SessionKey == session.Key
-                                    && item.Item.NgayHoc == day.Date)
-                                .Select(item => item.Item)
-                                .OrderBy(item => item.NgayHoc)
-                                .ThenBy(item => item.GioBatDau)
-                                .ToList()
-                        }).ToList()
-                    };
+                        var normalizedDay = NormalizeDayOfWeek(currentDate.DayOfWeek);
+                        var matchedItems = schedules
+                            .Where(item => item.ThuTrongTuan == normalizedDay)
+                            .ToList();
 
-                    weekTable.Rows.Add(row);
+                        foreach (var matchedItem in matchedItems)
+                        {
+                            expandedSchedule.Add((
+                                normalizedDay,
+                                DetectSession(matchedItem.GioBatDau),
+                                new WeeklyScheduleOccurrenceItem
+                                {
+                                    NgayHoc = currentDate,
+                                    GioBatDau = matchedItem.GioBatDau,
+                                    GioKetThuc = matchedItem.GioKetThuc,
+                                    DiaDiem = matchedItem.DiaDiem
+                                }));
+                        }
+                    }
+                }
+                else
+                {
+                    expandedSchedule = schedules
+                        .Select(item => (
+                            item.ThuTrongTuan,
+                            DetectSession(item.GioBatDau),
+                            new WeeklyScheduleOccurrenceItem
+                            {
+                                NgayHoc = null,
+                                GioBatDau = item.GioBatDau,
+                                GioKetThuc = item.GioKetThuc,
+                                DiaDiem = item.DiaDiem
+                            }))
+                        .ToList();
                 }
 
-                scheduleTable.WeekTables.Add(weekTable);
+                var effectiveStartDate = startDate ?? expandedSchedule
+                    .Where(item => item.Item.NgayHoc.HasValue)
+                    .Select(item => item.Item.NgayHoc!.Value)
+                    .DefaultIfEmpty(DateOnly.FromDateTime(DateTime.Today))
+                    .Min();
+
+                var effectiveEndDate = endDate ?? expandedSchedule
+                    .Where(item => item.Item.NgayHoc.HasValue)
+                    .Select(item => item.Item.NgayHoc!.Value)
+                    .DefaultIfEmpty(effectiveStartDate)
+                    .Max();
+
+                var firstWeekStart = GetStartOfWeek(effectiveStartDate);
+                var lastWeekStart = GetStartOfWeek(effectiveEndDate);
+                var weekOptions = new List<WeeklyScheduleWeekOption>();
+
+                for (var weekStart = firstWeekStart; weekStart <= lastWeekStart; weekStart = weekStart.AddDays(7))
+                {
+                    var weekEnd = weekStart.AddDays(6);
+                    weekOptions.Add(new WeeklyScheduleWeekOption
+                    {
+                        Index = weekOptions.Count,
+                        StartDate = weekStart,
+                        EndDate = weekEnd,
+                        Label = $"Tuần {weekOptions.Count + 1}: {weekStart:dd/MM} - {weekEnd:dd/MM}"
+                    });
+                }
+
+                if (weekOptions.Count == 0)
+                {
+                    weekOptions.Add(new WeeklyScheduleWeekOption
+                    {
+                        Index = 0,
+                        StartDate = firstWeekStart,
+                        EndDate = firstWeekStart.AddDays(6),
+                        Label = $"Tuần 1: {firstWeekStart:dd/MM} - {firstWeekStart.AddDays(6):dd/MM}"
+                    });
+                }
+
+                var scheduleTable = new WeeklyScheduleTableViewModel
+                {
+                    Weeks = weekOptions,
+                    SelectedWeekIndex = 0,
+                    WeekTables = new List<WeeklyScheduleWeekTable>()
+                };
+
+                foreach (var week in weekOptions)
+                {
+                    var weekTable = new WeeklyScheduleWeekTable
+                    {
+                        WeekIndex = week.Index,
+                        Label = week.Label,
+                        Days = Enumerable.Range(0, 7)
+                            .Select(offset => week.StartDate.AddDays(offset))
+                            .Select(date => new WeeklyScheduleDayColumn
+                            {
+                                DayOfWeek = NormalizeDayOfWeek(date.DayOfWeek),
+                                Label = FormatDayOfWeek(NormalizeDayOfWeek(date.DayOfWeek)),
+                                Date = date
+                            })
+                            .ToList(),
+                        Rows = new List<WeeklyScheduleRow>()
+                    };
+
+                    foreach (var session in sessionDefinitions)
+                    {
+                        var row = new WeeklyScheduleRow
+                        {
+                            SessionKey = session.Key,
+                            SessionLabel = session.Label,
+                            Cells = weekTable.Days.Select(day => new WeeklyScheduleCell
+                            {
+                                DayOfWeek = day.DayOfWeek,
+                                SessionKey = session.Key,
+                                Items = expandedSchedule
+                                    .Where(item => item.DayOfWeek == day.DayOfWeek
+                                        && item.SessionKey == session.Key
+                                        && item.Item.NgayHoc == day.Date)
+                                    .Select(item => item.Item)
+                                    .OrderBy(item => item.NgayHoc)
+                                    .ThenBy(item => item.GioBatDau)
+                                    .ToList()
+                            }).ToList()
+                        };
+
+                        weekTable.Rows.Add(row);
+                    }
+
+                    scheduleTable.WeekTables.Add(weekTable);
+                }
+
+                return scheduleTable;
             }
 
             <section class="course-detail-hero mb-5">
@@ -338,30 +352,88 @@
                         </div>
                     </div>
 
-                    <div class="course-detail-section">
+                    <div class="course-detail-section mt-4">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                            <h4 class="mb-0">Lịch học mẫu</h4>
-                            <span class="text-muted small">Dữ liệu lấy từ API chi tiết khóa học</span>
+                            <div>
+                                <h4 class="mb-1">Danh sách lớp đang mở</h4>
+                                <p class="text-muted mb-0">Chọn lớp phù hợp với lịch học của bạn trước khi gửi đăng ký.</p>
+                            </div>
+                            <span class="badge rounded-pill bg-light text-dark border">@availableClasses.Count lớp</span>
                         </div>
 
-                        @if (course.LichHocMau.Count == 0)
+                        @if (availableClasses.Count == 0)
                         {
-                            <p class="text-muted mb-0">Lịch học mẫu đang được cập nhật.</p>
+                            <div class="course-empty-state text-center">
+                                <i class="fa fa-school text-primary mb-3"></i>
+                                <h5 class="mb-2">Chưa có lớp nào để hiển thị</h5>
+                                <p class="text-muted mb-0">Hệ thống đang cập nhật danh sách lớp và lịch học cho khóa này.</p>
+                            </div>
                         }
                         else
                         {
-                            @await Html.PartialAsync("~/Views/Shared/Components/WeeklyScheduleTable/Default.cshtml", scheduleTable)
+                            <div class="class-list-grid">
+                                @foreach (var classItem in availableClasses)
+                                {
+                                    var isSelected = Model.SelectedClassId == classItem.ClassId;
+                                    var classScheduleTable = BuildScheduleTable(classItem.LichHoc, classItem.NgayBatDau, classItem.NgayKetThuc);
+                                    var classExpandedScheduleCount = classScheduleTable.WeekTables
+                                        .SelectMany(week => week.Rows)
+                                        .SelectMany(row => row.Cells)
+                                        .Sum(cell => cell.Items.Count);
+                                    <div class="class-card @(classItem.IsOpenForRegistration ? string.Empty : "is-disabled") @(isSelected ? "is-selected" : string.Empty)" data-class-card data-class-id="@classItem.ClassId" data-class-name="@classItem.TenLop" data-selectable="@(classItem.IsOpenForRegistration ? "true" : "false")">
+                                        <div class="class-card__top">
+                                            <div>
+                                                <div class="class-card__title-row">
+                                                    <input form="courseRegistrationForm" type="radio" name="classId" value="@classItem.ClassId" class="class-card__radio" @(classItem.IsOpenForRegistration ? null : "disabled") @(isSelected ? "checked" : null) />
+                                                    <h5 class="mb-0">@classItem.TenLop</h5>
+                                                </div>
+                                                <div class="small text-muted mt-2">Giáo viên: @(string.IsNullOrWhiteSpace(classItem.GiaoVien) ? "Đang cập nhật" : classItem.GiaoVien)</div>
+                                            </div>
+                                            <span class="badge rounded-pill @(classItem.IsOpenForRegistration ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")">@GetStatusLabel(classItem.TrangThai)</span>
+                                        </div>
 
-                            <div class="bg-white border rounded-3 p-3">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="fa fa-circle-info text-primary"></i>
-                                    <span class="fw-semibold">Tổng quan lịch học</span>
-                                </div>
-                                <div class="small text-muted">
-                                    Khóa học hiện có <strong>@expandedSchedule.Count</strong> buổi trong khoảng thời gian học, học vào
-                                    <strong>@string.Join(", ", course.LichHocMau.Select(item => item.ThuTrongTuan).Distinct().OrderBy(day => day).Select(FormatDayOfWeek))</strong>.
-                                    Lịch thực tế có thể được trung tâm điều chỉnh trước ngày khai giảng.
-                                </div>
+                                        <div class="class-card__meta">
+                                            <div><strong>Sĩ số:</strong> @classItem.SiSoHienTai/@classItem.SiSoToiDa</div>
+                                            <div><strong>Bắt đầu:</strong> @FormatDate(classItem.NgayBatDau)</div>
+                                            <div><strong>Kết thúc:</strong> @FormatDate(classItem.NgayKetThuc)</div>
+                                            <div><strong>Còn lại:</strong> @classItem.RemainingSlots chỗ</div>
+                                        </div>
+
+                                        <div class="class-card__schedule">
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                                                <div class="fw-semibold">Lịch học mẫu</div>
+                                                <span class="small text-muted">Giữ nguyên logic bảng lịch cũ</span>
+                                            </div>
+                                            @if (classItem.LichHoc.Count == 0)
+                                            {
+                                                <div class="text-muted small">Chưa có lịch học chi tiết.</div>
+                                            }
+                                            else
+                                            {
+                                                @await Html.PartialAsync("~/Views/Shared/Components/WeeklyScheduleTable/Default.cshtml", classScheduleTable)
+
+                                                <div class="bg-white border rounded-3 p-3 mt-3">
+                                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                                        <i class="fa fa-circle-info text-primary"></i>
+                                                        <span class="fw-semibold">Tổng quan lịch học lớp</span>
+                                                    </div>
+                                                    <div class="small text-muted">
+                                                        Lớp hiện có <strong>@classExpandedScheduleCount</strong> buổi trong khoảng thời gian học, học vào
+                                                        <strong>@string.Join(", ", classItem.LichHoc.Select(item => item.ThuTrongTuan).Distinct().OrderBy(day => day).Select(FormatDayOfWeek))</strong>.
+                                                        Lịch thực tế có thể được trung tâm điều chỉnh trước ngày khai giảng.
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        @if (!classItem.IsOpenForRegistration)
+                                        {
+                                            <div class="class-card__overlay-note">
+                                                <i class="fa fa-lock me-2"></i>Lớp này hiện chưa mở đăng ký.
+                                            </div>
+                                        }
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -397,14 +469,33 @@
                             Khi bấm đăng ký, hệ thống sẽ kiểm tra hồ sơ học viên của bạn và gửi yêu cầu đăng ký khóa học trực tiếp đến API.
                         </div>
 
-                        <form asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid gap-2 mb-3">
+                        @if (!string.IsNullOrWhiteSpace(Model.PaymentStatusMessage))
+                        {
+                            <div class="alert @GetRegistrationStateClass(Model.PaymentStatusState) small">
+                                <i class="fa fa-circle-info me-2"></i>@Model.PaymentStatusMessage
+                            </div>
+                        }
+
+                        <form id="courseRegistrationForm" asp-controller="KhoaHoc" asp-action="Register" method="post" class="d-grid gap-2 mb-3 js-submit-form">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="courseId" value="@course.CourseId" />
+                            <input type="hidden" id="selectedClassIdInput" name="classId" value="@(Model.SelectedClassId?.ToString() ?? string.Empty)" />
+                            <div>
+                                <label class="form-label fw-semibold">Lớp đã chọn</label>
+                                <div id="selectedClassText" class="selected-class-placeholder">
+                                    @(Model.SelectedClassId.HasValue
+                                        ? availableClasses.FirstOrDefault(item => item.ClassId == Model.SelectedClassId.Value)?.TenLop ?? "Đã chọn lớp"
+                                        : "Bạn cần chọn 1 lớp ở danh sách bên trái")
+                                </div>
+                            </div>
                             <div>
                                 <label class="form-label fw-semibold">Ghi chú</label>
                                 <textarea name="ghiChu" class="form-control" rows="3" placeholder="Nhập ghi chú nếu cần"></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-lg" @(course.IsOpenForRegistration ? null : "disabled")>Đăng ký ngay</button>
+                            <button type="submit" class="btn btn-primary btn-lg js-submit-button" @(course.IsOpenForRegistration && availableClasses.Any(item => item.IsOpenForRegistration) ? null : "disabled")>
+                                <span class="js-submit-default">Đăng ký ngay</span>
+                                <span class="js-submit-loading d-none"><i class="fa fa-spinner fa-spin me-2"></i>Đang gửi đăng ký...</span>
+                            </button>
                         </form>
 
                         <div class="d-grid gap-2">
@@ -636,10 +727,259 @@
             font-weight: 800;
         }
 
+        .class-list-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .class-card {
+            position: relative;
+            display: block;
+            padding: 1.25rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 1.15rem;
+            background: linear-gradient(135deg, #ffffff 0%, #fffdf7 100%);
+            cursor: pointer;
+            transition: all .2s ease;
+            width: 100%;
+            min-width: 0;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .class-card:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 12px 24px rgba(245, 158, 11, .12);
+        }
+
+        .class-card.is-selected {
+            border-color: #2563eb;
+            box-shadow: 0 14px 28px rgba(37, 99, 235, .14);
+        }
+
+        .class-card.is-disabled {
+            opacity: .75;
+            cursor: not-allowed;
+        }
+
+        .class-card__top {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .class-card__title-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+
+        .class-card__radio {
+            width: 1.1rem;
+            height: 1.1rem;
+            accent-color: #2563eb;
+        }
+
+        .class-card__meta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+            font-size: .95rem;
+            margin-bottom: 1rem;
+        }
+
+        .class-card__schedule {
+            padding: 1rem;
+            border-radius: 1rem;
+            background: #fff;
+            border: 1px dashed #e5e7eb;
+            max-height: 540px;
+            overflow: auto;
+            overscroll-behavior: contain;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .class-card__schedule .weekly-schedule-wrapper,
+        .class-card__schedule .table-responsive,
+        .class-card__schedule table {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .class-card__schedule .weekly-schedule-wrapper,
+        .class-card__schedule .table-responsive {
+            overflow-x: auto;
+        }
+
+        .class-list-grid,
+        .course-detail-section,
+        .class-card__top,
+        .class-card__meta {
+            min-width: 0;
+        }
+
+        .class-card__schedule::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .class-card__schedule::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, .8);
+            border-radius: 999px;
+        }
+
+        .class-card__schedule::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, .9);
+            border-radius: 999px;
+        }
+
+        .class-schedule-item {
+            padding: .75rem;
+            border-radius: .85rem;
+            background: #f8fafc;
+        }
+
+        .class-card__overlay-note {
+            margin-top: 1rem;
+            font-size: .92rem;
+            color: #b45309;
+        }
+
+        .course-empty-state {
+            padding: 2rem 1rem;
+            border-radius: 1rem;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .selected-class-placeholder {
+            padding: .95rem 1rem;
+            border-radius: 1rem;
+            background: rgba(255,255,255,.8);
+            border: 1px solid #e5e7eb;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
         @@media (max-width: 991.98px) {
             .course-detail-hero {
                 grid-template-columns: 1fr;
             }
+
+            .class-card__meta {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var form = document.getElementById('courseRegistrationForm');
+            if (!form) {
+                return;
+            }
+
+            var classInputs = document.querySelectorAll('input[name="classId"]');
+            var classCards = document.querySelectorAll('[data-class-card]');
+            var selectedClassText = document.getElementById('selectedClassText');
+            var selectedClassIdInput = document.getElementById('selectedClassIdInput');
+            var submitButton = form.querySelector('.js-submit-button');
+            var defaultText = form.querySelector('.js-submit-default');
+            var loadingText = form.querySelector('.js-submit-loading');
+
+            function clearSelection() {
+                classCards.forEach(function (card) {
+                    card.classList.remove('is-selected');
+                });
+
+                classInputs.forEach(function (input) {
+                    input.checked = false;
+                });
+
+                if (selectedClassIdInput) {
+                    selectedClassIdInput.value = '';
+                }
+
+                if (selectedClassText) {
+                    selectedClassText.textContent = 'Bạn cần chọn 1 lớp ở danh sách bên trái';
+                }
+            }
+
+            function selectCard(card) {
+                var classId = card.getAttribute('data-class-id') || '';
+                var className = card.getAttribute('data-class-name') || 'Đã chọn lớp';
+
+                classCards.forEach(function (item) {
+                    item.classList.remove('is-selected');
+                });
+
+                classInputs.forEach(function (input) {
+                    input.checked = input.value === classId;
+                });
+
+                card.classList.add('is-selected');
+
+                if (selectedClassIdInput) {
+                    selectedClassIdInput.value = classId;
+                }
+
+                if (selectedClassText) {
+                    selectedClassText.textContent = className;
+                }
+            }
+
+            classCards.forEach(function (card) {
+                card.addEventListener('click', function (event) {
+                    if (event.target.closest('a, button')) {
+                        return;
+                    }
+
+                    if (card.getAttribute('data-selectable') !== 'true') {
+                        return;
+                    }
+
+                    var currentClassId = card.getAttribute('data-class-id') || '';
+                    var isAlreadySelected = selectedClassIdInput && selectedClassIdInput.value === currentClassId;
+
+                    if (isAlreadySelected) {
+                        clearSelection();
+                        return;
+                    }
+
+                    selectCard(card);
+                });
+            });
+
+            classInputs.forEach(function (input) {
+                input.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            });
+
+            form.addEventListener('submit', function (event) {
+                if (!selectedClassIdInput || !selectedClassIdInput.value) {
+                    event.preventDefault();
+                    window.alert('Vui lòng chọn một lớp đang mở đăng ký trước khi gửi yêu cầu.');
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                if (defaultText) {
+                    defaultText.classList.add('d-none');
+                }
+
+                if (loadingText) {
+                    loadingText.classList.remove('d-none');
+                }
+            });
+        })();
+    </script>
 }

@@ -79,6 +79,7 @@ public class OnTapController : Controller
         };
         HttpContext.Session.SetString($"Practice_{topicCode}",
             System.Text.Json.JsonSerializer.Serialize(questions, jsonOptions));
+        HttpContext.Session.SetString($"PracticeTopicName_{topicCode}", questions.Items.FirstOrDefault()?.TopicName ?? "Ôn tập");
 
         return RedirectToAction(nameof(Session), new { topicCode, number = 1, embedded });
     }
@@ -109,6 +110,7 @@ public class OnTapController : Controller
 
             questionsJson = System.Text.Json.JsonSerializer.Serialize(questionsResponse);
             HttpContext.Session.SetString($"Practice_{topicCode}", questionsJson);
+            HttpContext.Session.SetString($"PracticeTopicName_{topicCode}", questionsResponse.Items.FirstOrDefault()?.TopicName ?? "Ôn tập");
             Console.WriteLine($"[Session] Reloaded {questionsResponse.Items.Count} questions for {topicCode}");
         }
 
@@ -137,6 +139,23 @@ public class OnTapController : Controller
     }
 
     [HttpGet]
+    public IActionResult Result(string topicCode, bool embedded = false)
+    {
+        var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            TempData["PracticeError"] = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+            return RedirectToAction("Index", "Login");
+        }
+
+        var topicName = HttpContext.Session.GetString($"PracticeTopicName_{topicCode}") ?? "Ôn tập";
+        ViewBag.TopicCode = topicCode;
+        ViewBag.TopicName = topicName;
+        ViewBag.IsEmbedded = embedded;
+        return View();
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetQuestionJson(string topicCode, int number, CancellationToken cancellationToken = default)
     {
         var accessToken = HttpContext.Session.GetString(AccessTokenSessionKey);
@@ -159,6 +178,7 @@ public class OnTapController : Controller
 
             questionsJson = System.Text.Json.JsonSerializer.Serialize(questionsResponse);
             HttpContext.Session.SetString($"Practice_{topicCode}", questionsJson);
+            HttpContext.Session.SetString($"PracticeTopicName_{topicCode}", questionsResponse.Items.FirstOrDefault()?.TopicName ?? "Ôn tập");
         }
 
         var jsonOptions = new System.Text.Json.JsonSerializerOptions
@@ -224,6 +244,7 @@ public class OnTapController : Controller
 
             questionsJson = System.Text.Json.JsonSerializer.Serialize(questionsResponse);
             HttpContext.Session.SetString($"Practice_{topicCode}", questionsJson);
+            HttpContext.Session.SetString($"PracticeTopicName_{topicCode}", questionsResponse.Items.FirstOrDefault()?.TopicName ?? "Ôn tập");
             Console.WriteLine($"Reloaded {questionsResponse.Items.Count} questions for {topicCode}");
         }
 

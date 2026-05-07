@@ -9,125 +9,133 @@ build_property.EnforceExtendedAnalyzerRules =
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = webthibanglai
 build_property.RootNamespace = webthibanglai
-build_property.ProjectDir = C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\
+build_property.ProjectDir = c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 9.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai
+build_property.MSBuildProjectDirectory = c:\Users\Bao\OneDrive\Máy tính\thibanglai\ThiBangLaiXe\webthibanglai
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 9.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/About/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/About/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWJvdXRcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Contact/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Contact/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQ29udGFjdFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXhhbVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Launch.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Launch.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXhhbVxMYXVuY2guY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Result.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Result.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXhhbVxSZXN1bHQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Session.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Session.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXhhbVxTZXNzaW9uLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Start.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Exam/Start.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcRXhhbVxTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Home/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Home/Privacy.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/KhoaHoc/Detail.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/KhoaHoc/Detail.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2hvYUhvY1xEZXRhaWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/KhoaHoc/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/KhoaHoc/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2hvYUhvY1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/LichHoc/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/KhoaHoc/MyRegistrations.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcS2hvYUhvY1xNeVJlZ2lzdHJhdGlvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/LichHoc/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTGljaEhvY1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Login/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Login/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Login/Profile.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Login/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTG9naW5cUHJvZmlsZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Onboarding/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Onboarding/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT25ib2FyZGluZ1xJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT25UYXBcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Launch.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Launch.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT25UYXBcTGF1bmNoLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Session.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Result.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT25UYXBcUmVzdWx0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/OnTap/Session.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcT25UYXBcU2Vzc2lvbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/Components/WeeklyScheduleTable/Default.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/Components/WeeklyScheduleTable/Default.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENvbXBvbmVudHNcV2Vla2x5U2NoZWR1bGVUYWJsZVxEZWZhdWx0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/Error.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Chatbot.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Chatbot.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9DaGF0Ym90LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Footer.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Footer.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Gb290ZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Header.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Header.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9IZWFkZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_ValidationScriptsPartial.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/_ViewImports.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/_ViewStart.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/webthibanglai/Views/Exam/Index.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/webthibanglai/Views/Exam/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = d2VidGhpYmFuZ2xhaVxWaWV3c1xFeGFtXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Layout.cshtml]
+[c:/Users/Bao/OneDrive/Máy tính/thibanglai/ThiBangLaiXe/webthibanglai/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-yeatoht90h

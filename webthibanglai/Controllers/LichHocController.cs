@@ -25,6 +25,8 @@ namespace webthibanglai.Controllers
             }
 
             var model = await _studentDashboardApiService.GetDashboardAsync(accessToken, cancellationToken);
+            model.CourseRegistrationStatusMessage = TempData["CourseRegistrationStatusMessage"]?.ToString();
+            model.CourseRegistrationStatusState = TempData["CourseRegistrationStatusState"]?.ToString();
             return View(model);
         }
 

@@ -10,7 +10,7 @@
     var total = questions.Count;
     var current = Math.Min(Math.Max(currentNumber, 1), Math.Max(total, 1));
     var currentQuestion = questions.ElementAtOrDefault(current - 1);
-    
+
     if (currentQuestion == null)
     {
         <div class="container py-5">
@@ -18,7 +18,7 @@
         </div>
         return;
     }
-    
+
     var questionId = currentQuestion.Id;
     var content = currentQuestion.Content;
     var isCritical = currentQuestion.IsCritical;
@@ -39,7 +39,7 @@
             <div class="col-lg-7">
                 <span class="badge rounded-pill bg-light text-primary px-3 py-2 mb-3">Chế độ ôn tập</span>
                 <h1 class="display-5 fw-bold mb-3">@topicName</h1>
-                <p class="lead mb-4">Làm bài ôn tập với phản hồi ngay lập tức. Khi chọn sai, hệ thống sẽ thông báo và lưu câu sai để bạn xem lại sau.</p>
+                <p class="lead mb-4">Làm bài ôn tập với phản hồi ngay lập tức. Khi chọn sai, hệ thống sẽ thông báo và lưu câu sai để bạn xem lại trong chính phiên hiện tại.</p>
                 <div class="d-flex flex-wrap gap-3">
                     <div class="practice-panel-glass px-3 py-2">
                         <i class="fas fa-layer-group me-2"></i>@total câu hỏi
@@ -100,6 +100,10 @@
                     <i class="fas fa-circle-info me-2"></i><span id="practiceFeedbackText">Chọn đáp án để kiểm tra</span>
                 </div>
 
+                <button type="button" class="btn btn-warning w-100 py-3 fw-semibold mb-3 practice-finish-button" id="finishPracticeButton">
+                    <i class="fas fa-flag-checkered me-2"></i>Kết thúc bài và xem kết quả
+                </button>
+
                 <div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0">Tổng quan</h6>
@@ -148,16 +152,13 @@
                                     var answerId = answer.AnswerId;
                                     var answerContent = answer.Content;
                                     var answerOrder = answer.Order;
-                                    var isCorrect = answer.IsCorrect == true;
-                                    
-                                    <div class="option-item selectable" data-answer-id="@answerId" data-is-correct="@isCorrect.ToString().ToLower()">
+                                    var answerIsCorrect = answer.IsCorrect == true;
+
+                                    <div class="option-item selectable" data-answer-id="@answerId" data-is-correct="@answerIsCorrect.ToString().ToLower()">
                                         <input class="option-input" type="radio" name="answerId" id="answer-@answerId" value="@answerId" />
                                         <label class="option-label w-100" for="answer-@answerId">
                                             <span class="option-marker">@((char)('A' + Math.Max(answerOrder - 1, 0)))</span>
                                             <span class="option-copy">@answerContent</span>
-                                            <span class="option-debug-badge" data-answer-id="@answerId">
-                                                <small class="text-muted">ID: @answerId | Đúng: @(isCorrect ? "✓" : "✗")</small>
-                                            </span>
                                         </label>
                                     </div>
                                 }
@@ -201,7 +202,6 @@
 
 @section Styles {
     <style>
-        /* Ẩn header và footer cho trang Session của OnTap */
         body:has(.session-practice-page) .container-fluid.bg-dark.text-light.p-0,
         body:has(.session-practice-page) .navbar,
         body:has(.session-practice-page) footer,
@@ -215,77 +215,34 @@
             max-width: 1320px;
         }
 
-        .session-practice-page .container.py-5 {
-            padding-top: 1rem !important;
-        }
-
-        /* Embedded mode - điều chỉnh thêm cho fullscreen */
-        body.embedded-practice-mode .practice-hero {
-            display: none !important;
-        }
-
-        body.embedded-practice-mode .container.py-5 {
-            max-width: 100%;
-            padding-top: .75rem !important;
-            padding-bottom: .75rem !important;
-        }
-
-        body.embedded-practice-mode .practice-shell {
-            padding: .5rem;
-            margin-top: 0;
-        }
-
-        body.embedded-practice-mode .practice-sidebar {
-            top: 1rem;
-        }
-
-        body.embedded-practice-mode .practice-stage {
-            min-height: calc(100vh - 2rem);
+        .practice-hero,
+        .practice-stage,
+        .practice-question-card,
+        .practice-sidebar {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 28px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
         }
 
         .practice-hero {
-            position: relative;
-            overflow: hidden;
-            border-radius: 32px;
-            padding: 3rem;
+            padding: 2rem;
             background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
-            color: #1f2937;
-            border: 1px solid #eceff3;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-        }
-
-        .practice-hero::after {
-            content: "";
-            position: absolute;
-            width: 320px;
-            height: 320px;
-            right: -120px;
-            top: -140px;
-            border-radius: 50%;
-            background: rgba(34, 197, 94, 0.10);
         }
 
         .practice-panel-glass {
-            border: 1px solid #bbf7d0;
-            background: #ffffff;
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            color: #1f2937;
-            box-shadow: 0 18px 40px rgba(34, 197, 94, 0.08);
+            border-radius: 18px;
+            background: rgba(255,255,255,.85);
+            border: 1px solid #dbeafe;
         }
 
         .practice-shell {
-            margin-top: 1.5rem;
-            background: #ffffff;
-            border-radius: 32px;
-            border: 1px solid #eceff3;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
-            overflow: hidden;
+            padding: .25rem;
         }
 
         .practice-workspace {
             display: grid;
-            grid-template-columns: 320px minmax(0,1fr);
+            grid-template-columns: 320px minmax(0, 1fr);
             gap: 1.5rem;
             align-items: start;
         }
@@ -293,100 +250,12 @@
         .practice-sidebar,
         .practice-stage,
         .practice-question-card {
-            background: #fff;
-            border-radius: 28px;
             padding: 1.5rem;
-            border: 1px solid #eceff3;
-            box-shadow: none;
         }
 
-        .sidebar-stat {
-            padding: 1rem;
-            border-radius: 20px;
-            background: #ffffff;
-            border: 1px solid #eceff3;
-            display: flex;
-            flex-direction: column;
-            gap: .35rem;
-        }
-
-        .practice-fullscreen-note {
-            padding: .9rem 1rem;
-            border-radius: 18px;
-            background: #eff6ff;
-            color: #1e40af;
-            border: 1px solid #bfdbfe;
-        }
-
-        .practice-fullscreen-note.status-correct {
-            background: #ecfdf3;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
-
-        .practice-fullscreen-note.status-wrong {
-            background: #fef2f2;
-            color: #b91c1c;
-            border-color: #fecaca;
-        }
-
-        .practice-explanation {
-            padding: 1rem 1.25rem;
-            border-radius: 18px;
-            background: #fffbea;
-            border: 1px solid #fde68a;
-            color: #92400e;
-        }
-
-        .practice-explanation-title {
-            font-weight: 700;
-            margin-bottom: .5rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .practice-explanation-text {
-            color: #78350f;
-            line-height: 1.65;
-            white-space: pre-line;
-        }
-
-        .question-palette {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: .6rem;
-        }
-
-        .palette-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 46px;
-            border-radius: 16px;
-            border: 1px solid #eceff3;
-            background: #ffffff;
-            color: #6b7280;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all .2s ease;
-        }
-
-        .palette-btn.active {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            border-color: #22c55e;
-            color: #fff;
-        }
-
-        .palette-btn.answered:not(.active) {
-            background: #e8f7ee;
-            border-color: #9ed9b0;
-            color: #166534;
-        }
-
-        .palette-btn.wrong:not(.active) {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #b91c1c;
+        .practice-sidebar {
+            position: sticky;
+            top: 1rem;
         }
 
         .practice-stage-header,
@@ -395,42 +264,38 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
-            margin-bottom: 1.5rem;
         }
 
         .question-progress {
             display: flex;
-            align-items: flex-start;
             gap: 1rem;
+            align-items: center;
         }
 
         .question-progress-badge {
             min-width: max-content;
-            padding: .55rem .95rem;
-            border-radius: 999px;
             background: #dcfce7;
             color: #166534;
+            border-radius: 999px;
+            padding: .8rem 1.1rem;
             font-weight: 700;
-            display: flex;
-            gap: .5rem;
-            align-items: center;
         }
 
         .question-progress-title {
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: .35rem;
         }
 
-        .question-progress-subtitle {
-            color: #6b7280;
-            margin: 0;
+        .question-progress-subtitle,
+        .text-muted {
+            color: #6b7280 !important;
         }
 
         .question-tag {
             display: inline-block;
             margin-bottom: 1rem;
-            padding: .35rem .8rem;
             border-radius: 999px;
+            padding: .65rem 1rem;
             background: #dcfce7;
             color: #166534;
             font-weight: 700;
@@ -439,148 +304,172 @@
         .question-text {
             font-size: 1.28rem;
             font-weight: 700;
-            color: #111827;
-            margin-bottom: 1.5rem;
+            line-height: 1.55;
+            color: #0f172a;
         }
 
         .question-image {
+            display: block;
             max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            margin-top: 1rem;
+            border: 1px solid #e5e7eb;
         }
 
         .option-list {
             display: grid;
             gap: 1rem;
+            margin-top: 1.5rem;
         }
 
-        .option-item.selectable {
-            position: relative;
+        .option-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 22px;
+            transition: all .2s ease;
+            background: #fff;
+        }
+
+        .option-item.selectable:hover {
+            border-color: #86efac;
+            box-shadow: 0 12px 30px rgba(34, 197, 94, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .option-item.selected {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, .12);
+        }
+
+        .option-item.correct {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .option-item.wrong {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .option-item.disabled {
+            pointer-events: none;
         }
 
         .option-input {
             position: absolute;
             opacity: 0;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            z-index: 2;
+            pointer-events: none;
         }
 
         .option-label {
             display: flex;
-            align-items: flex-start;
             gap: 1rem;
-            padding: 1rem 1.1rem;
-            border-radius: 18px;
-            border: 1px solid #e5e7eb;
-            background: #ffffff;
+            align-items: flex-start;
+            padding: 1.2rem 1.3rem;
             cursor: pointer;
-            transition: all .2s ease;
-        }
-
-        .option-label:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(15,23,42,.06);
-        }
-
-        .option-item.selectable.selected .option-label,
-        .option-input:checked + .option-label {
-            border-color: #22c55e;
-            background: #dcfce7;
-            box-shadow: 0 14px 35px rgba(34, 197, 94, 0.14);
-        }
-
-        .option-item.selectable.correct .option-label {
-            border-color: #22c55e;
-            background: #dcfce7;
-            box-shadow: 0 14px 35px rgba(34, 197, 94, 0.14);
-        }
-
-        .option-item.selectable.wrong .option-label {
-            border-color: #ef4444;
-            background: #fee2e2;
-            box-shadow: 0 14px 35px rgba(239, 68, 68, 0.14);
-        }
-
-        .option-item.selectable.disabled .option-input {
-            cursor: not-allowed;
-        }
-
-        .option-item.selectable.disabled .option-label {
-            cursor: not-allowed;
-            opacity: 0.7;
         }
 
         .option-marker {
-            width: 40px;
-            height: 40px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background: #f0fdf4;
             color: #166534;
-            font-weight: 700;
+            font-size: 1.25rem;
+            font-weight: 800;
             flex-shrink: 0;
         }
 
         .option-copy {
-            color: #111827;
-            font-weight: 500;
-            flex: 1;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #334155;
         }
 
-        .option-debug-badge {
-            display: flex;
-            align-items: center;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            background: #f3f4f6;
+        .practice-explanation {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+        }
+
+        .practice-explanation-title {
+            font-weight: 800;
+            color: #b45309;
+            margin-bottom: .5rem;
+        }
+
+        .practice-explanation-text {
+            color: #78350f;
+            line-height: 1.65;
+        }
+
+        .sidebar-stat,
+        .practice-fullscreen-note {
+            padding: 1rem 1.1rem;
+            border-radius: 18px;
+            background: #f8fafc;
             border: 1px solid #e5e7eb;
-            margin-left: auto;
         }
 
-        .option-debug-badge small {
-            font-size: 0.75rem;
-            font-weight: 600;
-            white-space: nowrap;
+        .practice-fullscreen-note.status-correct {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
         }
 
-        .option-input:checked + .option-label .option-marker,
-        .option-item.selectable.selected .option-label .option-marker {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        .practice-fullscreen-note.status-wrong {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .question-palette {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .palette-btn {
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            color: #166534;
+            border-radius: 16px;
+            min-height: 52px;
+            font-weight: 700;
+        }
+
+        .palette-btn.active {
+            background: #22c55e;
             color: #fff;
+            border-color: #22c55e;
         }
 
-        .option-item.selectable.correct .option-label .option-marker {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: #fff;
+        .palette-btn.answered {
+            background: #dcfce7;
         }
 
-        .option-item.selectable.wrong .option-label .option-marker {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #fff;
+        .palette-btn.wrong {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        .practice-finish-button {
+            box-shadow: 0 12px 24px rgba(234, 179, 8, .22);
         }
 
         @@media (max-width: 991.98px) {
             .practice-workspace {
                 grid-template-columns: 1fr;
             }
-        }
 
-        @@media (max-width: 767.98px) {
-            .practice-hero,
-            .practice-sidebar,
-            .practice-stage,
-            .practice-question-card {
-                padding: 1.25rem;
+            .practice-sidebar {
+                position: static;
             }
 
-            .practice-stage-header,
             .practice-nav,
             .question-progress {
                 flex-direction: column;
@@ -591,6 +480,24 @@
                 grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
+
+        @@media (max-width: 575.98px) {
+            .practice-hero,
+            .practice-sidebar,
+            .practice-stage,
+            .practice-question-card {
+                padding: 1rem;
+                border-radius: 20px;
+            }
+
+            .question-palette {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .option-label {
+                padding: 1rem;
+            }
+        }
     </style>
 }
 
@@ -598,80 +505,58 @@
     <script>
         (function () {
             var practiceForm = document.getElementById('practiceAnswerForm');
-            var checkUrl = practiceForm ? practiceForm.getAttribute('data-check-url') : '';
-            var topicCode = practiceForm ? practiceForm.getAttribute('data-topic-code') : '';
-            var tokenField = document.querySelector('input[name="__RequestVerificationToken"]');
             var feedback = document.getElementById('practiceFeedback');
             var feedbackText = document.getElementById('practiceFeedbackText');
-            var wrongCountBox = document.getElementById('wrongCountBox');
-            var progressText = document.getElementById('answeredProgressText');
-            var progressBar = document.getElementById('answeredProgressBar');
             var explanationBox = document.getElementById('practiceExplanation');
             var explanationText = document.getElementById('practiceExplanationText');
-            var apiBaseUrl = '@apiBaseUrl';
+            var tokenField = practiceForm ? practiceForm.querySelector('input[name="__RequestVerificationToken"]') : null;
+            var progressText = document.getElementById('answeredProgressText');
+            var progressBar = document.getElementById('answeredProgressBar');
+            var wrongCountBox = document.getElementById('wrongCountBox');
+            var checkUrl = practiceForm ? (practiceForm.getAttribute('data-check-url') || '') : '';
+            var topicCode = practiceForm ? (practiceForm.getAttribute('data-topic-code') || '') : '';
             var totalQuestions = @total;
             var currentQuestionNumber = @current;
             var questionId = @questionId;
             var currentExplanation = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(explanation ?? string.Empty));
-            var answeredStorageKey = 'practice-answered-' + topicCode;
-            var wrongStorageKey = 'practice-wrong-' + topicCode;
+            var sessionResultState = { answeredQuestions: [], wrongQuestions: [] };
             var isCheckingAnswer = false;
             var isNavigating = false;
             var isEmbedded = @(isEmbedded ? "true" : "false");
 
             function setFeedback(message, state) {
-                if (!feedback || !feedbackText) {
-                    return;
-                }
-
+                if (!feedback || !feedbackText) return;
                 feedback.classList.remove('status-correct', 'status-wrong');
-                if (state) {
-                    feedback.classList.add(state);
-                }
-
+                if (state) feedback.classList.add(state);
                 feedbackText.textContent = message || 'Chọn đáp án để kiểm tra';
             }
 
             function setExplanation(text, visible) {
-                if (!explanationBox || !explanationText) {
-                    return;
-                }
-
+                if (!explanationBox || !explanationText) return;
                 var normalized = (text || '').toString().trim();
                 explanationText.textContent = normalized;
                 explanationBox.style.display = visible && normalized ? 'block' : 'none';
             }
 
             function normalizeImageUrl(imageUrl) {
-                if (!imageUrl) {
+                if (!imageUrl) return imageUrl;
+                if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('//') || !@Html.Raw(System.Text.Json.JsonSerializer.Serialize(apiBaseUrl))) {
                     return imageUrl;
                 }
 
-                if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith('//') || !apiBaseUrl) {
-                    return imageUrl;
-                }
-
+                var apiBaseUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(apiBaseUrl));
                 return apiBaseUrl.replace(/\/$/, '') + '/' + imageUrl.replace(/^\//, '');
             }
 
             function getAnsweredQuestions() {
-                try {
-                    var raw = window.sessionStorage.getItem(answeredStorageKey);
-                    if (!raw) return [];
-                    var parsed = JSON.parse(raw);
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch {
-                    return [];
-                }
+                return Array.isArray(sessionResultState.answeredQuestions) ? sessionResultState.answeredQuestions.slice() : [];
             }
 
             function saveAnsweredQuestions(items) {
-                var normalized = Array.from(new Set(items
-                    .map(function (value) { return parseInt(value, 10); })
-                    .filter(function (value) { return !isNaN(value) && value >= 1 && value <= totalQuestions; })))
-                    .sort(function (a, b) { return a - b; });
-
-                window.sessionStorage.setItem(answeredStorageKey, JSON.stringify(normalized));
+                var normalized = Array.from(new Set(items.map(function (value) { return parseInt(value, 10); }).filter(function (value) {
+                    return !isNaN(value) && value >= 1 && value <= totalQuestions;
+                }))).sort(function (a, b) { return a - b; });
+                sessionResultState.answeredQuestions = normalized;
                 return normalized;
             }
 
@@ -680,23 +565,14 @@
             }
 
             function getWrongQuestions() {
-                try {
-                    var raw = window.sessionStorage.getItem(wrongStorageKey);
-                    if (!raw) return [];
-                    var parsed = JSON.parse(raw);
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch {
-                    return [];
-                }
+                return Array.isArray(sessionResultState.wrongQuestions) ? sessionResultState.wrongQuestions.slice() : [];
             }
 
             function saveWrongQuestions(items) {
-                var normalized = Array.from(new Set(items
-                    .map(function (value) { return parseInt(value, 10); })
-                    .filter(function (value) { return !isNaN(value) && value >= 1 && value <= totalQuestions; })))
-                    .sort(function (a, b) { return a - b; });
-
-                window.sessionStorage.setItem(wrongStorageKey, JSON.stringify(normalized));
+                var normalized = Array.from(new Set(items.map(function (value) { return parseInt(value, 10); }).filter(function (value) {
+                    return !isNaN(value) && value >= 1 && value <= totalQuestions;
+                }))).sort(function (a, b) { return a - b; });
+                sessionResultState.wrongQuestions = normalized;
                 return normalized;
             }
 
@@ -711,106 +587,64 @@
                 var wrongCount = wrongQuestions.length;
                 var answeredMap = new Set(answeredQuestions);
                 var wrongMap = new Set(wrongQuestions);
-                var answeredPercent = totalQuestions <= 0
-                    ? 0
-                    : Math.max(0, Math.min(100, Math.round(answeredCount / totalQuestions * 100)));
+                var answeredPercent = totalQuestions <= 0 ? 0 : Math.max(0, Math.min(100, Math.round(answeredCount / totalQuestions * 100)));
 
-                var paletteButtons = document.querySelectorAll('.palette-btn[data-question-number]');
-                paletteButtons.forEach(function (button) {
+                document.querySelectorAll('.palette-btn[data-question-number]').forEach(function (button) {
                     var number = parseInt(button.getAttribute('data-question-number') || '', 10);
                     button.classList.remove('answered', 'wrong');
-                    
-                    if (wrongMap.has(number)) {
-                        button.classList.add('wrong');
-                    } else if (answeredMap.has(number)) {
-                        button.classList.add('answered');
-                    }
+                    if (wrongMap.has(number)) button.classList.add('wrong');
+                    else if (answeredMap.has(number)) button.classList.add('answered');
                 });
 
-                if (progressText) {
-                    progressText.textContent = answeredCount + '/' + totalQuestions;
-                }
-
+                if (progressText) progressText.textContent = answeredCount + '/' + totalQuestions;
                 if (progressBar) {
                     progressBar.style.width = answeredPercent + '%';
                     progressBar.setAttribute('aria-valuenow', answeredPercent.toString());
                 }
-
-                if (wrongCountBox) {
-                    wrongCountBox.textContent = wrongCount.toString();
-                }
+                if (wrongCountBox) wrongCountBox.textContent = wrongCount.toString();
             }
 
             function disableAllOptions() {
-                practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
-                    item.classList.add('disabled');
-                });
-                practiceForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
-                    input.disabled = true;
-                });
+                if (!practiceForm) return;
+                practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) { item.classList.add('disabled'); });
+                practiceForm.querySelectorAll('input[name="answerId"]').forEach(function (input) { input.disabled = true; });
             }
 
             function highlightAnswers(selectedAnswerId, correctAnswerId, isCorrect) {
-                console.log('=== DEBUG: highlightAnswers ===');
-                console.log('selectedAnswerId:', selectedAnswerId, '(type:', typeof selectedAnswerId + ')');
-                console.log('correctAnswerId:', correctAnswerId, '(type:', typeof correctAnswerId + ')');
-                console.log('isCorrect:', isCorrect, '(type:', typeof isCorrect + ')');
-                
+                if (!practiceForm) return;
                 practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
                     var itemAnswerId = parseInt(item.getAttribute('data-answer-id') || '0', 10);
-                    var itemIsCorrect = item.getAttribute('data-is-correct') === 'true';
-                    
-                    console.log('  - Checking answer ID:', itemAnswerId, '| isCorrect from data:', itemIsCorrect);
-                    console.log('    itemAnswerId === correctAnswerId:', itemAnswerId === correctAnswerId);
-                    console.log('    itemAnswerId === selectedAnswerId:', itemAnswerId === selectedAnswerId);
-                    
-                    // Tô xanh đáp án đúng
-                    if (itemAnswerId === correctAnswerId) {
-                        console.log('    → Adding GREEN (correct) to answer', itemAnswerId);
-                        item.classList.add('correct');
-                    }
-                    
-                    // Nếu chọn sai, tô đỏ đáp án đã chọn
-                    if (!isCorrect && itemAnswerId === selectedAnswerId) {
-                        console.log('    → Adding RED (wrong) to answer', itemAnswerId);
-                        item.classList.add('wrong');
-                    }
+                    if (itemAnswerId === correctAnswerId) item.classList.add('correct');
+                    if (!isCorrect && itemAnswerId === selectedAnswerId) item.classList.add('wrong');
                 });
-                console.log('=== END DEBUG ===');
+            }
+
+            function finalizeAnswerResult(isCorrectResult, selectedAnswerIdResult, correctAnswerIdResult, explanationTextResult) {
+                if (isCorrectResult) setFeedback('✓ Chính xác! Đáp án đúng.', 'status-correct');
+                else {
+                    setFeedback('✗ Sai rồi! Đáp án đúng đã được đánh dấu màu xanh.', 'status-wrong');
+                    markWrong(currentQuestionNumber);
+                }
+                highlightAnswers(selectedAnswerIdResult, correctAnswerIdResult, isCorrectResult);
+                setExplanation(explanationTextResult || currentExplanation, true);
+                disableAllOptions();
+                renderAnsweredState();
+                isCheckingAnswer = false;
             }
 
             function checkAnswer(answerId) {
-                if (isCheckingAnswer) {
-                    return;
-                }
-
-                console.log('=== DEBUG: Client-side Check ===');
-                console.log('answerId:', answerId, '(type:', typeof answerId + ')');
-
+                if (isCheckingAnswer || !practiceForm) return;
                 isCheckingAnswer = true;
                 setFeedback('Đang kiểm tra...', '');
 
-                // Tìm đáp án được chọn và đáp án đúng từ DOM
                 var selectedAnswer = null;
                 var correctAnswer = null;
-                
                 practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
                     var itemAnswerId = parseInt(item.getAttribute('data-answer-id') || '0', 10);
                     var itemIsCorrect = item.getAttribute('data-is-correct') === 'true';
-                    
-                    console.log('  - Answer ID:', itemAnswerId, '| isCorrect:', itemIsCorrect);
-                    
-                    if (itemAnswerId === answerId) {
-                        selectedAnswer = { id: itemAnswerId, isCorrect: itemIsCorrect };
-                    }
-                    
-                    if (itemIsCorrect) {
-                        correctAnswer = { id: itemAnswerId };
-                    }
+                    if (itemAnswerId === answerId) selectedAnswer = { id: itemAnswerId, isCorrect: itemIsCorrect };
+                    if (itemIsCorrect) correctAnswer = { id: itemAnswerId };
                 });
-
-                console.log('Selected answer:', selectedAnswer);
-                console.log('Correct answer:', correctAnswer);
 
                 if (!selectedAnswer || !correctAnswer) {
                     setFeedback('Lỗi: Không tìm thấy thông tin đáp án.', 'status-wrong');
@@ -820,23 +654,6 @@
 
                 markAnswered(currentQuestionNumber);
 
-                function finalizeAnswerResult(isCorrectResult, selectedAnswerIdResult, correctAnswerIdResult, explanationTextResult) {
-                    if (isCorrectResult) {
-                        console.log('✓ User selected CORRECT answer');
-                        setFeedback('✓ Chính xác! Đáp án đúng.', 'status-correct');
-                    } else {
-                        console.log('✗ User selected WRONG answer');
-                        setFeedback('✗ Sai rồi! Đáp án đúng đã được đánh dấu màu xanh.', 'status-wrong');
-                        markWrong(currentQuestionNumber);
-                    }
-
-                    highlightAnswers(selectedAnswerIdResult, correctAnswerIdResult, isCorrectResult);
-                    setExplanation(explanationTextResult || currentExplanation, true);
-                    disableAllOptions();
-                    renderAnsweredState();
-                    isCheckingAnswer = false;
-                }
-
                 if (checkUrl && tokenField) {
                     fetch(checkUrl, {
                         method: 'POST',
@@ -845,220 +662,56 @@
                             'RequestVerificationToken': tokenField.value,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({
-                            topicCode: topicCode,
-                            questionId: questionId,
-                            answerId: answerId
-                        })
+                        body: JSON.stringify({ topicCode: topicCode, questionId: questionId, answerId: answerId })
                     })
-                    .then(function(response) {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
-
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
                         return response.json();
                     })
-                    .then(function(result) {
+                    .then(function (result) {
                         if (!result || !result.success) {
                             throw new Error(result && result.message ? result.message : 'Không thể kiểm tra đáp án.');
                         }
-
                         currentExplanation = result.explanation || currentExplanation || '';
-                        finalizeAnswerResult(
-                            result.isCorrect === true,
-                            parseInt(result.selectedAnswerId, 10),
-                            parseInt(result.correctAnswerId, 10),
-                            result.explanation || currentExplanation
-                        );
+                        finalizeAnswerResult(result.isCorrect === true, parseInt(result.selectedAnswerId, 10), parseInt(result.correctAnswerId, 10), result.explanation || currentExplanation);
                     })
-                    .catch(function(err) {
-                        console.warn('Fallback to client-side check because API check failed:', err);
-
-                        var localIsCorrect = selectedAnswer.isCorrect === true;
-                        finalizeAnswerResult(localIsCorrect, selectedAnswer.id, correctAnswer.id, currentExplanation);
+                    .catch(function () {
+                        finalizeAnswerResult(selectedAnswer.isCorrect === true, selectedAnswer.id, correctAnswer.id, currentExplanation);
                     });
-
                     return;
                 }
 
                 finalizeAnswerResult(selectedAnswer.isCorrect === true, selectedAnswer.id, correctAnswer.id, currentExplanation);
             }
 
-            // AJAX Navigation
             function navigateToQuestion(questionNumber) {
-                if (isNavigating) {
-                    console.log('Already navigating, skipping...');
-                    return;
-                }
-
-                if (questionNumber < 1 || questionNumber > totalQuestions) {
-                    console.warn('Invalid question number:', questionNumber);
-                    return;
-                }
-
+                if (isNavigating) return;
+                if (questionNumber < 1 || questionNumber > totalQuestions) return;
                 isNavigating = true;
                 setFeedback('Đang tải câu hỏi...', '');
 
-                var url = '@Url.Action("GetQuestionJson", "OnTap")' +
-                    '?topicCode=' + encodeURIComponent(topicCode) +
-                    '&number=' + questionNumber;
-
+                var url = '@Url.Action("GetQuestionJson", "OnTap")' + '?topicCode=' + encodeURIComponent(topicCode) + '&number=' + questionNumber;
                 fetch(url)
-                    .then(function(response) {
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
+                    .then(function (response) {
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
                         return response.json();
                     })
-                    .then(function(data) {
-                        if (!data.success || !data.question) {
-                            throw new Error('Invalid response data');
-                        }
-
+                    .then(function (data) {
+                        if (!data.success || !data.question) throw new Error('Invalid response data');
                         updateQuestionUI(data.question);
-                        
-                        // Update URL without reload
-                        var newUrl = '@Url.Action("Session", "OnTap")' +
-                            '?topicCode=' + encodeURIComponent(topicCode) +
-                            '&number=' + questionNumber +
-                            (isEmbedded ? '&embedded=true' : '');
+                        var newUrl = '@Url.Action("Session", "OnTap")' + '?topicCode=' + encodeURIComponent(topicCode) + '&number=' + questionNumber + (isEmbedded ? '&embedded=true' : '');
                         window.history.pushState({ questionNumber: questionNumber }, '', newUrl);
-
                         isNavigating = false;
                     })
-                    .catch(function(error) {
-                        console.error('Failed to load question:', error);
+                    .catch(function () {
                         setFeedback('Lỗi tải câu hỏi. Vui lòng thử lại.', 'status-wrong');
                         isNavigating = false;
                     });
             }
 
-            function updateQuestionUI(question) {
-                // Update global variables
-                currentQuestionNumber = question.number;
-                questionId = question.id;
-                currentExplanation = question.explanation || '';
-
-                // Update question content
-                var questionTag = document.querySelector('.question-tag');
-                if (questionTag) {
-                    questionTag.textContent = 'Câu hỏi ' + question.number + '/' + question.total;
-                }
-
-                var questionText = document.querySelector('.question-text');
-                if (questionText) {
-                    questionText.textContent = question.content;
-                }
-
-                setExplanation('', false);
-
-                // Update image
-                var questionImage = document.querySelector('.question-image');
-                if (question.imageUrl) {
-                    if (!questionImage) {
-                        questionImage = document.createElement('img');
-                        questionImage.className = 'question-image';
-                        questionImage.alt = 'Hình minh họa câu hỏi';
-                        questionText.parentNode.insertBefore(questionImage, questionText.nextSibling);
-                    }
-                    questionImage.src = normalizeImageUrl(question.imageUrl);
-                    questionImage.style.display = 'block';
-                } else if (questionImage) {
-                    questionImage.style.display = 'none';
-                }
-
-                // Update answers
-                var optionList = document.querySelector('.option-list');
-                if (optionList) {
-                    optionList.innerHTML = '';
-                    question.answers.forEach(function(answer, index) {
-                        var optionItem = document.createElement('div');
-                        optionItem.className = 'option-item selectable';
-                        optionItem.setAttribute('data-answer-id', answer.answerId);
-                        optionItem.setAttribute('data-is-correct', answer.isCorrect ? 'true' : 'false');
-
-                        var marker = String.fromCharCode(65 + index); // A, B, C, D
-
-                        optionItem.innerHTML =
-                            '<input class="option-input" type="radio" name="answerId" id="answer-' + answer.answerId + '" value="' + answer.answerId + '" />' +
-                            '<label class="option-label w-100" for="answer-' + answer.answerId + '">' +
-                                '<span class="option-marker">' + marker + '</span>' +
-                                '<span class="option-copy">' + answer.content + '</span>' +
-                                '<span class="option-debug-badge" data-answer-id="' + answer.answerId + '">' +
-                                    '<small class="text-muted">ID: ' + answer.answerId + ' | Đúng: ' + (answer.isCorrect ? '✓' : '✗') + '</small>' +
-                                '</span>' +
-                            '</label>';
-
-                        optionList.appendChild(optionItem);
-                    });
-
-                    // Re-attach event listeners to new radio buttons
-                    attachAnswerListeners();
-                }
-
-                // Update question ID in form
-                var questionIdInput = document.querySelector('input[name="questionId"]');
-                if (questionIdInput) {
-                    questionIdInput.value = question.id;
-                }
-
-                // Update question code display
-                var questionCodeDisplay = document.querySelector('.practice-question-card .text-muted');
-                if (questionCodeDisplay) {
-                    questionCodeDisplay.textContent = 'Mã câu hỏi: ' + question.id;
-                }
-
-                // Update progress displays
-                var progressBadge = document.querySelector('.question-progress-badge span');
-                if (progressBadge) {
-                    progressBadge.textContent = 'Câu ' + question.number + ' / ' + question.total;
-                }
-
-                var progressTitle = document.querySelector('.question-progress-title');
-                if (progressTitle) {
-                    progressTitle.textContent = 'Bạn đang làm đến câu ' + question.number;
-                }
-
-                var progressSubtitle = document.querySelector('.question-progress-subtitle');
-                if (progressSubtitle) {
-                    progressSubtitle.textContent = question.isCritical
-                        ? 'Đây là câu điểm liệt, cần chú ý chọn đáp án chính xác.'
-                        : 'Đọc kỹ nội dung câu hỏi và chọn đáp án phù hợp nhất.';
-                }
-
-                var sidebarCurrent = document.querySelector('.sidebar-stat strong');
-                if (sidebarCurrent) {
-                    sidebarCurrent.textContent = 'Câu ' + question.number;
-                }
-
-                var paletteProgress = document.querySelector('.question-palette').previousElementSibling.querySelector('.small.text-muted');
-                if (paletteProgress) {
-                    paletteProgress.textContent = 'Câu ' + question.number + ' / ' + question.total;
-                }
-
-                // Update palette active state
-                var paletteButtons = document.querySelectorAll('.palette-btn[data-question-number]');
-                paletteButtons.forEach(function(btn) {
-                    var btnNumber = parseInt(btn.getAttribute('data-question-number'), 10);
-                    if (btnNumber === question.number) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                });
-
-                // Update navigation buttons
-                updateNavigationButtons(question.number, question.total);
-
-                // Reset feedback
-                setFeedback('Chọn đáp án để kiểm tra', '');
-                isCheckingAnswer = false;
-            }
-
             function updateNavigationButtons(currentNum, totalNum) {
                 var navContainer = document.querySelector('.practice-nav .d-flex');
                 if (!navContainer) return;
-
                 navContainer.innerHTML = '';
 
                 if (currentNum > 1) {
@@ -1079,32 +732,104 @@
                     navContainer.appendChild(nextBtn);
                 }
 
-                // Re-attach navigation listeners
                 attachNavigationListeners();
             }
 
+            function updateQuestionUI(question) {
+                currentQuestionNumber = question.number;
+                questionId = question.id;
+                currentExplanation = question.explanation || '';
+
+                var questionTag = document.querySelector('.question-tag');
+                if (questionTag) questionTag.textContent = 'Câu hỏi ' + question.number + '/' + question.total;
+
+                var questionText = document.querySelector('.question-text');
+                if (questionText) questionText.textContent = question.content;
+                setExplanation('', false);
+
+                var questionImage = document.querySelector('.question-image');
+                if (question.imageUrl) {
+                    if (!questionImage && questionText) {
+                        questionImage = document.createElement('img');
+                        questionImage.className = 'question-image';
+                        questionImage.alt = 'Hình minh họa câu hỏi';
+                        questionText.parentNode.insertBefore(questionImage, questionText.nextSibling);
+                    }
+                    if (questionImage) {
+                        questionImage.src = normalizeImageUrl(question.imageUrl);
+                        questionImage.style.display = 'block';
+                    }
+                } else if (questionImage) {
+                    questionImage.style.display = 'none';
+                }
+
+                var optionList = document.querySelector('.option-list');
+                if (optionList) {
+                    optionList.innerHTML = '';
+                    question.answers.forEach(function (answer, index) {
+                        var optionItem = document.createElement('div');
+                        optionItem.className = 'option-item selectable';
+                        optionItem.setAttribute('data-answer-id', answer.answerId);
+                        optionItem.setAttribute('data-is-correct', answer.isCorrect ? 'true' : 'false');
+                        optionItem.innerHTML = '<input class="option-input" type="radio" name="answerId" id="answer-' + answer.answerId + '" value="' + answer.answerId + '" />'
+                            + '<label class="option-label w-100" for="answer-' + answer.answerId + '">'
+                            + '<span class="option-marker">' + String.fromCharCode(65 + index) + '</span>'
+                            + '<span class="option-copy">' + answer.content + '</span>'
+                            + '</label>';
+                        optionList.appendChild(optionItem);
+                    });
+                    attachAnswerListeners();
+                }
+
+                var questionIdInput = document.querySelector('input[name="questionId"]');
+                if (questionIdInput) questionIdInput.value = question.id;
+
+                var questionCodeDisplay = document.querySelector('.practice-question-card .text-muted');
+                if (questionCodeDisplay) questionCodeDisplay.textContent = 'Mã câu hỏi: ' + question.id;
+
+                var progressBadge = document.querySelector('.question-progress-badge span');
+                if (progressBadge) progressBadge.textContent = 'Câu ' + question.number + ' / ' + question.total;
+
+                var progressTitle = document.querySelector('.question-progress-title');
+                if (progressTitle) progressTitle.textContent = 'Bạn đang làm đến câu ' + question.number;
+
+                var progressSubtitle = document.querySelector('.question-progress-subtitle');
+                if (progressSubtitle) {
+                    progressSubtitle.textContent = question.isCritical ? 'Đây là câu điểm liệt, cần chú ý chọn đáp án chính xác.' : 'Đọc kỹ nội dung câu hỏi và chọn đáp án phù hợp nhất.';
+                }
+
+                var sidebarCurrent = document.querySelector('.sidebar-stat strong');
+                if (sidebarCurrent) sidebarCurrent.textContent = 'Câu ' + question.number;
+
+                var paletteProgress = document.querySelector('.question-palette').previousElementSibling.querySelector('.small.text-muted');
+                if (paletteProgress) paletteProgress.textContent = 'Câu ' + question.number + ' / ' + question.total;
+
+                document.querySelectorAll('.palette-btn[data-question-number]').forEach(function (btn) {
+                    var btnNumber = parseInt(btn.getAttribute('data-question-number'), 10);
+                    btn.classList.toggle('active', btnNumber === question.number);
+                });
+
+                updateNavigationButtons(question.number, question.total);
+                setFeedback('Chọn đáp án để kiểm tra', '');
+                isCheckingAnswer = false;
+            }
+
             function attachAnswerListeners() {
+                if (!practiceForm) return;
                 practiceForm.querySelectorAll('input[name="answerId"]').forEach(function (input) {
                     input.addEventListener('change', function () {
                         if (input.disabled) return;
-
-                        practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) {
-                            item.classList.remove('selected');
-                        });
-
+                        practiceForm.querySelectorAll('.option-item.selectable').forEach(function (item) { item.classList.remove('selected'); });
                         var optionItem = input.closest('.option-item.selectable');
-                        if (optionItem) {
-                            optionItem.classList.add('selected');
-                        }
-
+                        if (optionItem) optionItem.classList.add('selected');
                         checkAnswer(parseInt(input.value, 10));
                     });
                 });
             }
 
             function attachNavigationListeners() {
-                document.querySelectorAll('[data-navigate-to]').forEach(function(btn) {
-                    btn.addEventListener('click', function(e) {
+                document.querySelectorAll('[data-navigate-to]').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
                         e.preventDefault();
                         var targetNumber = parseInt(btn.getAttribute('data-navigate-to'), 10);
                         navigateToQuestion(targetNumber);
@@ -1112,17 +837,29 @@
                 });
             }
 
-            // Initialize
+            function goToResult() {
+                var answered = encodeURIComponent(JSON.stringify(getAnsweredQuestions()));
+                var wrong = encodeURIComponent(JSON.stringify(getWrongQuestions()));
+                var resultUrl = '@Url.Action("Result", "OnTap")' + '?topicCode=' + encodeURIComponent(topicCode) + '&total=' + encodeURIComponent(totalQuestions) + '&answered=' + answered + '&wrong=' + wrong + (isEmbedded ? '&embedded=true' : '');
+                window.location.assign(resultUrl);
+            }
+
             if (isEmbedded === true || isEmbedded === 'true') {
                 document.body.classList.add('embedded-practice-mode');
+            }
+
+            var finishPracticeButton = document.getElementById('finishPracticeButton');
+            if (finishPracticeButton) {
+                finishPracticeButton.addEventListener('click', function () {
+                    goToResult();
+                });
             }
 
             renderAnsweredState();
             attachAnswerListeners();
             attachNavigationListeners();
 
-            // Handle browser back/forward
-            window.addEventListener('popstate', function(event) {
+            window.addEventListener('popstate', function (event) {
                 if (event.state && event.state.questionNumber) {
                     navigateToQuestion(event.state.questionNumber);
                 }

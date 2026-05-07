@@ -44,14 +44,16 @@ public class StudentDashboardApiService : IStudentDashboardApiService
             var historyTask = client.GetAsync("/api/v1/history/analytics", cancellationToken);
             var wrongSummaryTask = client.GetAsync("/api/v1/wrong-questions/summary", cancellationToken);
             var criticalStatsTask = client.GetAsync("/api/v1/dashboard/critical-question-stats", cancellationToken);
+            var courseRegistrationsTask = client.GetAsync("/api/v1/my/course-registrations?page=1&pageSize=10", cancellationToken);
 
-            await Task.WhenAll(meTask, studentProfileTask, historyTask, wrongSummaryTask, criticalStatsTask);
+            await Task.WhenAll(meTask, studentProfileTask, historyTask, wrongSummaryTask, criticalStatsTask, courseRegistrationsTask);
 
             await PopulateProfileAsync(model, meTask.Result, cancellationToken);
             await PopulateStudentProfileAsync(model, studentProfileTask.Result, cancellationToken);
             await PopulateHistoryStatsAsync(model, historyTask.Result, cancellationToken);
             await PopulateWrongQuestionStatsAsync(model, wrongSummaryTask.Result, cancellationToken);
             await PopulateCriticalStatsAsync(model, criticalStatsTask.Result, cancellationToken);
+            await PopulateCourseRegistrationsAsync(model, courseRegistrationsTask.Result, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -321,6 +323,7 @@ public class StudentDashboardApiService : IStudentDashboardApiService
                     Status = "Sắp khai giảng"
                 }
             },
+            CourseRegistrations = new List<StudentCourseRegistrationItem>(),
             Schedule = new List<StudentScheduleItem>
             {
                 new() { DayLabel = "Thứ 2", Title = "Lý thuyết biển báo và sa hình", TimeText = "18:30 - 20:00", Location = "Phòng học A1", AccentClass = "primary" },
@@ -329,6 +332,200 @@ public class StudentDashboardApiService : IStudentDashboardApiService
                 new() { DayLabel = "Chủ nhật", Title = "Thi thử tổng hợp", TimeText = "08:00 - 10:00", Location = "Phòng thi mô phỏng", AccentClass = "danger" }
             }
         };
+    }
+
+    private async Task PopulateCourseRegistrationsAsync(LichHocViewModel model, HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get my course registrations failed. StatusCode={StatusCode}, Response={Response}", response.StatusCode, responseBody);
+            return;
+        }
+
+        var apiResponse = Deserialize<StudentDashboardApiEnvelope<StudentDashboardPagedResult<CourseRegistrationApiItem>>>(responseBody);
+        var registrations = apiResponse?.Data?.Items ?? new List<CourseRegistrationApiItem>();
+
+        model.CourseRegistrations = registrations.Select(item => new StudentCourseRegistrationItem
+        {
+            RegistrationId = item.RegistrationId,
+            CourseName = item.TenKhoaHoc ?? "Khóa học",
+            ClassName = item.TenLop ?? "Chưa phân lớp",
+            ScheduleText = BuildScheduleText(item.NgayBatDau, item.NgayKetThuc),
+            Status = NormalizeRegistrationStatus(item.TrangThai),
+            PaymentStatus = NormalizePaymentStatus(item.PaymentStatus),
+            ScheduleDetails = item.LichHoc
+                .OrderBy(schedule => schedule.ThuTrongTuan)
+                .ThenBy(schedule => schedule.GioBatDau)
+                .Select(schedule => new StudentCourseScheduleItem
+                {
+                    DayOfWeek = schedule.ThuTrongTuan,
+                    DayLabel = FormatDayOfWeek(schedule.ThuTrongTuan),
+                    StartTime = schedule.GioBatDau ?? string.Empty,
+                    EndTime = schedule.GioKetThuc ?? string.Empty,
+                    Location = string.IsNullOrWhiteSpace(schedule.DiaDiem) ? "Theo phân công trung tâm" : schedule.DiaDiem!
+                }).ToList(),
+            CanPayWithZaloPay = CanShowPaymentButton(item.TrangThai, item.PaymentStatus),
+            PaymentDisabledReason = BuildPaymentDisabledReason(item.TrangThai, item.PaymentStatus),
+            ReceiptId = item.ReceiptId?.ToString(),
+            TuitionFee = item.HocPhi,
+            TeacherName = string.IsNullOrWhiteSpace(item.GiaoVien) ? "Theo phân công trung tâm" : item.GiaoVien!
+        }).ToList();
+
+        if (model.CourseRegistrations.Count > 0)
+        {
+            model.RegisteredCourses = model.CourseRegistrations.Select(item => new StudentRegisteredCourseItem
+            {
+                Name = item.CourseName,
+                Description = $"Lớp: {item.ClassName}",
+                ScheduleText = item.ScheduleText,
+                TeacherName = item.TeacherName,
+                Status = item.Status,
+                PaymentStatus = item.PaymentStatus,
+                StudyTimeText = item.ScheduleText,
+                ScheduleDetails = item.ScheduleDetails
+            }).ToList();
+        }
+    }
+
+    private static string? BuildPaymentDisabledReason(string? registrationStatus, string? paymentStatus)
+    {
+        if (CanShowPaymentButton(registrationStatus, paymentStatus))
+        {
+            return null;
+        }
+
+        if (IsPaymentSuccessStatus(paymentStatus))
+        {
+            return "Đăng ký này đã hoàn tất thanh toán.";
+        }
+
+        if (!IsApprovedRegistrationStatus(registrationStatus))
+        {
+            return "Bạn chỉ có thể thanh toán sau khi đăng ký được duyệt.";
+        }
+
+        return "Hiện chưa thể thanh toán cho đăng ký này.";
+    }
+
+    private static string FormatDayOfWeek(int day) => day switch
+    {
+        2 => "Thứ 2",
+        3 => "Thứ 3",
+        4 => "Thứ 4",
+        5 => "Thứ 5",
+        6 => "Thứ 6",
+        7 => "Thứ 7",
+        8 => "Chủ nhật",
+        _ => $"Thứ {day}"
+    };
+
+    private static bool IsApprovedRegistrationStatus(string? status)
+    {
+        return string.Equals(status, "da_duyet", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaDuyet", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "đã duyệt", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPaymentSuccessStatus(string? status)
+    {
+        return string.Equals(status, "da_xac_nhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaXacNhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "da_thanh_toan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "DaThanhToan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "đã thanh toán", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPendingPaymentStatus(string? status)
+    {
+        return string.IsNullOrWhiteSpace(status)
+            || string.Equals(status, "chua_thanh_toan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChuaThanhToan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "chưa thanh toán", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "cho_xac_nhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChoXacNhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "chờ xác nhận", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeRegistrationStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return "Chờ duyệt";
+        }
+
+        if (IsApprovedRegistrationStatus(status))
+        {
+            return "Đã duyệt";
+        }
+
+        if (string.Equals(status, "cho_duyet", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChoDuyet", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "chờ duyệt", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chờ duyệt";
+        }
+
+        return status;
+    }
+
+    private static string NormalizePaymentStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return "Chưa thanh toán";
+        }
+
+        if (IsPaymentSuccessStatus(status))
+        {
+            return "Đã thanh toán";
+        }
+
+        if (string.Equals(status, "cho_xac_nhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChoXacNhan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "chờ xác nhận", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chờ xác nhận";
+        }
+
+        if (string.Equals(status, "chua_thanh_toan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "ChuaThanhToan", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "chưa thanh toán", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chưa thanh toán";
+        }
+
+        return status;
+    }
+
+    private static bool CanShowPaymentButton(string? registrationStatus, string? paymentStatus)
+    {
+        if (IsPaymentSuccessStatus(paymentStatus))
+        {
+            return false;
+        }
+
+        if (IsPendingPaymentStatus(paymentStatus))
+        {
+            return true;
+        }
+
+        return IsApprovedRegistrationStatus(registrationStatus) && !IsPaymentSuccessStatus(paymentStatus);
+    }
+
+    private static string BuildScheduleText(DateOnly? startDate, DateOnly? endDate)
+    {
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            return $"{startDate:dd/MM/yyyy} - {endDate:dd/MM/yyyy}";
+        }
+
+        if (startDate.HasValue)
+        {
+            return startDate.Value.ToString("dd/MM/yyyy");
+        }
+
+        return "Đang cập nhật lịch học";
     }
 
     private static JsonElement? TryGetDataElement(JsonElement root)
@@ -491,4 +688,39 @@ internal sealed class StudentProfileApiResponse
     public string? Cccd { get; set; }
     public string? DiaChi { get; set; }
     public string? AnhChanDung { get; set; }
+}
+
+internal sealed class StudentDashboardApiEnvelope<T>
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public T? Data { get; set; }
+}
+
+internal sealed class StudentDashboardPagedResult<T>
+{
+    public List<T> Items { get; set; } = new();
+}
+
+internal sealed class CourseRegistrationApiItem
+{
+    public int RegistrationId { get; set; }
+    public string? TenKhoaHoc { get; set; }
+    public string? TenLop { get; set; }
+    public DateOnly? NgayBatDau { get; set; }
+    public DateOnly? NgayKetThuc { get; set; }
+    public string? TrangThai { get; set; }
+    public string? PaymentStatus { get; set; }
+    public long HocPhi { get; set; }
+    public long? ReceiptId { get; set; }
+    public string? GiaoVien { get; set; }
+    public List<CourseRegistrationScheduleApiItem> LichHoc { get; set; } = new();
+}
+
+internal sealed class CourseRegistrationScheduleApiItem
+{
+    public int ThuTrongTuan { get; set; }
+    public string? GioBatDau { get; set; }
+    public string? GioKetThuc { get; set; }
+    public string? DiaDiem { get; set; }
 }
